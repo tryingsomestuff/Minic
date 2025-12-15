@@ -270,9 +270,9 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
          nbPos += nbPosLoc;
          const auto ms = getTimeDiff(startTime);
          ++nbGames;
-         Logging::LogIt(Logging::logInfoPrio) << "Nb games : " << nbGames << ", Nb Pos : " << nbPos << ", elapsed s : " << ms/1000;
-         Logging::LogIt(Logging::logInfoPrio) << "Game speed : " << static_cast<double>(nbGames) / (static_cast<double>(ms) / 1000 / 60) << " games/min";
-         Logging::LogIt(Logging::logInfoPrio) << "Pos speed : " << static_cast<double>(nbPos) / (static_cast<double>(ms) / 1000) << " pos/s";         
+         Logging::LogIt(Logging::logError) << "Nb games : " << nbGames << ", Nb Pos : " << nbPos << ", elapsed s : " << ms/1000;
+         Logging::LogIt(Logging::logError) << "Game speed : " << static_cast<double>(nbGames) / (static_cast<double>(ms) / 1000 / 60) << " games/min";
+         Logging::LogIt(Logging::logError) << "Pos speed : " << static_cast<double>(nbPos) / (static_cast<double>(ms) / 1000) << " pos/s";         
       }
       return true;
    }
