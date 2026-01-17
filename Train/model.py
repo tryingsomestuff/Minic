@@ -16,7 +16,7 @@ withFactorizer = True
 # change requiered in
 # void fill_entry(FeatureSet<Ts...>, int i, const TrainingDataEntry& e)
 # if this is changed
-nbucket = 8
+nbucket = 2
 BASE = 384
 L1 = 8
 L2 = 8
@@ -78,7 +78,7 @@ class NNUE(pl.LightningModule):
   lambda_ = 0.0 - purely based on game results
   lambda_ = 1.0 - purely based on search scores
   """
-  def __init__(self, lambda_=1.0):
+  def __init__(self, lambda_=1.0, dropout_rate=0.05):
     super(NNUE, self).__init__()
     funcs = [piece_position,]
 
@@ -91,18 +91,16 @@ class NNUE(pl.LightningModule):
       self.white_affine = nn.Linear(halfka.numel(), BASE)
       self.black_affine = nn.Linear(halfka.numel(), BASE)
 
-    # dropout seems necessary when using factorizer to avoid over-fitting
-    #self.d0 = nn.Dropout(p=0.05)
+    #self.d0 = nn.Dropout(p=dropout_rate * 0.5)
     self.fc0 = nn.Linear(2*BASE, L1 * nbucket)
 
-    #self.d1 = nn.Dropout(p=0.1)
+    #self.d1 = nn.Dropout(p=dropout_rate)
     self.fc1 = nn.Linear(L1, L2 * nbucket)
 
-    #self.d2 = nn.Dropout(p=0.1)
-    #self.fc2 = nn.Linear(L2, L3 * nbucket)
+    #self.d2 = nn.Dropout(p=dropout_rate)
     self.fc2 = nn.Linear(L2 + L1,  L3 * nbucket)
     
-    #self.d3 = nn.Dropout(p=0.1)
+    #self.d3 = nn.Dropout(p=dropout_rate)
     self.fc3 = nn.Linear(L3 + L2 + L1,  1 * nbucket)
 
     self.lambda_ = lambda_
@@ -131,7 +129,6 @@ class NNUE(pl.LightningModule):
         self.idx_offset = torch.arange(0, bucket.shape[0] * nbucket, nbucket, device=bucket.device)
 
     indices = bucket.flatten() + self.idx_offset
-    #print(torch.bincount(bucket.flatten()))
 
     if len(white.size()) > 2: # data are from pydataloader
       w__ = halfka.half_ka(white, black)
@@ -185,9 +182,66 @@ class NNUE(pl.LightningModule):
     q = (scorenet / out_scaling).sigmoid()
     p = (score / in_scaling).sigmoid()
     pt = p * self.lambda_ + t * (1.0 - self.lambda_)
-    loss = torch.pow(torch.abs(pt - q), 2.6).mean()
+    
+    # powered loss
+    #loss = torch.pow(torch.abs(pt - q), 2.6).mean()
+    
+    # Huber loss
+    #loss = F.huber_loss(q, pt, delta=0.1)
+
+    # smaller exponent
+    #loss = torch.pow(torch.abs(pt - q), 2.3).mean()
+
+    # Combined MSE + MAE loss
+    #mse_loss = F.mse_loss(q, pt)
+    #mae_loss = F.l1_loss(q, pt)
+    #loss = 0.7 * mse_loss + 0.3 * mae_loss
+    
+    # Ponderated loss
+    abs_score = torch.abs(score)
+    
+    zone_weights = torch.where(
+        abs_score < 150,
+        torch.ones_like(abs_score) * 2,
+        torch.where(
+            abs_score < 300,
+            torch.ones_like(abs_score) * 1.7,
+            torch.where(
+                abs_score < 500,
+                torch.ones_like(abs_score) * 1.0,
+                torch.where(
+                    abs_score < 700,
+                    torch.ones_like(abs_score) * 0.8,
+                    torch.ones_like(abs_score) * 0.6
+                )
+            )
+        )
+    )
+
+    score_expectation = (score / in_scaling).sigmoid()
+
+    # Check if prediction direction matches outcome
+    # If score > 0 and outcome = 1, or score < 0 and outcome = 0, direction is correct
+    correct_direction = (score > 0) == (outcome > 0.5)
+
+    outcome_surprise = torch.abs(outcome - score_expectation)
+
+    # Only apply surprise penalty when direction is wrong, or reduce it when correct
+    outcome_surprise = torch.where(
+        correct_direction,
+        outcome_surprise * 0.1,
+        outcome_surprise
+    )
+
+    surprise_weight = 1.0 / (1.0 + outcome_surprise * 9.0)
+
+    #weights = zone_weights * surprise_weight
+    weights = surprise_weight
+    weights = weights / weights.mean()
+    loss = (weights * torch.pow(torch.abs(pt - q), 2.4)).mean()
 
     self.log(loss_type, loss)
+
     return loss
 
   def training_step(self, batch, batch_idx):
@@ -200,9 +254,32 @@ class NNUE(pl.LightningModule):
     self.step_(batch, batch_idx, 'test_loss')
 
   def configure_optimizers(self):
+    
+    # Strategy 1: Adadelta with lower LR and cosine annealing
+    #optimizer = torch.optim.Adadelta(self.parameters(), lr=0.3, weight_decay=1e-12)
+    #scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+    #    optimizer, T_0=50, T_mult=2, eta_min=1e-6
+    #)
+    
+    # Strategy 2: AdamW for fine-tuning
+    # optimizer = torch.optim.AdamW(self.parameters(), lr=1e-3, weight_decay=1e-4)
+    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100, eta_min=1e-6)
+    
+    # Strategy 3: Adadelta with ReduceLROnPlateau
     optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-13)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=75, gamma=0.1)
-    return [optimizer], [scheduler]
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode='min', factor=0.5, patience=15, verbose=True
+    )
+    return {
+        'optimizer': optimizer,
+        'lr_scheduler': {
+            'scheduler': scheduler,
+            'monitor': 'val_loss',
+        },
+        'gradient_clip_val': 1.0,
+    }
+    
+    #return [optimizer], [scheduler]
 
   def flattened_parameters(self, log=False, only_weight=False):
     def join_param(joined, param):

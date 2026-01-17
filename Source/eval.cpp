@@ -129,23 +129,28 @@ ScoreType evalAntiChess(const Position &p, EvalData &data, [[maybe_unused]] Sear
 ScoreType NNUEEVal(const Position & p, EvalData &data, Searcher &context, EvalFeatures &features, bool secondTime = false){
    START_TIMER
    if (DynamicConfig::armageddon) features.scalingFactor = 1.f; ///@todo better
-   
+   /*
    // king bucket
    constexpr int kingBucket[64] = {
       0,  0,  0,  1,  1,  1,  2,  2,
-      0,  0,  3,  1,  1,  4,  5,  5,
+      0,  3,  3,  3,  4,  4,  5,  5,
+      3,  3,  3,  3,  4,  4,  5,  5,
       3,  3,  3,  4,  4,  4,  5,  5,
-      3,  3,  3,  4,  4,  5,  5,  5,
-      3,  3,  3,  4,  4,  7,  7,  5,
-      3,  3,  6,  6,  6,  7,  7,  7, 
-      6,  6,  6,  6,  6,  7,  7,  7, 
-      6,  6,  6,  6,  7,  7,  7,  7, 
+      3,  3,  3,  4,  4,  6,  6,  5,
+      6,  6,  6,  6,  6,  6,  6,  6, 
+      6,  6,  6,  6,  6,  6,  6,  6, 
+      6,  6,  6,  6,  6,  6,  6,  6, 
    };
    const int bucket = kingBucket[relative_square(p.c, p.king[p.c])];
-    
+   */
    // or phase
    //const int bucketDivisor = 32/p.evaluator().weights.nbuckets;
    //const int bucket = std::max(0, std::min(p.evaluator().weights.nbuckets-1, (std::min(32,static_cast<int>(BB::countBit(p.occupancy()))-1) / bucketDivisor)));
+   int bucket = 0;
+   if (data.gp < 0.45f)
+      bucket = 0;
+   else
+      bucket = 1;
    
    // call the net
    ScoreType nnueScore = static_cast<ScoreType>(p.evaluator().propagate(p.c, bucket));
