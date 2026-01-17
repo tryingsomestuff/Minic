@@ -203,6 +203,45 @@ struct SparseBatch
 
 private:
 
+    const std::array<int,5> ValuesGP  = {93, 290, 301, 518, 1076};
+
+    float gamePhase(const Position &pos)
+    {
+        const float wQ = ValuesGP[(int)PieceType::Queen];
+        const float wR = ValuesGP[(int)PieceType::Rook];
+        const float wB = ValuesGP[(int)PieceType::Bishop];
+        const float wN = ValuesGP[(int)PieceType::Knight];
+        const float wP = ValuesGP[(int)PieceType::Pawn];
+
+        const float totalMatScore =
+            2.f * wQ +
+            4.f * wR +
+            4.f * wB +
+            4.f * wN +
+            16.f * wP;
+
+        auto count = [&](Color c, PieceType pt) {
+            return pos.piecesBB(Piece(pt, c)).count();
+        };
+
+        const int matPieceScoreW =
+            count(Color::White, PieceType::Queen) * wQ +
+            count(Color::White, PieceType::Rook)  * wR +
+            count(Color::White, PieceType::Bishop)* wB +
+            count(Color::White, PieceType::Knight)* wN;
+
+        const int matPieceScoreB =
+            count(Color::Black, PieceType::Queen) * wQ +
+            count(Color::Black, PieceType::Rook)  * wR +
+            count(Color::Black, PieceType::Bishop)* wB +
+            count(Color::Black, PieceType::Knight)* wN;
+
+        const int matPawnScoreW = count(Color::White, PieceType::Pawn) * wP;
+        const int matPawnScoreB = count(Color::Black, PieceType::Pawn) * wP;
+
+        return std::min(1.f, (matPawnScoreW + matPieceScoreW + matPawnScoreB + matPieceScoreB) / totalMatScore);
+    }
+
     template <typename... Ts>
     void fill_entry(FeatureSet<Ts...>, int i, const TrainingDataEntry& e)
     {
@@ -210,20 +249,27 @@ private:
         is_white[i] = static_cast<float>(color == Color::White);
         outcome[i] = (e.result + 1.0f) / 2.0f;
         score[i] = e.score;
+        /*
         // king bucket
         constexpr int kingBucket[64] = {
             0,  0,  0,  1,  1,  1,  2,  2,
-            0,  0,  3,  1,  1,  4,  5,  5,
+            0,  3,  3,  3,  4,  4,  5,  5,
+            3,  3,  3,  3,  4,  4,  5,  5,
             3,  3,  3,  4,  4,  4,  5,  5,
-            3,  3,  3,  4,  4,  5,  5,  5,
-            3,  3,  3,  4,  4,  7,  7,  5,
-            3,  3,  6,  6,  6,  7,  7,  7, 
-            6,  6,  6,  6,  6,  7,  7,  7, 
-            6,  6,  6,  6,  7,  7,  7,  7, 
+            3,  3,  3,  4,  4,  6,  6,  5,
+            6,  6,  6,  6,  6,  6,  6,  6, 
+            6,  6,  6,  6,  6,  6,  6,  6, 
+            6,  6,  6,  6,  6,  6,  6,  6, 
         };
         bucket[i] = kingBucket[ static_cast<int>(e.pos.kingSquare(color)) ^ (56 * static_cast<int>(color != Color::White))];
+        */
         // game phase
-        //bucket[i] = std::min(3,e.pos.piecesBB().count()/8);
+        //bucket[i] = std::min(1,e.pos.piecesBB().count()/16);
+        const float gf = gamePhase(e.pos);
+        if (gf < 0.45f)
+            bucket[i] = 0;
+        else 
+            bucket[i] = 1;
         fill_features(FeatureSet<Ts...>{}, i, e);
     }
 
