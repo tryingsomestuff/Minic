@@ -112,14 +112,15 @@ void generateSquare(const Position& p, MoveList& moves, const Square from) {
    BitBoard sliderRay = emptyBitBoard;
    BitBoard attacker = emptyBitBoard;
    if (phase == GP_evasion){
-      const BitBoard slider = BBTools::attack<P_wb>(kingSquare(p), p.pieces_const<P_wb>(~p.c) | p.pieces_const<P_wq>(~p.c), occupancy)|
-                              BBTools::attack<P_wr>(kingSquare(p), p.pieces_const<P_wr>(~p.c) | p.pieces_const<P_wq>(~p.c), occupancy);
+      const Square kingSq = kingSquare(p);
+      const BitBoard slider = BBTools::attack<P_wb>(kingSq, p.pieces_const<P_wb>(~p.c) | p.pieces_const<P_wq>(~p.c), occupancy)|
+                              BBTools::attack<P_wr>(kingSq, p.pieces_const<P_wr>(~p.c) | p.pieces_const<P_wq>(~p.c), occupancy);
       attacker = slider;
       BB::applyOn(slider, [&](const Square & k){
-         sliderRay |= BBTools::between(k,kingSquare(p));
+         sliderRay |= BBTools::between(k, kingSq);
       });
-      attacker |= BBTools::attack<P_wn>(kingSquare(p), p.pieces_const<P_wn>(~p.c));
-      attacker |= BBTools::attack<P_wp>(kingSquare(p), p.pieces_const<P_wp>(~p.c), occupancy, p.c);
+      attacker |= BBTools::attack<P_wn>(kingSq, p.pieces_const<P_wn>(~p.c));
+      attacker |= BBTools::attack<P_wp>(kingSq, p.pieces_const<P_wp>(~p.c), occupancy, p.c);
       if (!attacker){
          std::cout << "Error ! no attaker but evasion requested !" << std::endl;
          std::cout << ToString(p) << std::endl;
@@ -169,11 +170,13 @@ void generateSquare(const Position& p, MoveList& moves, const Square from) {
          auto addIfCastlingOk = [&]<MType mt>() mutable {
             const Color c = CastlingTraits<mt>::c;
             const Square to = p.rootInfo().rooksInit[c][CastlingTraits<mt>::ct];
-            if ((p.castling & CastlingTraits<mt>::cr) &&
-               (((BBTools::between(p.king[c], CastlingTraits<mt>::kingLanding) | CastlingTraits<mt>::kingLandingBB | BBTools::between(to, CastlingTraits<mt>::rookLanding) | CastlingTraits<mt>::rookLandingBB) 
-                   & ~BBTools::mask[to].bbsquare & ~BBTools::mask[p.king[c]].bbsquare) & occupancy) == emptyBitBoard &&
-               !isAttacked(p, BBTools::between(p.king[c], CastlingTraits<mt>::kingLanding) | SquareToBitboard(p.king[c]) | CastlingTraits<mt>::kingLandingBB)){
-              addMove(from, to, mt, moves);
+            if (p.castling & CastlingTraits<mt>::cr) {
+               const BitBoard kingPath = BBTools::between(p.king[c], CastlingTraits<mt>::kingLanding) | CastlingTraits<mt>::kingLandingBB;
+               const BitBoard pathOccupancy = (kingPath | BBTools::between(to, CastlingTraits<mt>::rookLanding) | CastlingTraits<mt>::rookLandingBB) 
+                                              & ~BBTools::mask[to].bbsquare & ~BBTools::mask[p.king[c]].bbsquare;
+               if ((pathOccupancy & occupancy) == emptyBitBoard && !isAttacked(p, kingPath | SquareToBitboard(p.king[c]))){
+                  addMove(from, to, mt, moves);
+               }
             }
          };
 
