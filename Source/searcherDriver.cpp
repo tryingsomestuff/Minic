@@ -484,6 +484,7 @@ pvsout:
       if (auto* monitor = getEnergyMonitor()) {
          const TimeType searchDuration = getTimeDiff(startTime);
          monitor->reportEnergy(searchDuration, Logging::logInfoPrio);
+         monitor->reportCost(searchDuration, Logging::logInfoPrio);
       }
 
       if (postMove) {

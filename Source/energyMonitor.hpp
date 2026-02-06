@@ -44,8 +44,11 @@ class EnergyMonitor {
 
    void reportPower(Logging::LogLevel level = Logging::logGUI) const;
    void reportEnergy(TimeType durationMs, Logging::LogLevel level = Logging::logGUI) const;
+   void reportCost(TimeType durationMs, Logging::LogLevel level = Logging::logGUI) const;
 
   private:
+   static constexpr double kWhPriceEuro = 0.2016;
+
    std::atomic<bool>   _running{false};
    std::thread         _worker;
    const int           _period;

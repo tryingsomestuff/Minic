@@ -93,6 +93,28 @@ void EnergyMonitor::reportEnergy(TimeType durationMs, Logging::LogLevel level) c
 #endif
 }
 
+void EnergyMonitor::reportCost(TimeType durationMs, Logging::LogLevel level) const {
+   const double hours = durationMs / 1000.0 / 3600.0;
+#ifdef WITH_MPI
+   const PowerResult result = reducePower();
+   if (Distributed::isMainProcess()) {
+      const double cpuCost = (result.cpu_sum * hours) / 1000.0 * kWhPriceEuro;
+      const double ramCost = (result.ram_sum * hours) / 1000.0 * kWhPriceEuro;
+      Logging::LogIt(level) << "CPU " << cpuCost << " €"
+                            << ", RAM " << ramCost << " €"
+                            << " (" << kWhPriceEuro << " €/kWh)";
+   }
+#else
+   const double cpuCost = (cpuW() * hours) / 1000.0 * kWhPriceEuro;
+   const double ramCost = (ramW() * hours) / 1000.0 * kWhPriceEuro;
+   if (Distributed::isMainProcess()) {
+      Logging::LogIt(level) << "CPU " << cpuCost << " €"
+                            << ", RAM " << ramCost << " €"
+                            << " (" << kWhPriceEuro << " €/kWh)";
+   }
+#endif
+}
+
 CpuTimes EnergyMonitor::readCpuTimes() {
    std::ifstream f("/proc/stat");
    std::string   line;
