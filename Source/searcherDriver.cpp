@@ -1,6 +1,7 @@
 #include "com.hpp"
 #include "distributed.h"
 #include "dynamicConfig.hpp"
+#include "energyMonitor.hpp"
 #include "logging.hpp"
 #include "searcher.hpp"
 #include "skill.hpp"
@@ -477,6 +478,12 @@ pvsout:
       if (Distributed::moreThanOneProcess()) { Distributed::showStat(); }
       else {
          ThreadPool::instance().displayStats();
+      }
+
+      // report energy consumption for this search
+      if (auto* monitor = getEnergyMonitor()) {
+         const TimeType searchDuration = getTimeDiff(startTime);
+         monitor->reportEnergy(searchDuration, Logging::logInfoPrio);
       }
 
       if (postMove) {
