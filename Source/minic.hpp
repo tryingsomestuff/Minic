@@ -6,6 +6,7 @@
 #include "distributed.h"
 #include "dynamicConfig.hpp"
 #include "egt.hpp"
+#include "energyMonitor.hpp"
 #include "evalConfig.hpp"
 #include "hash.hpp"
 #include "kpk.hpp"
@@ -25,6 +26,7 @@
 #include "transposition.hpp"
 #include "uci.hpp"
 #include "xboard.hpp"
+
 
 inline void sizeOf(){
    Logging::LogIt(Logging::logInfo) << "Size of Position " << sizeof(Position) << "b";
@@ -56,6 +58,8 @@ inline void init(int argc, char** argv) {
 #endif
    COM::init(COM::p_uci); // let's do this ... (usefull to reset position in case of NNUE)
    sizeOf();
+   // Start energy monitoring
+   initEnergyMonitor(500);
 }
 
 inline void finalize() {
@@ -67,6 +71,8 @@ inline void finalize() {
    ThreadPool::instance().resize(0);
    Logging::LogIt(Logging::logInfo) << "Syncing process...";
    Distributed::sync(Distributed::_commInput, __PRETTY_FUNCTION__);
+   // Report and cleanup energy monitoring
+   finalizeEnergyMonitor();
    Logging::LogIt(Logging::logInfo) << "Bye bye...";
    Logging::finalize();
    Logging::LogIt(Logging::logInfo) << "See you soon...";
