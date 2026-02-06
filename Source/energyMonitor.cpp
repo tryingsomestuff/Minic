@@ -21,6 +21,7 @@ EnergyMonitor::~EnergyMonitor() {
 }
 
 void EnergyMonitor::start() {
+   _startTime = Clock::now();
    _domains = findEnergyDomains();
    if (_domains.empty()) {
       Logging::LogIt(Logging::logWarn) << "No RAPL energy domains found";
@@ -258,6 +259,12 @@ void initEnergyMonitor(int period_ms) {
 void finalizeEnergyMonitor() {
    if (energyMonitor) {
       energyMonitor->stop();
+      const TimeType totalDuration = getTimeDiff(energyMonitor->getStartTime());
+      if (Distributed::isMainProcess()) {
+         Logging::LogIt(Logging::logInfo) << "Total execution time: " << totalDuration << " ms";
+         energyMonitor->reportEnergy(totalDuration, Logging::logInfo);
+         energyMonitor->reportCost(totalDuration, Logging::logInfo);
+      }
       EnergyMonitorInitializer::destroy();
    }
 }

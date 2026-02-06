@@ -35,6 +35,8 @@ class EnergyMonitor {
    void start();
    void stop();
 
+   [[nodiscard]] const Clock::time_point& getStartTime() const { return _startTime; }
+
    [[nodiscard]] double cpuW() const;
    [[nodiscard]] double ramW() const;
 
@@ -53,6 +55,7 @@ class EnergyMonitor {
    std::thread         _worker;
    const int           _period;
    const int           _ncores_phys;
+   Clock::time_point   _startTime;
    std::vector<EnergyDomain>      _domains;
    std::map<std::string,long long> _lastEnergy;
    std::atomic<double> _cpuWLocal{0.0};
