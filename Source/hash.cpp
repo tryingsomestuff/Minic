@@ -8,18 +8,125 @@
 namespace Zobrist {
 array2d<Hash,NbSquare,14> ZT;
 array1d<Hash,16> ZTCastling;
-array1d<Hash,std::numeric_limits<uint16_t>::max()> ZTMove;
 
 inline constexpr int hash_seed = 42;
+
+namespace {
+   // Test bit distribution across all Zobrist hash values
+   void testBitDistribution() {
+      std::array<uint64_t, 64> bitCounts = {0};
+      uint64_t totalHashes = 0;
+      
+      // Count bits across ZT table
+      for (int k = 0; k < NbSquare; ++k) {
+         for (int j = 0; j < 14; ++j) {
+            Hash h = ZT[k][j];
+            for (int bit = 0; bit < 64; ++bit) {
+               if (h & (1ULL << bit)) bitCounts[bit]++;
+            }
+            totalHashes++;
+         }
+      }
+      
+      // Count bits in castling table
+      for (int k = 0; k < 16; ++k) {
+         Hash h = ZTCastling[k];
+         for (int bit = 0; bit < 64; ++bit) {
+            if (h & (1ULL << bit)) bitCounts[bit]++;
+         }
+         totalHashes++;
+      }
+      
+      Logging::LogIt(Logging::logInfo) << "Zobrist bit distribution test (should be ~0.5 for each bit):";
+      bool allGood = true;
+      for (int bit = 0; bit < 64; ++bit) {
+         double ratio = bitCounts[bit] / static_cast<double>(totalHashes);
+         if (ratio < 0.45 || ratio > 0.55) {
+            Logging::LogIt(Logging::logWarn) << "  Bit " << bit << " has poor distribution: " << ratio;
+            allGood = false;
+         }
+      }
+      if (allGood) {
+         Logging::LogIt(Logging::logInfo) << "  All bits have good distribution (between 0.45 and 0.55)";
+      }
+   }
+   
+   // Calculate Hamming distance between two hashes
+   int hammingDistance(Hash a, Hash b) {
+      return __builtin_popcountll(a ^ b);
+   }
+   
+   // Test average Hamming distance (should be around 32 for random 64-bit values)
+   void testHammingDistance() {
+      const int sampleSize = 1000;
+      uint64_t totalDistance = 0;
+      int comparisons = 0;
+      
+      // Sample random pairs from ZT table
+      for (int i = 0; i < sampleSize && i < NbSquare * 14; ++i) {
+         int k1 = (i * 7) % NbSquare;
+         int j1 = (i * 13) % 14;
+         int k2 = ((i + 1) * 11) % NbSquare;
+         int j2 = ((i + 1) * 17) % 14;
+         
+         if (k1 != k2 || j1 != j2) {
+            totalDistance += hammingDistance(ZT[k1][j1], ZT[k2][j2]);
+            comparisons++;
+         }
+      }
+      
+      double avgDistance = static_cast<double>(totalDistance) / static_cast<double>(comparisons);
+      Logging::LogIt(Logging::logInfo) << "Zobrist Hamming distance test:";
+      Logging::LogIt(Logging::logInfo) << "  Average Hamming distance: " << avgDistance << " (ideal: ~32)";
+      
+      if (avgDistance < 28 || avgDistance > 36) {
+         Logging::LogIt(Logging::logWarn) << "  Hamming distance outside expected range [28, 36]";
+      }
+   }
+   
+   // Test for unwanted correlations (adjacent squares)
+   void testCorrelations() {
+      Logging::LogIt(Logging::logInfo) << "Zobrist correlation test (adjacent squares):";
+      
+      // Check adjacent squares for the same piece type
+      int poorDistances = 0;
+      int totalComparisons = 0;
+      
+      for (int k = 0; k < NbSquare - 1; ++k) {
+         for (int j = 0; j < 14; ++j) {
+            int dist = hammingDistance(ZT[k][j], ZT[k+1][j]);
+            totalComparisons++;
+            // Count outliers (very low or very high Hamming distance)
+            if (dist < 20 || dist > 44) {
+               poorDistances++;
+            }
+         }
+      }
+      
+      double poorRatio = poorDistances / static_cast<double>(totalComparisons);
+      Logging::LogIt(Logging::logInfo) << "  Outliers: " << poorDistances << "/" << totalComparisons 
+                                        << " (" << (poorRatio * 100) << "%)";
+      
+      // More than 10% outliers would indicate a real problem
+      if (poorRatio > 0.10) {
+         Logging::LogIt(Logging::logWarn) << "  WARNING: High correlation detected (>10% outliers)";
+      } else {
+         Logging::LogIt(Logging::logInfo) << "  No significant correlations detected";
+      }
+   }
+}
 
 void initHash() {
    Logging::LogIt(Logging::logInfo) << "Init hash";
    Logging::LogIt(Logging::logInfo) << "Size of zobrist table " << (sizeof(ZT)+sizeof(ZTCastling)) / 1024 << "Kb";
-   Logging::LogIt(Logging::logInfo) << "Size of zobrist table for moves " << sizeof(ZTMove) / 1024 << "Kb";
    for (int k = 0; k < NbSquare; ++k)
       for (int j = 0; j < 14; ++j) ZT[k][j] = randomInt<Hash, hash_seed>(std::numeric_limits<Hash>::min(), std::numeric_limits<Hash>::max());
    for (int k = 0; k < 16; ++k) ZTCastling[k] = randomInt<Hash, hash_seed>(std::numeric_limits<Hash>::min(), std::numeric_limits<Hash>::max());
-   for (int k = 0; k < std::numeric_limits<uint16_t>::max(); ++k) ZTMove[k] = randomInt<Hash, hash_seed>(std::numeric_limits<Hash>::min(), std::numeric_limits<Hash>::max());
+   
+   // Run quality tests on generated Zobrist values
+   testBitDistribution();
+   testHammingDistance();
+   testCorrelations();
 }
 } // namespace Zobrist
 
