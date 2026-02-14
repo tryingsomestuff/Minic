@@ -40,43 +40,48 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
    
    float propagate(Color c, const int bucket) const {
       assert(!dirty);
-      assert(bucket>=0);
-      assert(bucket<(NNUEWeights<NT, Q>::nbuckets));
-      const auto w_x {white.active().dequantize(1.f/Quantization<Q>::scale)
+      assert(bucket >= 0);
+      assert(bucket < (NNUEWeights<NT, Q>::nbuckets));
+      
+      constexpr float deqScale = 1.f / Quantization<Q>::scale;
+      const auto& layer = weights.innerLayer[bucket];
+      
+      const auto w_x {white.active().dequantize(deqScale)
 #ifdef USE_SIMD_INTRIN
-                                    .activation_(white.slopes())
+                               .activation_(white.slopes())
 #else
-                                    .apply_(activationInput<BT, Q>, white.slopes())
+                               .apply_(activationInput<BT, Q>, white.slopes())
 #endif
-                     };
-      const auto b_x {black.active().dequantize(1.f/Quantization<Q>::scale)
+                  };
+      const auto b_x {black.active().dequantize(deqScale)
 #ifdef USE_SIMD_INTRIN
-                                    .activation_(black.slopes())
+                               .activation_(black.slopes())
 #else
-                                    .apply_(activationInput<BT, Q>, black.slopes())
+                               .apply_(activationInput<BT, Q>, black.slopes())
 #endif
-                     };
+                  };
+      
       const auto x0 = c == Co_White ? splice(w_x, b_x) : splice(b_x, w_x);
-      const auto x1 = weights.innerLayer[bucket].fc0.forward(x0)
+      const auto x1 = layer.fc0.forward(x0)
 #ifdef USE_SIMD_INTRIN
-                                                .activation_(weights.innerLayer[bucket].fc0.slopes);
+                            .activation_(layer.fc0.slopes);
 #else
-                                                .apply_(activation<BT, Q>, weights.innerLayer[bucket].fc0.slopes);
+                            .apply_(activation<BT, Q>, layer.fc0.slopes);
 #endif
-      const auto x2 = splice(x1, (weights.innerLayer[bucket].fc1).forward(x1)
+      const auto x2 = splice(x1, layer.fc1.forward(x1)
 #ifdef USE_SIMD_INTRIN
-                                                                .activation_(weights.innerLayer[bucket].fc1.slopes));
+                                      .activation_(layer.fc1.slopes));
 #else
-                                                                .apply_(activation<BT, Q>, weights.innerLayer[bucket].fc1.slopes);
+                                      .apply_(activation<BT, Q>, layer.fc1.slopes);
 #endif
-      const auto x3 = splice(x2, (weights.innerLayer[bucket].fc2).forward(x2)
+      const auto x3 = splice(x2, layer.fc2.forward(x2)
 #ifdef USE_SIMD_INTRIN
-                                                                .activation_(weights.innerLayer[bucket].fc2.slopes));
+                                      .activation_(layer.fc2.slopes));
 #else
-                                                                .apply_(activation<BT, Q>, weights.innerLayer[bucket].fc2.slopes);
+                                      .apply_(activation<BT, Q>, layer.fc2.slopes);
 #endif
-
-      const float val = weights.innerLayer[bucket].fc3.forward(x3).data[0];
+       
+      const float val = layer.fc3.forward(x3).data[0];
       return val * Quantization<Q>::outFactor;
    }
 
@@ -102,4 +107,4 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
 template<typename NT, bool Q> 
 NNUEWeights<NT, Q> NNUEEval<NT, Q>::weights;
 
-#endif // WITH_NNUE 
+#endif // WITH_NNUE
