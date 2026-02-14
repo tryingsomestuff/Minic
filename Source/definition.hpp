@@ -132,7 +132,7 @@ constexpr size_t SIZE_MULTIPLIER = 1024ull * 1024ull; // Mb
 #define FORCE_FINLINE 
 #endif
 
-template<typename T> [[nodiscard]] constexpr T Abs(const T& s) { 
+template<typename T> [[nodiscard]] constexpr inline T Abs(const T& s) { 
    static_assert(T(-1) < T(0));
    if constexpr (std::is_enum_v<T>){
       assert(s != std::numeric_limits<std::underlying_type_t<T>>::min());

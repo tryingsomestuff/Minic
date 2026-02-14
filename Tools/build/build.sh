@@ -66,7 +66,7 @@ fi
 
 if [ ! -n "$DEBUGMINIC" ]; then
   echo "******* RELEASE BUILD *******"
-  OPT="-DNDEBUG -fno-math-errno -O3 $n"
+  OPT="-DNDEBUG -fno-math-errno -O3 -funroll-loops -fprefetch-loop-arrays $n"
   #-ffast-math ?
   if [ -n "$VTUNEMINIC" ]; then
      echo "***** with VTUNE params *****"
