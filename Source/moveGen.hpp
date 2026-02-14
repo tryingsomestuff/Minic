@@ -79,7 +79,7 @@ namespace MoveGen {
 
 enum GenPhase { GP_all = 0, GP_cap = 1, GP_quiet = 2, GP_evasion = 3 };
 
-FORCE_FINLINE void addMove(Square from, Square to, MType type, MoveList& moves) {
+FORCE_FINLINE void addMove(const Square from, const Square to, const MType type, MoveList& moves) {
    assert(isValidSquare(from));
    assert(isValidSquare(to));
    moves.emplace_back(ToMove(from, to, type, 0));
