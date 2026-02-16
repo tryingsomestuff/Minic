@@ -5,7 +5,12 @@ if [ -z $CXX ]; then
 fi
 
 if [ -z $CC ]; then
-   export CC=gcc
+   # If using Intel oneAPI C++ compiler, use corresponding C compiler
+   if [[ "$CXX" == *"icpx"* ]] || [[ "$CXX" == *"mpiicpx"* ]]; then
+      export CC=mpiicx
+   else
+      export CC=gcc
+   fi
 fi
 
 source $(dirname $0)/common
@@ -23,7 +28,13 @@ fi
 lib=${lib}.o
 echo "Building $lib"
 
-OPT="-Wall -Wno-char-subscripts $d -DNDEBUG -O3 -flto $t -I."
+# Disable LTO for Intel compilers to avoid profiling issues
+if [[ "$CC" == *"mpiicx"* ]] || [[ "$CC" == *"icx"* ]]; then
+   OPT="-Wall $d -DNDEBUG -O3 $t -I."
+else
+   OPT="-Wall $d -DNDEBUG -O3 -flto=auto $t -I."
+fi
+#-Wno-char-subscripts
 $CC -c -std=gnu99 $OPT tbprobe.c -o $lib
 
 cd - > /dev/null

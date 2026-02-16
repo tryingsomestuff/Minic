@@ -54,9 +54,16 @@ std::vector<EntryHash> _ttBufRecv;
 uint8_t     _doubleBufferTTParity;
 std::mutex  _ttMutex;
 uint64_t    _nbTTTransfert;
+uint64_t    _nbTTBufferOverruns;
 
-void checkError(int err) {
-   if (err != MPI_SUCCESS) { Logging::LogIt(Logging::logFatal) << "MPI error"; }
+void checkError(int err, const std::string& context) {
+   if (err != MPI_SUCCESS) {
+      char error_string[MPI_MAX_ERROR_STRING];
+      int length;
+      MPI_Error_string(err, error_string, &length);
+      Logging::LogIt(Logging::logFatal) << "MPI error" << (context.empty() ? "" : " in " + context) 
+                                        << ": " << error_string << " (code: " << err << ")";
+   }
 }
 
 void init() {
@@ -82,6 +89,12 @@ void init() {
    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commMove));
    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &_commStopFromR0));
 
+   // Initialize MPI requests to NULL
+   _requestTT = MPI_REQUEST_NULL;
+   _requestStat = MPI_REQUEST_NULL;
+   _requestInput = MPI_REQUEST_NULL;
+   _requestMove = MPI_REQUEST_NULL;
+
    _nbStatPoll             = 0ull;
    _doubleBufferStatParity = 0;
 
@@ -91,28 +104,29 @@ void init() {
    _ttBufRecv.resize(worldSize * _ttBufSize);
    _ttCurPos      = 0ull;
    _nbTTTransfert = 0ull;
+   _nbTTBufferOverruns = 0ull;
    _doubleBufferTTParity = 0;
 }
 
 void lateInit() {
    if (moreThanOneProcess()) {
-      checkError(MPI_Win_create(&ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStopFromR0, &_winStopFromR0));
-      checkError(MPI_Win_fence(0, _winStopFromR0));
+      checkError(MPI_Win_create(&ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStopFromR0, &_winStopFromR0), "MPI_Win_create");
+      checkError(MPI_Win_fence(0, _winStopFromR0), "MPI_Win_fence in lateInit");
    }
 }
 
 void finalize() {
-   checkError(MPI_Comm_free(&_commTT));
-   checkError(MPI_Comm_free(&_commTT2));
-   checkError(MPI_Comm_free(&_commStat));
-   checkError(MPI_Comm_free(&_commStat2));
-   checkError(MPI_Comm_free(&_commInput));
-   checkError(MPI_Comm_free(&_commMove));
-   checkError(MPI_Comm_free(&_commStopFromR0));
+   checkError(MPI_Comm_free(&_commTT), "MPI_Comm_free _commTT");
+   checkError(MPI_Comm_free(&_commTT2), "MPI_Comm_free _commTT2");
+   checkError(MPI_Comm_free(&_commStat), "MPI_Comm_free _commStat");
+   checkError(MPI_Comm_free(&_commStat2), "MPI_Comm_free _commStat2");
+   checkError(MPI_Comm_free(&_commInput), "MPI_Comm_free _commInput");
+   checkError(MPI_Comm_free(&_commMove), "MPI_Comm_free _commMove");
+   checkError(MPI_Comm_free(&_commStopFromR0), "MPI_Comm_free _commStopFromR0");
 
-   if (moreThanOneProcess()) checkError(MPI_Win_free(&_winStopFromR0));
+   if (moreThanOneProcess()) checkError(MPI_Win_free(&_winStopFromR0), "MPI_Win_free");
 
-   checkError(MPI_Finalize());
+   checkError(MPI_Finalize(), "MPI_Finalize");
 }
 
 bool isMainProcess() { return rank == 0; }
@@ -125,7 +139,7 @@ bool moreThanOneProcess() {
 void sync(MPI_Comm& com, const std::string& msg) {
    if (!moreThanOneProcess()) return;
    Logging::LogIt(Logging::logDebug) << "syncing: " << msg;
-   checkError(MPI_Barrier(com));
+   checkError(MPI_Barrier(com), "MPI_Barrier: " + msg);
    Logging::LogIt(Logging::logDebug) << "...done";
 }
 
@@ -133,11 +147,11 @@ void sync(MPI_Comm& com, const std::string& msg) {
 void waitRequest(MPI_Request& req) {
    if (!moreThanOneProcess()) return;
    // don't rely on MPI to do a "passive wait", most implementations are doing a busy-wait, so use 100% cpu
-   if (Distributed::isMainProcess()) { checkError(MPI_Wait(&req, MPI_STATUS_IGNORE)); }
+   if (Distributed::isMainProcess()) { checkError(MPI_Wait(&req, MPI_STATUS_IGNORE), "MPI_Wait in waitRequest"); }
    else {
       while (true) {
          int flag;
-         checkError(MPI_Test(&req, &flag, MPI_STATUS_IGNORE));
+         checkError(MPI_Test(&req, &flag, MPI_STATUS_IGNORE), "MPI_Test in waitRequest");
          if (flag) break;
          else
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -165,7 +179,7 @@ void pollStat() { // only called from main thread
    if (!moreThanOneProcess()) return;
    int flag = 1;
    Logging::LogIt(Logging::logDebug) << Logging::_protocolComment[Logging::ct] << rank << " pollstat";
-   checkError(MPI_Test(&_requestStat, &flag, MPI_STATUS_IGNORE));
+   checkError(MPI_Test(&_requestStat, &flag, MPI_STATUS_IGNORE), "MPI_Test in pollStat");
    // if previous comm is done, launch another one
    if (flag) {
       ++_doubleBufferStatParity;
@@ -188,14 +202,14 @@ void syncStat() { // only called from main thread
    uint64_t globalNbPoll = 0ull;
    allReduceMax(&_nbStatPoll, &globalNbPoll, 1, _commStat2);
    while (_nbStatPoll < globalNbPoll) {
-      checkError(MPI_Wait(&_requestStat, MPI_STATUS_IGNORE));
+      checkError(MPI_Wait(&_requestStat, MPI_STATUS_IGNORE), "MPI_Wait in syncStat loop");
       sendStat();
    }
 
    // final resync
-   checkError(MPI_Wait(&_requestStat, MPI_STATUS_IGNORE));
+   checkError(MPI_Wait(&_requestStat, MPI_STATUS_IGNORE), "MPI_Wait in syncStat final 1");
    pollStat();
-   checkError(MPI_Wait(&_requestStat, MPI_STATUS_IGNORE));
+   checkError(MPI_Wait(&_requestStat, MPI_STATUS_IGNORE), "MPI_Wait in syncStat final 2");
 
    _countersBufRecv[(_doubleBufferStatParity + 1) % 2] = _countersBufRecv[(_doubleBufferStatParity) % 2];
 
@@ -227,33 +241,45 @@ void setEntry(const Hash h, const TT::Entry& e) {
       DEBUGCOUT("depth ok")
       if (_ttMutex.try_lock()) { // this can be called from multiple threads of this process !
          DEBUGCOUT("lock ok")
-         _ttBufSend[_doubleBufferTTParity % 2][_ttCurPos++] = {h, e};
+         const uint8_t writeBuffer = _doubleBufferTTParity % 2;
+         _ttBufSend[writeBuffer][_ttCurPos++] = {h, e};
          if (_ttCurPos == _ttBufSize) { // buffer is full
             DEBUGCOUT("buffer full")
-            _ttCurPos = 0ull; // reset index
             // if previous comm is done then use data and launch another one
             int flag;
-            checkError(MPI_Test(&_requestTT, &flag, MPI_STATUS_IGNORE));
+            checkError(MPI_Test(&_requestTT, &flag, MPI_STATUS_IGNORE), "MPI_Test in setEntry");
             if (flag) {
-               // receive previous data
+               // receive previous data (if this is not the first send)
+               if (_nbTTTransfert > 0) {
 #ifdef DEBUG_DISTRIBUTED
-               static uint64_t received = 0;
+                  static uint64_t received = 0;
 #endif
-               DEBUGCOUT("buffer received " +std::to_string(received++))
-               for (const auto& i : _ttBufRecv) {
-                  TT::_setEntry(i.h, i.e); // always replace (favour data from other process)
+                  DEBUGCOUT("buffer received " +std::to_string(received++))
+                  for (const auto& i : _ttBufRecv) {
+                     if (i.h != nullHash) { // Only process valid entries
+                        TT::_setEntry(i.h, i.e); // always replace (favour data from other process)
+                     }
+                  }
                }
-               // send new ones
-               ++_doubleBufferTTParity; // switch buffer
+               // send current buffer (writeBuffer)
                DEBUGCOUT("sending data " + std::to_string(_nbTTTransfert))
-               asyncAllGather(_ttBufSend[(_doubleBufferTTParity + 1) % 2].data(), _ttBufRecv.data(), _ttBufSize * sizeof(EntryHash), _requestTT,
-                              _commTT);
+               asyncAllGather(_ttBufSend[writeBuffer].data(), _ttBufRecv.data(), _ttBufSize * sizeof(EntryHash), _requestTT, _commTT);
                ++_nbTTTransfert;
+               // switch to other buffer and reset position
+               ++_doubleBufferTTParity;
+               _ttCurPos = 0ull;
             }
-            // else we reuse the same buffer and loosing current data
-            /*else {
-                  DEBUGCOUT("previous comm not done, skipping")
-            }*/
+            else {
+               // Previous comm not done, reset position and overwrite old data in same buffer
+               // This means we're losing TT entries - track this for monitoring
+               ++_nbTTBufferOverruns;
+               if (_nbTTBufferOverruns % 100 == 1) { // Log occasionally to avoid spam
+                  Logging::LogIt(Logging::logWarn) << "Rank " << rank << ": TT buffer overrun #" 
+                                                    << _nbTTBufferOverruns << " (MPI send slower than generation)";
+               }
+               DEBUGCOUT("previous comm not done, reusing buffer")
+               _ttCurPos = 0ull;
+            }
          }
          _ttMutex.unlock();
       } // end of lock
@@ -264,25 +290,56 @@ void setEntry(const Hash h, const TT::Entry& e) {
 void syncTT() { // only called from main thread
    if (!moreThanOneProcess()) return;
    Logging::LogIt(Logging::logInfo) << "Syncing TT";
-   // wait for equilibrium
+   
+   // First, ensure any pending TT transfer is complete
+   DEBUGCOUT("sync TT initial wait")
+   if (_requestTT != MPI_REQUEST_NULL) {
+      checkError(MPI_Wait(&_requestTT, MPI_STATUS_IGNORE), "MPI_Wait in syncTT initial");
+      // Process received data
+      if (_nbTTTransfert > 0) {
+         for (const auto& i : _ttBufRecv) {
+            if (i.h != nullHash) {
+               TT::_setEntry(i.h, i.e);
+            }
+         }
+      }
+   }
+   
+   // Synchronize transfer counts across all processes
    uint64_t globalNbPoll = 0ull;
    allReduceMax(&_nbTTTransfert, &globalNbPoll, 1, _commTT2);
    DEBUGCOUT("sync TT " + std::to_string(_nbTTTransfert) + " " + std::to_string(globalNbPoll))
-   if (_nbTTTransfert < globalNbPoll) {
-      DEBUGCOUT("sync TT middle wait")
-      checkError(MPI_Wait(&_requestTT, MPI_STATUS_IGNORE));
-      // we don't really care which buffer is sent here
-      asyncAllGather(_ttBufSend[(_doubleBufferTTParity + 1) % 2].data(), _ttBufRecv.data(), _ttBufSize * sizeof(EntryHash), _requestTT, _commTT);
+   
+   // Make sure all processes have done the same number of transfers
+   while (_nbTTTransfert < globalNbPoll) {
+      DEBUGCOUT("sync TT catchup")
+      // Send a partial buffer or empty buffer to catch up
+      std::lock_guard<std::mutex> lock(_ttMutex);
+      const uint8_t sendBuffer = _doubleBufferTTParity % 2;
+      asyncAllGather(_ttBufSend[sendBuffer].data(), _ttBufRecv.data(), _ttBufSize * sizeof(EntryHash), _requestTT, _commTT);
+      checkError(MPI_Wait(&_requestTT, MPI_STATUS_IGNORE), "MPI_Wait in syncTT catchup");
       ++_nbTTTransfert;
+      // Process received data
+      for (const auto& i : _ttBufRecv) {
+         if (i.h != nullHash) {
+            TT::_setEntry(i.h, i.e);
+         }
+      }
    }
-   // final resync
-   DEBUGCOUT("sync TT final wait")
-   checkError(MPI_Wait(&_requestTT, MPI_STATUS_IGNORE));
-   DEBUGCOUT("sync TT final wait done 1")
-   //sync(_commTT, __PRETTY_FUNCTION__);
-   DEBUGCOUT("sync TT final wait done 2")
+   
+   DEBUGCOUT("sync TT final barrier")
+   sync(_commTT2, "syncTT final");
+   
    Logging::LogIt(Logging::logInfo) << "... ok";
+   
+   if (_nbTTBufferOverruns > 0) {
+      Logging::LogIt(Logging::logInfo) << "Rank " << rank << ": Total TT buffer overruns: " << _nbTTBufferOverruns;
+   }
+   
    _nbTTTransfert = 0;
+   _nbTTBufferOverruns = 0;
+   _ttCurPos = 0;
+   _requestTT = MPI_REQUEST_NULL;
 }
 } // namespace Distributed
 

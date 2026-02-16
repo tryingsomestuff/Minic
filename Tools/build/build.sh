@@ -3,15 +3,14 @@ ulimit -s unlimited
 
 if grep "^#define WITH_MPI" Source/config.hpp ; then
    echo "Build with mpi"
-   if (mpirun --version | grep Open); then
-      export CXX=mpicxx
-      export CC=mpicc
-      #export NOPROFILE=1
+#   if (mpirun --version | grep Open); then
+      export CXX=mpiicpx
+      export CC=mpiicx
       which mpirun
-   else
-      echo "Please use OpenMPI, only validated MPI distribution with Minic"
-      exit 1
-   fi
+#   else
+#      echo "Please use OpenMPI, only validated MPI distribution with Minic"
+#      exit 1
+#   fi
 else
    if [ -z $CXX ]; then
       export CXX=g++
@@ -48,15 +47,23 @@ fi
 echo "Building $exe"
 do_sep
 
-WARN="-Wall -Wcast-qual -Wno-char-subscripts -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wno-unknown-pragmas -Wno-unknown-warning-option -Wno-missing-braces -Wno-constant-logical-operand"
-if [[ $CXX == *"clang"* ]]; then
-   echo "Using clang ... will be slowwwww"
-   WARN="$WARN -fconstexpr-steps=1000000000"
+WARN="-Wall -Wcast-qual -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wno-unknown-pragmas -Wno-unknown-warning-option -Wno-missing-braces -Wno-constant-logical-operand"
+#-Wno-char-subscripts
+if [[ $CXX == *"clang"* ]] || [[ $CXX == *"icpx"* ]]; then
+   echo "Using LLVM-based compiler (clang/icpx)"
+   #WARN="$WARN -fconstexpr-steps=1000000000"
    PROF_GEN="-fprofile-generate=${buildDir}/"
-   PROF_MERGE="llvm-profdata-18 merge -output=${buildDir}/code.profdata ${buildDir}/*.profraw"
+   # Find the llvm-profdata matching the compiler version to avoid version mismatch
+   LLVM_PROFDATA="llvm-profdata"
+   COMPILER_BINDIR=$($CXX --version 2>&1 | grep InstalledDir | sed 's/.*InstalledDir: *//')
+   if [ -n "$COMPILER_BINDIR" ] && [ -x "$COMPILER_BINDIR/llvm-profdata" ]; then
+      LLVM_PROFDATA="$COMPILER_BINDIR/llvm-profdata"
+      echo "Using llvm-profdata from compiler installation: $LLVM_PROFDATA"
+   fi
+   PROF_MERGE="$LLVM_PROFDATA merge -output=${buildDir}/code.profdata ${buildDir}/*.profraw"
    PROF_USE="-fprofile-use=${buildDir}/code.profdata"
 else
-   WARN="$WARN -fconstexpr-loop-limit=1000000000"
+   #WARN="$WARN -fconstexpr-loop-limit=1000000000"
    PROF_GEN="-fprofile-generate"
    PROF_MERGE=""
    PROF_USE="-fprofile-use"
@@ -66,7 +73,7 @@ fi
 
 if [ ! -n "$DEBUGMINIC" ]; then
   echo "******* RELEASE BUILD *******"
-  OPT="-DNDEBUG -fno-math-errno -O3 -funroll-loops -fprefetch-loop-arrays $n"
+  OPT="-DNDEBUG -fno-math-errno -O3 -funroll-loops $n"
   #-ffast-math ?
   if [ -n "$VTUNEMINIC" ]; then
      echo "***** with VTUNE params *****"
@@ -130,7 +137,6 @@ else
       echo "running Minic for profiling : $exe"
       $exe bench $DEPTH -minOutputLevel 0
       $PROF_MERGE
-      #$exe bench $DEPTH -minOutputLevel 0 -NNUEFile none # force no NNUE
       echo "starting optimized compilation"
       CMD="$CXX $PROF_USE $OPT $STANDARDSOURCE -ISource -ISource/nnue -o $exe $LIBS"
       echo "Build command : $CMD"

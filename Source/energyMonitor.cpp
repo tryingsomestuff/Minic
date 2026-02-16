@@ -1,7 +1,5 @@
 #include "energyMonitor.hpp"
 
-#include "distributed.h"
-
 #include <filesystem>
 
 namespace {

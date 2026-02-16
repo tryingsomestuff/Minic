@@ -84,7 +84,7 @@ FORCE_FINLINE float v_sum_f32_512(__m512 a) {
 #define v_min_f32_512       _mm512_min_ps
 
 template<bool Q>
-FORCE_FINLINE void simdReLU512Helper(float * RESTRICT x, const float * RESTRICT a, const __m512 & zero){
+FORCE_FINLINE void simdReLU512Helper(float * RESTRICT x, [[maybe_unused]] const float * RESTRICT a, const __m512 & zero){
    v_store_f32_512(x, v_max_f32_512(zero, v_load_f32_512(x)));
 }
 
@@ -246,7 +246,7 @@ FORCE_FINLINE float v_sum_f32_256(__m256 a) {
 #define v_min_f32_256   _mm256_min_ps
 
 template<bool Q>
-FORCE_FINLINE void simdReLU256Helper(float * RESTRICT x, const float * RESTRICT a, const __m256 & zero){
+FORCE_FINLINE void simdReLU256Helper(float * RESTRICT x, [[maybe_unused]] const float * RESTRICT a, const __m256 & zero){
    v_store_f32_256(x, v_max_f32_256(zero, v_load_f32_256(x)));
 }
 
@@ -412,7 +412,7 @@ FORCE_FINLINE float v_sum_f32_128(__m128 a) {
 #define v_min_f32_128   _mm_min_ps
 
 template<bool Q>
-FORCE_FINLINE void simdReLU128Helper(float * RESTRICT x, const float * RESTRICT a, const v_f32_128 & zero){
+FORCE_FINLINE void simdReLU128Helper(float * RESTRICT x, [[maybe_unused]] const float * RESTRICT a, const v_f32_128 & zero){
    v_store_f32_128(x, v_max_f32_128(zero, v_load_f32_128(x)));
 }
 

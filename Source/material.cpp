@@ -24,19 +24,6 @@ array1d<MaterialHashEntry,TotalMat> materialHashTable;
 #else
 [[nodiscard]] Hash getMaterialHash(const Position::Material &mat) {
 #endif
-   assert(mat[Co_White][M_q]  >= 0);
-   assert(mat[Co_Black][M_q]  >= 0);
-   assert(mat[Co_White][M_r]  >= 0);
-   assert(mat[Co_Black][M_r]  >= 0);
-   assert(mat[Co_White][M_bl] >= 0);
-   assert(mat[Co_Black][M_bl] >= 0);
-   assert(mat[Co_White][M_bd] >= 0);
-   assert(mat[Co_Black][M_bd] >= 0);
-   assert(mat[Co_White][M_n]  >= 0);
-   assert(mat[Co_Black][M_n]  >= 0);
-   assert(mat[Co_White][M_p]  >= 0);
-   assert(mat[Co_Black][M_p]  >= 0);
-
    if (mat[Co_White][M_q] > 2  || mat[Co_Black][M_q] > 2
     || mat[Co_White][M_r] > 2  || mat[Co_Black][M_r] > 2
     || mat[Co_White][M_bl] > 2 || mat[Co_Black][M_bl] > 2
