@@ -1,6 +1,7 @@
 #pragma once
 
 #include "definition.hpp"
+#include "distributed.h"
 #include "logging.hpp"
 
 /*!

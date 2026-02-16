@@ -81,7 +81,7 @@ template<> struct TraitMpiType<Counter>   { static const MPI_Datatype type;};
 template<> struct TraitMpiType<EntryHash> { static const MPI_Datatype type;}; // WARNING : size must be adapted *sizeof(EntryHash)
 template<> struct TraitMpiType<Move>      { static const MPI_Datatype type;};
 
-void checkError(int err);
+void checkError(int err, const std::string& context = "");
 
 /*
 template<typename T> FORCE_FINLINE void bcast(T* v, int n, MPI_Comm& com) {
@@ -150,6 +150,9 @@ template<typename T> FORCE_FINLINE void get(T* ptr, int n, MPI_Win& window, int 
    //Logging::LogIt(Logging::logInfo) << "Window get... ";
    checkError(MPI_Win_lock(MPI_LOCK_SHARED, source, 0, window));
    checkError(MPI_Get(ptr, n, TraitMpiType<T>::type, source, MPI_Aint(0), n, TraitMpiType<T>::type, window));
+   // Flush to ensure RMA operation completes before unlock
+   // This guarantees data consistency across different MPI implementations
+   checkError(MPI_Win_flush(source, window));
    checkError(MPI_Win_unlock(source, window));
    //Logging::LogIt(Logging::logInfo) << "... ok";
 }
@@ -217,7 +220,7 @@ extern DummyType _requestMove;
 
 extern DummyType _winStopFromR0;
 
-FORCE_FINLINE void checkError(int) {}
+FORCE_FINLINE void checkError(int, const std::string& = "") {}
 
 FORCE_FINLINE void init() {}
 FORCE_FINLINE void lateInit() {}
