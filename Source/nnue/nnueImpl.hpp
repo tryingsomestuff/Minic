@@ -14,16 +14,6 @@
 #include <string>
 #include <utility>
 
-enum ActivationType{
-   eReLU = 0,
-   eClippedReLU,
-   ePReLU,
-   eClippedPReLU,
-   eApproxSigmoid
-};
-
-constexpr auto activationType = eClippedReLU;
-
 #ifdef USE_SIMD_INTRIN
 #include "simd.hpp" // manual simd implementations
 #endif
