@@ -84,104 +84,27 @@ FORCE_FINLINE float v_sum_f32_512(__m512 a) {
 #define v_min_f32_512       _mm512_min_ps
 
 template<bool Q>
-FORCE_FINLINE void simdReLU512Helper(float * RESTRICT x, [[maybe_unused]] const float * RESTRICT a, const __m512 & zero){
-   v_store_f32_512(x, v_max_f32_512(zero, v_load_f32_512(x)));
-}
-
-template<bool Q>
-FORCE_FINLINE void simdClippedReLU512Helper(float * RESTRICT x, const float * RESTRICT a, const __m512 & zero, const __m512 & un){
-   const auto vx = v_load_f32_512(x);
-   const auto va = v_load_f32_512(a);
-   v_store_f32_512(x, v_max_f32_512(zero, v_min_f32_512(un, v_mul_f32_512(vx, va))));
-}
-
-template<bool Q>
-FORCE_FINLINE void simdPReLU512Helper(float * RESTRICT x, const float * RESTRICT a, const __m512 & zero){
-   const auto v = v_load_f32_512(x);
-   const auto va = v_load_f32_512(a);
-   const auto vmin = v_min_f32_512(zero, v);
-   v_store_f32_512(x, v_max_f32_512(zero, v) + v_mul_f32_512(va, vmin));
-}
-
-template<bool Q>
-FORCE_FINLINE void simdClippedPReLU512Helper(float * RESTRICT x, const float * RESTRICT a, const __m512 & zero, const __m512 & un){
-   const auto v = v_load_f32_512(x);
-   const auto va = v_load_f32_512(a);
-   const auto vmin = v_min_f32_512(zero, v);
-   const auto vmax = v_max_f32_512(zero, v);
-   v_store_f32_512(x, v_min_f32_512(un, vmax + v_mul_f32_512(va, vmin)));
-}
-
-FORCE_FINLINE void simdSigmoid512Helper(float * RESTRICT x, const float * RESTRICT a) {
-    const __m512 two = v_set_f32_512(2.0f);
-    const __m512 point_five = v_set_f32_512(0.5f);
-    const __m512 neg_zero = v_set_f32_512(-0.0f);
-    const __m512 vx = v_load_f32_512(x);
-    const __m512 va = v_load_f32_512(a);
-    const __m512 ax = v_mul_f32_512(va, vx);
-    const __m512 abs_ax = _mm512_andnot_ps(neg_zero, ax);
-    const __m512 numerator = v_muladd_f32_512(abs_ax, two, two);
-    const __m512 result = _mm512_div_ps(ax, numerator);
-    v_store_f32_512(x, v_add_f32_512(result, point_five));
+FORCE_FINLINE void simdClippedReLU512Helper(float * RESTRICT x, const __m512 & zero, const __m512 & un){
+   v_store_f32_512(x, v_max_f32_512(zero, v_min_f32_512(un, v_load_f32_512(x))));
 }
 
 template<size_t N, bool Q>
-void simdActivation512(float * RESTRICT x, const float * RESTRICT a, [[maybe_unused]] const __m512 & zero, [[maybe_unused]] const __m512 & un){
+void simdActivation512(float * RESTRICT x, const __m512 & zero, const __m512 & un){
    constexpr int vstep    = v_nlanes_f32_512;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;
    int i = 0;
    if constexpr(unrollx4){
       while (i < unrollx4) {
-         if constexpr (activationType == eReLU){
-            simdReLU512Helper<Q>(x + i            , a + i            , zero);
-            simdReLU512Helper<Q>(x + i + vstep    , a + i + vstep    , zero);
-            simdReLU512Helper<Q>(x + i + vstep * 2, a + i + vstep * 2, zero);
-            simdReLU512Helper<Q>(x + i + vstep * 3, a + i + vstep * 3, zero);
-         }
-         if constexpr (activationType == eClippedReLU){
-            simdClippedReLU512Helper<Q>(x + i            , a + i            , zero, un);
-            simdClippedReLU512Helper<Q>(x + i + vstep    , a + i + vstep    , zero, un);
-            simdClippedReLU512Helper<Q>(x + i + vstep * 2, a + i + vstep * 2, zero, un);
-            simdClippedReLU512Helper<Q>(x + i + vstep * 3, a + i + vstep * 3, zero, un);
-         }
-         if constexpr (activationType == ePReLU){
-            simdPReLU512Helper<Q>(x + i            , a + i            , zero);
-            simdPReLU512Helper<Q>(x + i + vstep    , a + i + vstep    , zero);
-            simdPReLU512Helper<Q>(x + i + vstep * 2, a + i + vstep * 2, zero);
-            simdPReLU512Helper<Q>(x + i + vstep * 3, a + i + vstep * 3, zero);
-         }
-         if constexpr (activationType == eClippedPReLU){
-            simdClippedPReLU512Helper<Q>(x + i            , a + i            , zero, un);
-            simdClippedPReLU512Helper<Q>(x + i + vstep    , a + i + vstep    , zero, un);
-            simdClippedPReLU512Helper<Q>(x + i + vstep * 2, a + i + vstep * 2, zero, un);
-            simdClippedPReLU512Helper<Q>(x + i + vstep * 3, a + i + vstep * 3, zero, un);
-         }
-         if constexpr (activationType == eApproxSigmoid){
-            simdSigmoid512Helper(x + i            , a + i            );
-            simdSigmoid512Helper(x + i + vstep    , a + i + vstep    );
-            simdSigmoid512Helper(x + i + vstep * 2, a + i + vstep * 2);
-            simdSigmoid512Helper(x + i + vstep * 3, a + i + vstep * 3);
-         }
+            simdClippedReLU512Helper<Q>(x + i            , zero, un);
+            simdClippedReLU512Helper<Q>(x + i + vstep    , zero, un);
+            simdClippedReLU512Helper<Q>(x + i + vstep * 2, zero, un);
+            simdClippedReLU512Helper<Q>(x + i + vstep * 3, zero, un);
          i += vstep * 4;
       }
    }
    while (i < unrollx) {
-      if constexpr (activationType == eReLU){
-         simdReLU512Helper<Q>(x + i, a + i, zero);
-      }
-      if constexpr (activationType == eClippedReLU){
-         simdClippedReLU512Helper<Q>(x + i, a + i, zero, un);
-      }
-      if constexpr (activationType == ePReLU){
-         simdPReLU512Helper<Q>(x + i, a + i, zero);
-      }
-      if constexpr (activationType == eClippedPReLU){
-         simdClippedPReLU512Helper<Q>(x + i, a + i, zero, un);
-      }      
-      if constexpr (activationType == eApproxSigmoid){
-         simdSigmoid512Helper(x + i, a + i);
-      }
+         simdClippedReLU512Helper<Q>(x + i, zero, un);
       i += vstep;
    }
 }
@@ -246,104 +169,27 @@ FORCE_FINLINE float v_sum_f32_256(__m256 a) {
 #define v_min_f32_256   _mm256_min_ps
 
 template<bool Q>
-FORCE_FINLINE void simdReLU256Helper(float * RESTRICT x, [[maybe_unused]] const float * RESTRICT a, const __m256 & zero){
-   v_store_f32_256(x, v_max_f32_256(zero, v_load_f32_256(x)));
-}
-
-template<bool Q>
-FORCE_FINLINE void simdClippedReLU256Helper(float * RESTRICT x, const float * RESTRICT a, const __m256 & zero, const __m256 & un){
-   const auto vx = v_load_f32_256(x);
-   const auto va = v_load_f32_256(a);
-   v_store_f32_256(x, v_max_f32_256(zero, v_min_f32_256(un, v_mul_f32_256(vx, va))));
-}
-
-template<bool Q>
-FORCE_FINLINE void simdPReLU256Helper(float * RESTRICT x, const float * RESTRICT a, const __m256 & zero){
-   const auto v = v_load_f32_256(x);
-   const auto va = v_load_f32_256(a);
-   const auto vmin = v_min_f32_256(zero, v);
-   v_store_f32_256(x, v_max_f32_256(zero, v) + v_mul_f32_256(va, vmin));
-}
-
-template<bool Q>
-FORCE_FINLINE void simdClippedPReLU256Helper(float * RESTRICT x, const float * RESTRICT a, const __m256 & zero, const __m256 & un){
-   const auto v = v_load_f32_256(x);
-   const auto va = v_load_f32_256(a);
-   const auto vmin = v_min_f32_256(zero, v);
-   const auto vmax = v_max_f32_256(zero, v);
-   v_store_f32_256(x, v_min_f32_256(un, vmax + v_mul_f32_256(va, vmin)));
-}
-
-FORCE_FINLINE void simdSigmoid256Helper(float * RESTRICT x, const float * RESTRICT a) {
-    const v_f32_256 two = v_set_f32_256(2.0f);
-    const v_f32_256 point_five = v_set_f32_256(0.5f);
-    const v_f32_256 neg_zero = v_set_f32_256(-0.0f);
-    const v_f32_256 vx = v_load_f32_256(x);
-    const v_f32_256 va = v_load_f32_256(a);
-    const v_f32_256 ax = v_mul_f32_256(va, vx);
-    const v_f32_256 abs_ax = _mm256_andnot_ps(neg_zero, ax);
-    const v_f32_256 numerator = v_muladd_f32_256(abs_ax, two, two);
-    const v_f32_256 result = _mm256_div_ps(ax, numerator);
-    v_store_f32_256(x, v_add_f32_256(result, point_five));
+FORCE_FINLINE void simdClippedReLU256Helper(float * RESTRICT x, const __m256 & zero, const __m256 & un){
+   v_store_f32_256(x, v_max_f32_256(zero, v_min_f32_256(un, v_load_f32_256(x))));
 }
 
 template<size_t N, bool Q>
-void simdActivation256(float * RESTRICT x, const float * RESTRICT a, [[maybe_unused]] const __m256 & zero, [[maybe_unused]] const __m256 & un){
+void simdActivation256(float * RESTRICT x, const __m256 & zero, const __m256 & un){
    constexpr int vstep    = v_nlanes_f32_256;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;
    int i = 0;
    if constexpr(unrollx4){
       while (i < unrollx4) {
-         if constexpr (activationType == eReLU){
-            simdReLU256Helper<Q>(x + i            , a + i            , zero);
-            simdReLU256Helper<Q>(x + i + vstep    , a + i + vstep    , zero);
-            simdReLU256Helper<Q>(x + i + vstep * 2, a + i + vstep * 2, zero);
-            simdReLU256Helper<Q>(x + i + vstep * 3, a + i + vstep * 3, zero);
-         }
-         if constexpr (activationType == eClippedReLU){
-            simdClippedReLU256Helper<Q>(x + i            , a + i            , zero, un);
-            simdClippedReLU256Helper<Q>(x + i + vstep    , a + i + vstep    , zero, un);
-            simdClippedReLU256Helper<Q>(x + i + vstep * 2, a + i + vstep * 2, zero, un);
-            simdClippedReLU256Helper<Q>(x + i + vstep * 3, a + i + vstep * 3, zero, un);
-         }
-         if constexpr (activationType == ePReLU){
-            simdPReLU256Helper<Q>(x + i            , a + i            , zero);
-            simdPReLU256Helper<Q>(x + i + vstep    , a + i + vstep    , zero);
-            simdPReLU256Helper<Q>(x + i + vstep * 2, a + i + vstep * 2, zero);
-            simdPReLU256Helper<Q>(x + i + vstep * 3, a + i + vstep * 3, zero);
-         }        
-         if constexpr (activationType == eClippedPReLU){
-            simdClippedPReLU256Helper<Q>(x + i            , a + i            , zero, un);
-            simdClippedPReLU256Helper<Q>(x + i + vstep    , a + i + vstep    , zero, un);
-            simdClippedPReLU256Helper<Q>(x + i + vstep * 2, a + i + vstep * 2, zero, un);
-            simdClippedPReLU256Helper<Q>(x + i + vstep * 3, a + i + vstep * 3, zero, un);
-         }             
-         if constexpr (activationType == eApproxSigmoid){
-            simdSigmoid256Helper(x + i            , a + i            );
-            simdSigmoid256Helper(x + i + vstep    , a + i + vstep    );
-            simdSigmoid256Helper(x + i + vstep * 2, a + i + vstep * 2);
-            simdSigmoid256Helper(x + i + vstep * 3, a + i + vstep * 3);
-         }
+            simdClippedReLU256Helper<Q>(x + i            , zero, un);
+            simdClippedReLU256Helper<Q>(x + i + vstep    , zero, un);
+            simdClippedReLU256Helper<Q>(x + i + vstep * 2, zero, un);
+            simdClippedReLU256Helper<Q>(x + i + vstep * 3, zero, un);
          i += vstep * 4;
       }
    }
    while (i < unrollx) {
-      if constexpr (activationType == eReLU){
-         simdReLU256Helper<Q>(x + i, a + i, zero);
-      }
-      if constexpr (activationType == eClippedReLU){
-         simdClippedReLU256Helper<Q>(x + i, a + i, zero, un);
-      }
-      if constexpr (activationType == ePReLU){
-         simdPReLU256Helper<Q>(x + i, a + i, zero);
-      }
-      if constexpr (activationType == eClippedPReLU){
-         simdClippedPReLU256Helper<Q>(x + i, a + i, zero, un);
-      }
-      if constexpr (activationType == eApproxSigmoid){
-         simdSigmoid256Helper(x + i, a + i);
-      }
+         simdClippedReLU256Helper<Q>(x + i, zero, un);
       i += vstep;
    }
 }
@@ -412,105 +258,28 @@ FORCE_FINLINE float v_sum_f32_128(__m128 a) {
 #define v_min_f32_128   _mm_min_ps
 
 template<bool Q>
-FORCE_FINLINE void simdReLU128Helper(float * RESTRICT x, [[maybe_unused]] const float * RESTRICT a, const v_f32_128 & zero){
-   v_store_f32_128(x, v_max_f32_128(zero, v_load_f32_128(x)));
+FORCE_FINLINE void simdClippedReLU128Helper(float * RESTRICT x, const v_f32_128 & zero, const v_f32_128 & un){
+   v_store_f32_128(x, v_max_f32_128(zero, v_min_f32_128(un, v_load_f32_128(x))));
 }
 
-template<bool Q>
-FORCE_FINLINE void simdClippedReLU128Helper(float * RESTRICT x, const float * RESTRICT a, const v_f32_128 & zero, const v_f32_128 & un){
-   const auto vx = v_load_f32_128(x);
-   const auto va = v_load_f32_128(a);
-   v_store_f32_128(x, v_max_f32_128(zero, v_min_f32_128(un, v_mul_f32_128(vx, va))));
-}
-
-template<bool Q>
-FORCE_FINLINE void simdPReLU128Helper(float * RESTRICT x, const float * RESTRICT a, const v_f32_128 & zero){
-   const auto v = v_load_f32_128(x);
-   const auto va = v_load_f32_128(a);
-   const auto vmin = v_min_f32_128(zero, v);
-   v_store_f32_128(x, v_max_f32_128(zero, v) + v_mul_f32_128(va, vmin));
-}
-
-template<bool Q>
-FORCE_FINLINE void simdClippedPReLU128Helper(float * RESTRICT x, const float * RESTRICT a, const v_f32_128 & zero, const v_f32_128 & un){
-   const auto v = v_load_f32_128(x);
-   const auto va = v_load_f32_128(a);
-   const auto vmin = v_min_f32_128(zero, v);
-   const auto vmax = v_max_f32_128(zero, v);
-   v_store_f32_128(x, v_min_f32_128(un, vmax + v_mul_f32_128(va, vmin)));
-}
-
-
-FORCE_FINLINE void simdSigmoid128Helper(float * RESTRICT x, const float * RESTRICT a) {
-    const v_f32_128 two = v_set_f32_128(2.0f);
-    const v_f32_128 point_five = v_set_f32_128(0.5f);
-    const v_f32_128 neg_zero = v_set_f32_128(-0.0f);
-    const v_f32_128 vx = v_load_f32_128(x);
-    const v_f32_128 va = v_load_f32_128(a);
-    const v_f32_128 ax = v_mul_f32_128(va, vx);
-    const v_f32_128 abs_ax = _mm_andnot_ps(neg_zero, ax);
-    const v_f32_128 numerator = v_muladd_f32_128(abs_ax, two, two);
-    const v_f32_128 result = _mm_div_ps(ax, numerator);
-    v_store_f32_128(x, v_add_f32_128(result, point_five));
-}
 
 template<size_t N, bool Q>
-void simdActivation128(float * RESTRICT x, const float * RESTRICT a, [[maybe_unused]] const v_f32_128 & zero, [[maybe_unused]] const v_f32_128 & un){
+void simdActivation128(float * RESTRICT x, const v_f32_128 & zero, const v_f32_128 & un){
    constexpr int vstep    = v_nlanes_f32_128;
    constexpr int unrollx4 = N & (-vstep * 4);
    constexpr int unrollx  = N & -vstep;   
    int i = 0;
    if constexpr(unrollx4){
       while (i < unrollx4) {
-         if constexpr (activationType == eReLU){
-            simdReLU128Helper<Q>(x + i            , a + i            , zero);
-            simdReLU128Helper<Q>(x + i + vstep    , a + i + vstep    , zero);
-            simdReLU128Helper<Q>(x + i + vstep * 2, a + i + vstep * 2, zero);
-            simdReLU128Helper<Q>(x + i + vstep * 3, a + i + vstep * 3, zero);
-         }
-         if constexpr (activationType == eClippedReLU){
-            simdClippedReLU128Helper<Q>(x + i            , a + i            , zero, un);
-            simdClippedReLU128Helper<Q>(x + i + vstep    , a + i + vstep    , zero, un);
-            simdClippedReLU128Helper<Q>(x + i + vstep * 2, a + i + vstep * 2, zero, un);
-            simdClippedReLU128Helper<Q>(x + i + vstep * 3, a + i + vstep * 3, zero, un);
-         }
-         if constexpr (activationType == ePReLU){
-            simdPReLU128Helper<Q>(x + i            , a + i            , zero);
-            simdPReLU128Helper<Q>(x + i + vstep    , a + i + vstep    , zero);
-            simdPReLU128Helper<Q>(x + i + vstep * 2, a + i + vstep * 2, zero);
-            simdPReLU128Helper<Q>(x + i + vstep * 3, a + i + vstep * 3, zero);
-         }
-         if constexpr (activationType == eClippedPReLU){
-            simdClippedPReLU128Helper<Q>(x + i            , a + i            , zero, un);
-            simdClippedPReLU128Helper<Q>(x + i + vstep    , a + i + vstep    , zero, un);
-            simdClippedPReLU128Helper<Q>(x + i + vstep * 2, a + i + vstep * 2, zero, un);
-            simdClippedPReLU128Helper<Q>(x + i + vstep * 3, a + i + vstep * 3, zero, un);
-         }             
-         if constexpr (activationType == eApproxSigmoid){
-            simdSigmoid128Helper(x + i            , a + i            );
-            simdSigmoid128Helper(x + i + vstep    , a + i + vstep    );
-            simdSigmoid128Helper(x + i + vstep * 2, a + i + vstep * 2);
-            simdSigmoid128Helper(x + i + vstep * 3, a + i + vstep * 3);
-         }
+            simdClippedReLU128Helper<Q>(x + i            , zero, un);
+            simdClippedReLU128Helper<Q>(x + i + vstep    , zero, un);
+            simdClippedReLU128Helper<Q>(x + i + vstep * 2, zero, un);
+            simdClippedReLU128Helper<Q>(x + i + vstep * 3, zero, un);
          i += vstep * 4;
       }
    }
    while (i < unrollx) {
-      if constexpr (activationType == eReLU){
-         simdReLU128Helper<Q>(x + i, a + i, zero);
-      }
-      if constexpr (activationType == eClippedReLU){
-         simdClippedReLU128Helper<Q>(x + i, a + i, zero, un);
-      }
-      if constexpr (activationType == ePReLU){
-         simdPReLU128Helper<Q>(x + i, a + i, zero);
-      }
-      if constexpr (activationType == eClippedPReLU){
-         simdClippedPReLU128Helper<Q>(x + i, a + i, zero, un);
-      }      
-      if constexpr (activationType == eApproxSigmoid){
-         simdSigmoid128Helper(x + i, a + i);
-      }
+         simdClippedReLU128Helper<Q>(x + i, zero, un);
       i += vstep;
    }
 }
@@ -545,42 +314,13 @@ template<size_t N, bool Q>
 #endif
 
 template<size_t N, bool Q> 
-FORCE_FINLINE void simdActivationDefault(float * RESTRICT x, const float * RESTRICT a){
+FORCE_FINLINE void simdActivationDefault(float * RESTRICT x){
    constexpr int n1 = N & -4;
    for (int i = 0; i < n1; i += 4) {
-      const float x0 = x[i], x1 = x[i+1], x2 = x[i+2], x3 = x[i+3];
-      const float a0 = a[i], a1 = a[i+1], a2 = a[i+2], a3 = a[i+3];
-      if constexpr (activationType == eReLU){
-         x[i]     = std::max(x0 * a0, 0.f);
-         x[i + 1] = std::max(x1 * a1, 0.f);
-         x[i + 2] = std::max(x2 * a2, 0.f);
-         x[i + 3] = std::max(x3 * a3, 0.f);
-      }
-      if constexpr (activationType == eClippedReLU){
-         x[i]     = std::min(std::max(x0 * a0, 0.f), 1.f);
-         x[i + 1] = std::min(std::max(x1 * a1, 0.f), 1.f);
-         x[i + 2] = std::min(std::max(x2 * a2, 0.f), 1.f);
-         x[i + 3] = std::min(std::max(x3 * a3, 0.f), 1.f);
-      }
-      if constexpr (activationType == ePReLU){
-         x[i]     = std::max(0.f, x0) + a0 * std::min(0.f, x0);
-         x[i + 1] = std::max(0.f, x1) + a1 * std::min(0.f, x1);
-         x[i + 2] = std::max(0.f, x2) + a2 * std::min(0.f, x2);
-         x[i + 3] = std::max(0.f, x3) + a3 * std::min(0.f, x3);
-      }
-      if constexpr (activationType == eClippedPReLU){
-         x[i]     = std::min(1.f, std::max(0.f, x0) + a0 * std::min(0.f, x0));
-         x[i + 1] = std::min(1.f, std::max(0.f, x1) + a1 * std::min(0.f, x1));
-         x[i + 2] = std::min(1.f, std::max(0.f, x2) + a2 * std::min(0.f, x2));
-         x[i + 3] = std::min(1.f, std::max(0.f, x3) + a3 * std::min(0.f, x3));
-      }
-      if constexpr (activationType == eApproxSigmoid){
-         const float ax0 = a0*x0, ax1 = a1*x1, ax2 = a2*x2, ax3 = a3*x3;
-         x[i]     = ax0 / (2 * std::fabs(ax0) + 2) + 0.5f;
-         x[i + 1] = ax1 / (2 * std::fabs(ax1) + 2) + 0.5f;
-         x[i + 2] = ax2 / (2 * std::fabs(ax2) + 2) + 0.5f;
-         x[i + 3] = ax3 / (2 * std::fabs(ax3) + 2) + 0.5f;
-      }
+         x[i]     = std::min(std::max(x[i]    , 0.f), 1.f);
+         x[i + 1] = std::min(std::max(x[i + 1], 0.f), 1.f);
+         x[i + 2] = std::min(std::max(x[i + 2], 0.f), 1.f);
+         x[i + 3] = std::min(std::max(x[i + 3], 0.f), 1.f);
    }   
 }
 
@@ -597,8 +337,182 @@ template<size_t N, bool Q>
    return dot;
 }
 
+template<size_t N>
+FORCE_FINLINE void simdAdd_i16(int16_t* RESTRICT dst, const int16_t* RESTRICT src) {
+   size_t i = 0;
+#if V_SIMD_256
+   constexpr size_t vstep = 16; // 256 bits / 16 bits
+   constexpr size_t unrollx4 = N & (-vstep * 4);
+   constexpr size_t unrollx  = N & -vstep;
+   if constexpr (unrollx4) {
+      while (i < unrollx4) {
+         _mm256_store_si256(reinterpret_cast<__m256i*>(dst + i            ), _mm256_add_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(dst + i            )), _mm256_load_si256(reinterpret_cast<const __m256i*>(src + i            ))));
+         _mm256_store_si256(reinterpret_cast<__m256i*>(dst + i + vstep    ), _mm256_add_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(dst + i + vstep    )), _mm256_load_si256(reinterpret_cast<const __m256i*>(src + i + vstep    ))));
+         _mm256_store_si256(reinterpret_cast<__m256i*>(dst + i + vstep * 2), _mm256_add_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(dst + i + vstep * 2)), _mm256_load_si256(reinterpret_cast<const __m256i*>(src + i + vstep * 2))));
+         _mm256_store_si256(reinterpret_cast<__m256i*>(dst + i + vstep * 3), _mm256_add_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(dst + i + vstep * 3)), _mm256_load_si256(reinterpret_cast<const __m256i*>(src + i + vstep * 3))));
+         i += vstep * 4;
+      }
+   }
+   while (i + vstep <= unrollx) {
+      _mm256_store_si256(reinterpret_cast<__m256i*>(dst + i), _mm256_add_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(dst + i)), _mm256_load_si256(reinterpret_cast<const __m256i*>(src + i))));
+      i += vstep;
+   }
+#endif
+#if V_SIMD_128
+   constexpr size_t vstep128 = 8;
+   while (i + vstep128 <= N) {
+      _mm_store_si128(reinterpret_cast<__m128i*>(dst + i), _mm_add_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(dst + i)), _mm_load_si128(reinterpret_cast<const __m128i*>(src + i))));
+      i += vstep128;
+   }
+#endif
+   while (i < N) { dst[i] += src[i]; ++i; }
+}
+
+template<size_t N>
+FORCE_FINLINE void simdSub_i16(int16_t* RESTRICT dst, const int16_t* RESTRICT src) {
+   size_t i = 0;
+#if V_SIMD_256
+   constexpr size_t vstep = 16;
+   constexpr size_t unrollx4 = N & (-vstep * 4);
+   constexpr size_t unrollx  = N & -vstep;
+   if constexpr (unrollx4) {
+      while (i < unrollx4) {
+         _mm256_store_si256(reinterpret_cast<__m256i*>(dst + i            ), _mm256_sub_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(dst + i            )), _mm256_load_si256(reinterpret_cast<const __m256i*>(src + i            ))));
+         _mm256_store_si256(reinterpret_cast<__m256i*>(dst + i + vstep    ), _mm256_sub_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(dst + i + vstep    )), _mm256_load_si256(reinterpret_cast<const __m256i*>(src + i + vstep    ))));
+         _mm256_store_si256(reinterpret_cast<__m256i*>(dst + i + vstep * 2), _mm256_sub_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(dst + i + vstep * 2)), _mm256_load_si256(reinterpret_cast<const __m256i*>(src + i + vstep * 2))));
+         _mm256_store_si256(reinterpret_cast<__m256i*>(dst + i + vstep * 3), _mm256_sub_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(dst + i + vstep * 3)), _mm256_load_si256(reinterpret_cast<const __m256i*>(src + i + vstep * 3))));
+         i += vstep * 4;
+      }
+   }
+   while (i + vstep <= unrollx) {
+      _mm256_store_si256(reinterpret_cast<__m256i*>(dst + i), _mm256_sub_epi16(_mm256_load_si256(reinterpret_cast<const __m256i*>(dst + i)), _mm256_load_si256(reinterpret_cast<const __m256i*>(src + i))));
+      i += vstep;
+   }
+#endif
+#if V_SIMD_128
+   constexpr size_t vstep128 = 8;
+   while (i + vstep128 <= N) {
+      _mm_store_si128(reinterpret_cast<__m128i*>(dst + i), _mm_sub_epi16(_mm_load_si128(reinterpret_cast<const __m128i*>(dst + i)), _mm_load_si128(reinterpret_cast<const __m128i*>(src + i))));
+      i += vstep128;
+   }
+#endif
+   while (i < N) { dst[i] -= src[i]; ++i; }
+}
+
+template<size_t N>
+FORCE_FINLINE void simdCopy_i16(int16_t* RESTRICT dst, const int16_t* RESTRICT src) {
+   size_t i = 0;
+#if V_SIMD_256
+   constexpr size_t vstep = 16;
+   while (i + vstep <= N) {
+      _mm256_store_si256(reinterpret_cast<__m256i*>(dst + i), _mm256_load_si256(reinterpret_cast<const __m256i*>(src + i)));
+      i += vstep;
+   }
+#endif
+#if V_SIMD_128
+   constexpr size_t vstep128 = 8;
+   while (i + vstep128 <= N) {
+      _mm_store_si128(reinterpret_cast<__m128i*>(dst + i), _mm_load_si128(reinterpret_cast<const __m128i*>(src + i)));
+      i += vstep128;
+   }
+#endif
+   while (i < N) { dst[i] = src[i]; ++i; }
+}
+
+template<size_t N>
+FORCE_FINLINE void simdCopy_f32(float* RESTRICT dst, const float* RESTRICT src) {
+   size_t i = 0;
+#if V_SIMD_256
+   constexpr size_t vstep = 8;
+   while (i + vstep <= N) {
+      _mm256_store_ps(dst + i, _mm256_load_ps(src + i));
+      i += vstep;
+   }
+#endif
+#if V_SIMD_128
+   constexpr size_t vstep128 = 4;
+   while (i + vstep128 <= N) {
+      _mm_store_ps(dst + i, _mm_load_ps(src + i));
+      i += vstep128;
+   }
+#endif
+   while (i < N) { dst[i] = src[i]; ++i; }
+}
+
+template<size_t N>
+FORCE_FINLINE void simdDequantize_i16_f32(float* RESTRICT dst, const int16_t* RESTRICT src, const float scale) {
+   size_t i = 0;
+#if V_SIMD_256
+   constexpr size_t vstep = 8; // 8 floats per __m256
+   const __m256 vscale = _mm256_set1_ps(scale);
+   while (i + vstep <= N) {
+      // Load 8 x int16, sign-extend to 8 x int32, convert to 8 x float, multiply by scale
+      const __m128i src_i16 = _mm_load_si128(reinterpret_cast<const __m128i*>(src + i));
+      const __m256i src_i32 = _mm256_cvtepi16_epi32(src_i16);
+      const __m256  src_f32 = _mm256_cvtepi32_ps(src_i32);
+      _mm256_store_ps(dst + i, _mm256_mul_ps(src_f32, vscale));
+      i += vstep;
+   }
+#endif
+#if V_SIMD_128
+   constexpr size_t vstep128 = 4;
+   const __m128 vscale128 = _mm_set1_ps(scale);
+   while (i + vstep128 <= N) {
+      // Load 4 x int16 (as 64-bit), sign-extend to 4 x int32, convert to 4 x float
+      const __m128i src_i16 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(src + i));
+      const __m128i src_i32 = _mm_cvtepi16_epi32(src_i16);
+      const __m128  src_f32 = _mm_cvtepi32_ps(src_i32);
+      _mm_store_ps(dst + i, _mm_mul_ps(src_f32, vscale128));
+      i += vstep128;
+   }
+#endif
+   while (i < N) { dst[i] = scale * static_cast<float>(src[i]); ++i; }
+}
+
+template<size_t N0, size_t N1>
+FORCE_FINLINE void simdSplice_f32(float* RESTRICT dst, const float* RESTRICT a, const float* RESTRICT b) {
+   simdCopy_f32<N0>(dst, a);
+   simdCopy_f32<N1>(dst + N0, b);
+}
+
+template<size_t N, bool Q>
+FORCE_FINLINE void simdDequantizeActivate_i16_f32(float* RESTRICT dst, const int16_t* RESTRICT src, const float scale) {
+   size_t i = 0;
+#if V_SIMD_256
+   constexpr size_t vstep = 8;
+   const __m256 vscale = _mm256_set1_ps(scale);
+   const __m256 vzero  = _mm256_setzero_ps();
+   const __m256 vone   = _mm256_set1_ps(1.0f);
+   while (i + vstep <= N) {
+      const __m128i src_i16 = _mm_load_si128(reinterpret_cast<const __m128i*>(src + i));
+      const __m256i src_i32 = _mm256_cvtepi16_epi32(src_i16);
+      const __m256  deq     = _mm256_mul_ps(_mm256_cvtepi32_ps(src_i32), vscale);
+      _mm256_store_ps(dst + i, _mm256_max_ps(vzero, _mm256_min_ps(vone, deq)));
+      i += vstep;
+   }
+#endif
+#if V_SIMD_128
+   constexpr size_t vstep128 = 4;
+   const __m128 vscale128 = _mm_set1_ps(scale);
+   const __m128 vzero128  = _mm_setzero_ps();
+   const __m128 vone128   = _mm_set1_ps(1.0f);
+   while (i + vstep128 <= N) {
+      const __m128i src_i16 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(src + i));
+      const __m128i src_i32 = _mm_cvtepi16_epi32(src_i16);
+      const __m128  deq     = _mm_mul_ps(_mm_cvtepi32_ps(src_i32), vscale128);
+      _mm_store_ps(dst + i, _mm_max_ps(vzero128, _mm_min_ps(vone128, deq)));
+      i += vstep128;
+   }
+#endif
+   while (i < N) {
+      const float deq = scale * static_cast<float>(src[i]);
+      dst[i] = std::max(0.f, std::min(1.f, deq));
+      ++i;
+   }
+}
+
 template<size_t N, bool Q> 
-void simdActivation(float* RESTRICT x, const float* a) {
+void simdActivation(float* RESTRICT x) {
    size_t i = 0;
    if constexpr (N <= 0) return;
 
@@ -606,7 +520,7 @@ void simdActivation(float* RESTRICT x, const float* a) {
    if (N-i >= 16){
       const v_f32_512 zero = v_zero_f32_512();
       const v_f32_512 un   = v_set_f32_512(1.f);      
-      simdActivation512<N,Q>(x+i, a+i, zero, un);
+      simdActivation512<N,Q>(x+i, zero, un);
       i += ((N-i) & -16);
    }
 #endif
@@ -615,7 +529,7 @@ void simdActivation(float* RESTRICT x, const float* a) {
    if (N-i >= 8){
       const v_f32_256 zero = v_zero_f32_256();
       const v_f32_256 un   = v_set_f32_256(1.f);
-      simdActivation256<N,Q>(x+i, a+i, zero, un);
+      simdActivation256<N,Q>(x+i, zero, un);
       i += ((N-i) & -8);
    }
 #endif
@@ -624,32 +538,18 @@ void simdActivation(float* RESTRICT x, const float* a) {
    if (N-i >= 4){
       const v_f32_128 zero = v_zero_f32_128();
       const v_f32_128 un   = v_set_f32_128(1.f);      
-      simdActivation128<N,Q>(x+i, a+i, zero, un);
+      simdActivation128<N,Q>(x+i, zero, un);
       i += ((N-i) & -4);
    }
 #endif
 
    if (N-i >= 4){
-      simdActivationDefault<N,Q>(x+i, a+i);
+      simdActivationDefault<N,Q>(x+i);
       i += ((N-i) & -4);
    }
 
    while (i < N) {
-      if constexpr (activationType == eReLU){
-         x[i] = std::max(x[i] * a[i], 0.f);
-      }
-      if constexpr (activationType == eClippedReLU){
-         x[i] = std::min(std::max(x[i] * a[i], 0.f), 1.f);
-      }
-      if constexpr (activationType == ePReLU){
-         x[i] = std::max(0.f, x[i]) + a[i] * std::min( 0.f, x[i]);
-      }
-      if constexpr (activationType == eClippedPReLU){
-         x[i] = std::min(1.f, std::max(0.f, x[i]) + a[i] * std::min( 0.f, x[i]));
-      }      
-      if constexpr (activationType == eApproxSigmoid){
-         x[i] = a[i]*x[i] / ( 2 * std::fabs(a[i]*x[i]) + 2) + 0.5;
-      }
+         x[i] = std::min(std::max(x[i], 0.f), 1.f);
       ++i;
    }
 }
@@ -726,17 +626,17 @@ int main(int, char**){
    {
    const v_f32_256 zero = v_zero_f32_256();
    const v_f32_256 un   = v_set_f32_256(1.f);
-   simdActivation256<n,true>(a,b, zero, un);
+   simdActivation256<n,true>(a, zero, un);
    reset();
    }
    {
    const v_f32_128 zero = v_zero_f32_128();
    const v_f32_128 un   = v_set_f32_128(1.f);      
-   simdActivation128<n,true>(a,b, zero, un);
+   simdActivation128<n,true>(a, zero, un);
    reset();
    }
    {
-   simdActivationDefault<n,true>(a,b);
+   simdActivationDefault<n,true>(a);
    reset();
    }
 

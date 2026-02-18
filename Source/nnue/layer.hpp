@@ -15,13 +15,11 @@ struct Layer {
 
    using BT = typename Quantization<Q>::BT;
    using WT = typename Quantization<Q>::WT;
-   using ST = typename Quantization<Q>::ST;
 
    // Layer is always for inner layer, so we can safely use WT and BT
    // Always small enough to be statically allocated
    alignas(NNUEALIGNMENT) WT W[nbW];
    alignas(NNUEALIGNMENT) BT b[nbB];
-   alignas(NNUEALIGNMENT) ST slopes[nbB];
 
    template<typename T> 
    CONSTEXPR StackVector<BT, dim1, Q> forward(const StackVector<T, dim0, Q>& x) const {
@@ -37,12 +35,17 @@ struct Layer {
       return result; // RVO
    }
 
+#ifdef USE_SIMD_INTRIN
+   template<typename T>
+   FORCE_FINLINE void forwardTo(const StackVector<T, dim0, Q>& x, BT* RESTRICT dst) const {
+      for (size_t i = 0; i < dim1; ++i) { dst[i] = b[i]; }
+      for (size_t i = 0; i < dim1; ++i) { dst[i] += x.dot_(W + i * dim0); }
+   }
+#endif
+
    Layer<NT, dim0, dim1, Q>& load_(WeightsReader<NT>& ws) {
       ws.template streamW<WT>(W, nbW, dim0, dim1)
         .template streamB<BT>(b, nbB);
-#ifdef NNUE_WITH_SLOPES
-      ws.template streamS<ST>(slopes, nbB);
-#endif
       return *this;
    }
 
@@ -52,11 +55,7 @@ struct Layer {
    Layer(const Layer<NT, dim0, dim1, Q>& other) = delete;
    Layer(Layer<NT, dim0, dim1, Q>&& other) = delete;
 
-   Layer(){
-      for (size_t i = 0; i < nbB; ++i){
-         slopes[i] = 1;
-       }
-   };
+   Layer(){};
    ~Layer() = default;
 
 };
