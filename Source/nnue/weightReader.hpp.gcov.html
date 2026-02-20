@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-15 11:28:56</td>
+            <td class="headerValue">2026-02-20 18:34:13</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -191,32 +191,10 @@
 <span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">          16 :       return *this;</span></span>
 <span id="L130"><span class="lineNum">     130</span>              :    }</span>
 <span id="L131"><span class="lineNum">     131</span>              : </span>
-<span id="L132"><span class="lineNum">     132</span>              :    template&lt;typename T&gt; </span>
-<span id="L133"><span class="lineNum">     133</span>              :    WeightsReader&lt;NT&gt;&amp; streamS(T* dst, const size_t request) {</span>
-<span id="L134"><span class="lineNum">     134</span>              :       assert(file);</span>
-<span id="L135"><span class="lineNum">     135</span>              :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Reading slopes&quot;;</span>
-<span id="L136"><span class="lineNum">     136</span>              :       // we will get min and max slopes for display purpose</span>
-<span id="L137"><span class="lineNum">     137</span>              :       NT minS = std::numeric_limits&lt;NT&gt;::max();</span>
-<span id="L138"><span class="lineNum">     138</span>              :       NT maxS = std::numeric_limits&lt;NT&gt;::lowest();</span>
-<span id="L139"><span class="lineNum">     139</span>              :       array1d&lt;char, sizeof(NT)&gt; singleElement {};</span>
-<span id="L140"><span class="lineNum">     140</span>              :       // read each slopes one by one</span>
-<span id="L141"><span class="lineNum">     141</span>              :       for (size_t i(0); i &lt; request; ++i) {</span>
-<span id="L142"><span class="lineNum">     142</span>              :          file-&gt;read(singleElement.data(), singleElement.size());</span>
-<span id="L143"><span class="lineNum">     143</span>              :          NT tmp {0};</span>
-<span id="L144"><span class="lineNum">     144</span>              :          std::memcpy(&amp;tmp, singleElement.data(), singleElement.size());</span>
-<span id="L145"><span class="lineNum">     145</span>              :          // update min/max</span>
-<span id="L146"><span class="lineNum">     146</span>              :          minS = std::min(minS, tmp);</span>
-<span id="L147"><span class="lineNum">     147</span>              :          maxS = std::max(maxS, tmp);</span>
-<span id="L148"><span class="lineNum">     148</span>              :          dst[i] = static_cast&lt;T&gt;(tmp);</span>
-<span id="L149"><span class="lineNum">     149</span>              :       }</span>
-<span id="L150"><span class="lineNum">     150</span>              :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Slopes in [&quot; &lt;&lt; minS &lt;&lt; &quot;, &quot; &lt;&lt; maxS &lt;&lt; &quot;]&quot;;</span>
-<span id="L151"><span class="lineNum">     151</span>              :       return *this;</span>
-<span id="L152"><span class="lineNum">     152</span>              :    }</span>
-<span id="L153"><span class="lineNum">     153</span>              : </span>
-<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">           8 :    explicit WeightsReader(std::istream&amp; stream): file(&amp;stream) {}</span></span>
-<span id="L155"><span class="lineNum">     155</span>              : };</span>
-<span id="L156"><span class="lineNum">     156</span>              : </span>
-<span id="L157"><span class="lineNum">     157</span>              : #endif // WITH_NNUE</span>
+<span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC">           8 :    explicit WeightsReader(std::istream&amp; stream): file(&amp;stream) {}</span></span>
+<span id="L133"><span class="lineNum">     133</span>              : };</span>
+<span id="L134"><span class="lineNum">     134</span>              : </span>
+<span id="L135"><span class="lineNum">     135</span>              : #endif // WITH_NNUE</span>
         </pre>
               </td>
             </tr>

@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-15 11:28:56</td>
+            <td class="headerValue">2026-02-20 18:34:13</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
@@ -80,7 +80,7 @@
 <span id="L18"><span class="lineNum">      18</span>              : </span>
 <span id="L19"><span class="lineNum">      19</span>              : GameInfo gameInfo;</span>
 <span id="L20"><span class="lineNum">      20</span>              : </span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC tlaBgGNC">      133724 : GameInfo &amp; GetGameInfo(){ return gameInfo; }</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC tlaBgGNC">      185231 : GameInfo &amp; GetGameInfo(){ return gameInfo; }</span></span>
 <span id="L22"><span class="lineNum">      22</span>              : </span>
 <span id="L23"><span class="lineNum">      23</span>              : #ifdef WITH_NNUE</span>
 <span id="L24"><span class="lineNum">      24</span>              : NNUEEvaluator evaluator;</span>
@@ -130,10 +130,10 @@
 <span id="L68"><span class="lineNum">      68</span> <span class="tlaUNC">           0 :    return moves;</span></span>
 <span id="L69"><span class="lineNum">      69</span> <span class="tlaUNC">           0 : }</span></span>
 <span id="L70"><span class="lineNum">      70</span>              : </span>
-<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC tlaBgGNC">      133720 : std::optional&lt;Hash&gt; GameInfo::getHash(uint16_t halfmove) const{</span></span>
-<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">      133720 :    const size_t startingPly = initialPos.halfmoves;</span></span>
-<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">      133720 :    const size_t offset = halfmove - startingPly;</span></span>
-<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">      133720 :    if ( offset &gt;= size()) return {};</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC tlaBgGNC">      185227 : std::optional&lt;Hash&gt; GameInfo::getHash(uint16_t halfmove) const{</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">      185227 :    const size_t startingPly = initialPos.halfmoves;</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">      185227 :    const size_t offset = halfmove - startingPly;</span></span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">      185227 :    if ( offset &gt;= size()) return {};</span></span>
 <span id="L75"><span class="lineNum">      75</span> <span class="tlaUNC tlaBgUNC">           0 :    return offset == 0 ? computeHash(initialPos) : _gameStates[offset-1].p.h; // halfmove starts at 1, not 0 ...</span></span>
 <span id="L76"><span class="lineNum">      76</span>              : }</span>
 <span id="L77"><span class="lineNum">      77</span>              : </span>
@@ -205,10 +205,10 @@
 <span id="L143"><span class="lineNum">     143</span>              :    }</span>
 <span id="L144"><span class="lineNum">     144</span> <span class="tlaGNC">          23 : }</span></span>
 <span id="L145"><span class="lineNum">     145</span>              : </span>
-<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">         177 : bool receiveMoves(Move move, Move ponderMove) {</span></span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">         166 : bool receiveMoves(Move move, Move ponderMove) {</span></span>
 <span id="L147"><span class="lineNum">     147</span>              :    std::lock_guard lock(mutexGUI); // cannot treat GUI bestmove while receiving new position</span>
-<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">         531 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;move &quot; &lt;&lt; ToString(move) &lt;&lt; &quot; (state &quot; &lt;&lt; static_cast&lt;int&gt;(state) &lt;&lt; &quot;)&quot;;</span></span>
-<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">         354 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;ponder move &quot; &lt;&lt; ToString(ponderMove);</span></span>
+<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">         498 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;move &quot; &lt;&lt; ToString(move) &lt;&lt; &quot; (state &quot; &lt;&lt; static_cast&lt;int&gt;(state) &lt;&lt; &quot;)&quot;;</span></span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">         332 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;ponder move &quot; &lt;&lt; ToString(ponderMove);</span></span>
 <span id="L150"><span class="lineNum">     150</span>              : </span>
 <span id="L151"><span class="lineNum">     151</span>              :    // share the same move with all process</span>
 <span id="L152"><span class="lineNum">     152</span>              :    if (Distributed::moreThanOneProcess()) {</span>
@@ -218,66 +218,66 @@
 <span id="L156"><span class="lineNum">     156</span>              :    }</span>
 <span id="L157"><span class="lineNum">     157</span>              : </span>
 <span id="L158"><span class="lineNum">     158</span>              :    // if possible, get a ponder move</span>
-<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">         177 :    if (ponderMove != INVALIDMOVE) {</span></span>
-<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">         174 :       Position p2 = position;</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">         166 :    if (ponderMove != INVALIDMOVE) {</span></span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">         160 :       Position p2 = position;</span></span>
 <span id="L161"><span class="lineNum">     161</span>              : #ifdef WITH_NNUE</span>
-<span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">         174 :       NNUEEvaluator evaluator2;</span></span>
+<span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">         160 :       NNUEEvaluator evaluator2;</span></span>
 <span id="L163"><span class="lineNum">     163</span>              :       p2.associateEvaluator(evaluator2);</span>
-<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">         174 :       p2.resetNNUEEvaluator(p2.evaluator());</span></span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">         160 :       p2.resetNNUEEvaluator(p2.evaluator());</span></span>
 <span id="L165"><span class="lineNum">     165</span>              : #endif</span>
 <span id="L166"><span class="lineNum">     166</span>              :       // apply best move and verify ponder move is ok</span>
-<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">         174 :       const MoveInfo moveInfo(p2, move);</span></span>
-<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">         174 :       if (!(applyMove(p2, moveInfo) &amp;&amp; isPseudoLegal(p2, ponderMove))) {</span></span>
+<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">         160 :       const MoveInfo moveInfo(p2, move);</span></span>
+<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">         160 :       if (!(applyMove(p2, moveInfo) &amp;&amp; isPseudoLegal(p2, ponderMove))) {</span></span>
 <span id="L169"><span class="lineNum">     169</span> <span class="tlaUNC tlaBgUNC">           0 :          Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Illegal ponder move &quot; &lt;&lt; ToString(ponderMove) &lt;&lt; &quot; &quot; &lt;&lt; ToString(p2);</span></span>
 <span id="L170"><span class="lineNum">     170</span> <span class="tlaUNC">           0 :          ponderMove = INVALIDMOVE; // do be sure ...</span></span>
 <span id="L171"><span class="lineNum">     171</span>              :       }</span>
-<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC tlaBgGNC">         174 :    }</span></span>
+<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC tlaBgGNC">         160 :    }</span></span>
 <span id="L173"><span class="lineNum">     173</span>              : </span>
 <span id="L174"><span class="lineNum">     174</span>              :    bool ret = true;</span>
 <span id="L175"><span class="lineNum">     175</span>              : </span>
-<span id="L176"><span class="lineNum">     176</span> <span class="tlaGNC">         354 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;search async done (state &quot; &lt;&lt; static_cast&lt;int&gt;(state) &lt;&lt; &quot;)&quot;;</span></span>
+<span id="L176"><span class="lineNum">     176</span> <span class="tlaGNC">         332 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;search async done (state &quot; &lt;&lt; static_cast&lt;int&gt;(state) &lt;&lt; &quot;)&quot;;</span></span>
 <span id="L177"><span class="lineNum">     177</span>              :    </span>
 <span id="L178"><span class="lineNum">     178</span>              :    // in searching only mode we have to return a move to GUI</span>
 <span id="L179"><span class="lineNum">     179</span>              :    // but uci protocol also expect a bestMove when pondering or analysing to wake up the GUI</span>
-<span id="L180"><span class="lineNum">     180</span> <span class="tlaGNC">         177 :    if (state == st_searching || state == st_pondering || state == st_analyzing) {</span></span>
-<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">         178 :       const std::string tag = Logging::ct == Logging::CT_uci ? &quot;bestmove&quot; : &quot;move&quot;;</span></span>
-<span id="L182"><span class="lineNum">     182</span> <span class="tlaGNC">         354 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;sending move to GUI &quot; &lt;&lt; ToString(move);</span></span>
-<span id="L183"><span class="lineNum">     183</span> <span class="tlaGNC">         177 :       if (move == INVALIDMOVE) {</span></span>
+<span id="L180"><span class="lineNum">     180</span> <span class="tlaGNC">         166 :    if (state == st_searching || state == st_pondering || state == st_analyzing) {</span></span>
+<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">         167 :       const std::string tag = Logging::ct == Logging::CT_uci ? &quot;bestmove&quot; : &quot;move&quot;;</span></span>
+<span id="L182"><span class="lineNum">     182</span> <span class="tlaGNC">         332 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;sending move to GUI &quot; &lt;&lt; ToString(move);</span></span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaGNC">         166 :       if (move == INVALIDMOVE) {</span></span>
 <span id="L184"><span class="lineNum">     184</span>              :          // game ends (check mated / stalemate) **or** stop at the very begining of pondering</span>
 <span id="L185"><span class="lineNum">     185</span>              :          ret = false;</span>
 <span id="L186"><span class="lineNum">     186</span> <span class="tlaUNC tlaBgUNC">           0 :          Logging::LogIt(Logging::logGUI) &lt;&lt; tag &lt;&lt; &quot; &quot; &lt;&lt; &quot;0000&quot;;</span></span>
 <span id="L187"><span class="lineNum">     187</span>              :       }</span>
 <span id="L188"><span class="lineNum">     188</span>              :       else {</span>
 <span id="L189"><span class="lineNum">     189</span>              :          // update current position with given move (in fact this is not good for UCI protocol)</span>
-<span id="L190"><span class="lineNum">     190</span> <span class="tlaGNC tlaBgGNC">         177 :          if (!makeMove(move, true, tag, ponderMove)) {</span></span>
+<span id="L190"><span class="lineNum">     190</span> <span class="tlaGNC tlaBgGNC">         166 :          if (!makeMove(move, true, tag, ponderMove)) {</span></span>
 <span id="L191"><span class="lineNum">     191</span> <span class="tlaUNC tlaBgUNC">           0 :             Logging::LogIt(Logging::logGUI) &lt;&lt; &quot;info string Bad move ! &quot; &lt;&lt; ToString(move);</span></span>
 <span id="L192"><span class="lineNum">     192</span> <span class="tlaUNC">           0 :             Logging::LogIt(Logging::logInfo) &lt;&lt; ToString(position);</span></span>
 <span id="L193"><span class="lineNum">     193</span>              :             ret = false;</span>
 <span id="L194"><span class="lineNum">     194</span>              :          }</span>
 <span id="L195"><span class="lineNum">     195</span>              :       }</span>
 <span id="L196"><span class="lineNum">     196</span>              :    }</span>
-<span id="L197"><span class="lineNum">     197</span> <span class="tlaGNC tlaBgGNC">         354 :    Distributed::sync(Distributed::_commMove, &quot;after sending move to GUI&quot;);</span></span>
-<span id="L198"><span class="lineNum">     198</span> <span class="tlaGNC">         354 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Putting state to none (state was &quot; &lt;&lt; static_cast&lt;int&gt;(state) &lt;&lt; &quot;)&quot;;</span></span>
-<span id="L199"><span class="lineNum">     199</span> <span class="tlaGNC">         177 :    state = st_none;</span></span>
+<span id="L197"><span class="lineNum">     197</span> <span class="tlaGNC tlaBgGNC">         332 :    Distributed::sync(Distributed::_commMove, &quot;after sending move to GUI&quot;);</span></span>
+<span id="L198"><span class="lineNum">     198</span> <span class="tlaGNC">         332 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Putting state to none (state was &quot; &lt;&lt; static_cast&lt;int&gt;(state) &lt;&lt; &quot;)&quot;;</span></span>
+<span id="L199"><span class="lineNum">     199</span> <span class="tlaGNC">         166 :    state = st_none;</span></span>
 <span id="L200"><span class="lineNum">     200</span>              : </span>
-<span id="L201"><span class="lineNum">     201</span> <span class="tlaGNC">         177 :    return ret;</span></span>
+<span id="L201"><span class="lineNum">     201</span> <span class="tlaGNC">         166 :    return ret;</span></span>
 <span id="L202"><span class="lineNum">     202</span>              : }</span>
 <span id="L203"><span class="lineNum">     203</span>              : </span>
-<span id="L204"><span class="lineNum">     204</span> <span class="tlaGNC">         178 : bool makeMove(const Move m, const bool disp, const std::string &amp; tag, const Move pondermove) {</span></span>
+<span id="L204"><span class="lineNum">     204</span> <span class="tlaGNC">         167 : bool makeMove(const Move m, const bool disp, const std::string &amp; tag, const Move pondermove) {</span></span>
 <span id="L205"><span class="lineNum">     205</span>              :    // there is a possible race condition here, as position can be changed from UCI or XBOARD command line</span>
 <span id="L206"><span class="lineNum">     206</span>              :    // while it is still in use here. For instance in a multi-process context where the move has already been send to GUI by rank 0</span>
 <span id="L207"><span class="lineNum">     207</span>              :    // and other ranks are still using the previous position. Thus mutexGUI...</span>
 <span id="L208"><span class="lineNum">     208</span>              : #ifdef WITH_NNUE</span>
-<span id="L209"><span class="lineNum">     209</span> <span class="tlaGNC">         178 :    position.resetNNUEEvaluator(position.evaluator());</span></span>
+<span id="L209"><span class="lineNum">     209</span> <span class="tlaGNC">         167 :    position.resetNNUEEvaluator(position.evaluator());</span></span>
 <span id="L210"><span class="lineNum">     210</span>              : #endif</span>
-<span id="L211"><span class="lineNum">     211</span> <span class="tlaGNC">         178 :    const MoveInfo moveInfo(position, m);</span></span>
-<span id="L212"><span class="lineNum">     212</span> <span class="tlaGNC">         178 :    const bool b = applyMove(position, moveInfo); // this update the COM::position position status</span></span>
-<span id="L213"><span class="lineNum">     213</span> <span class="tlaGNC">         178 :    if (disp &amp;&amp; m != INVALIDMOVE) {</span></span>
-<span id="L214"><span class="lineNum">     214</span> <span class="tlaGNC">         354 :       Logging::LogIt(Logging::logGUI) &lt;&lt; tag &lt;&lt; &quot; &quot; &lt;&lt; ToString(m)</span></span>
-<span id="L215"><span class="lineNum">     215</span> <span class="tlaGNC">         703 :                                       &lt;&lt; (Logging::ct == Logging::CT_uci &amp;&amp; isValidMove(pondermove) ? (&quot; ponder &quot; + ToString(pondermove)) : &quot;&quot;);</span></span>
+<span id="L211"><span class="lineNum">     211</span> <span class="tlaGNC">         167 :    const MoveInfo moveInfo(position, m);</span></span>
+<span id="L212"><span class="lineNum">     212</span> <span class="tlaGNC">         167 :    const bool b = applyMove(position, moveInfo); // this update the COM::position position status</span></span>
+<span id="L213"><span class="lineNum">     213</span> <span class="tlaGNC">         167 :    if (disp &amp;&amp; m != INVALIDMOVE) {</span></span>
+<span id="L214"><span class="lineNum">     214</span> <span class="tlaGNC">         332 :       Logging::LogIt(Logging::logGUI) &lt;&lt; tag &lt;&lt; &quot; &quot; &lt;&lt; ToString(m)</span></span>
+<span id="L215"><span class="lineNum">     215</span> <span class="tlaGNC">         656 :                                       &lt;&lt; (Logging::ct == Logging::CT_uci &amp;&amp; isValidMove(pondermove) ? (&quot; ponder &quot; + ToString(pondermove)) : &quot;&quot;);</span></span>
 <span id="L216"><span class="lineNum">     216</span>              :    }</span>
-<span id="L217"><span class="lineNum">     217</span> <span class="tlaGNC">         356 :    Logging::LogIt(Logging::logInfo) &lt;&lt; ToString(position);</span></span>
-<span id="L218"><span class="lineNum">     218</span> <span class="tlaGNC">         178 :    return b;</span></span>
+<span id="L217"><span class="lineNum">     217</span> <span class="tlaGNC">         334 :    Logging::LogIt(Logging::logInfo) &lt;&lt; ToString(position);</span></span>
+<span id="L218"><span class="lineNum">     218</span> <span class="tlaGNC">         167 :    return b;</span></span>
 <span id="L219"><span class="lineNum">     219</span>              : }</span>
 <span id="L220"><span class="lineNum">     220</span>              : </span>
 <span id="L221"><span class="lineNum">     221</span> <span class="tlaGNC">           3 : void stop() {</span></span>
@@ -291,24 +291,24 @@
 <span id="L229"><span class="lineNum">     229</span> <span class="tlaUNC">           0 : }</span></span>
 <span id="L230"><span class="lineNum">     230</span>              : </span>
 <span id="L231"><span class="lineNum">     231</span>              : // this is a non-blocking call (search wise)</span>
-<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC tlaBgGNC">         177 : void thinkAsync(const COM::State givenState) {</span></span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC tlaBgGNC">         166 : void thinkAsync(const COM::State givenState) {</span></span>
 <span id="L233"><span class="lineNum">     233</span>              :    std::lock_guard lock(mutex); // cannot stop and start at the same time</span>
-<span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">         531 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Thinking... (state was &quot; &lt;&lt; static_cast&lt;int&gt;(state) &lt;&lt; &quot; going for &quot; &lt;&lt; static_cast&lt;int&gt;(givenState) &lt;&lt; &quot;)&quot;;</span></span>
-<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">         177 :    if (depth &lt; 0) depth = MAX_DEPTH;</span></span>
-<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">         354 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;depth          &quot; &lt;&lt; static_cast&lt;int&gt;(depth);</span></span>
+<span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">         498 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Thinking... (state was &quot; &lt;&lt; static_cast&lt;int&gt;(state) &lt;&lt; &quot; going for &quot; &lt;&lt; static_cast&lt;int&gt;(givenState) &lt;&lt; &quot;)&quot;;</span></span>
+<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">         166 :    if (depth &lt; 0) depth = MAX_DEPTH;</span></span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">         332 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;depth          &quot; &lt;&lt; static_cast&lt;int&gt;(depth);</span></span>
 <span id="L237"><span class="lineNum">     237</span>              :    // here is computed the time for next search (and store it in the Threadpool for now)</span>
-<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">         177 :    ThreadPool::instance().currentMoveMs = TimeMan::getNextMSecPerMove(position);</span></span>
-<span id="L239"><span class="lineNum">     239</span> <span class="tlaGNC">         354 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;currentMoveMs  &quot; &lt;&lt; ThreadPool::instance().currentMoveMs;</span></span>
-<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">         354 :    Logging::LogIt(Logging::logInfo) &lt;&lt; ToString(position);</span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">         166 :    ThreadPool::instance().currentMoveMs = TimeMan::getNextMSecPerMove(position);</span></span>
+<span id="L239"><span class="lineNum">     239</span> <span class="tlaGNC">         332 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;currentMoveMs  &quot; &lt;&lt; ThreadPool::instance().currentMoveMs;</span></span>
+<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">         332 :    Logging::LogIt(Logging::logInfo) &lt;&lt; ToString(position);</span></span>
 <span id="L241"><span class="lineNum">     241</span>              : </span>
 <span id="L242"><span class="lineNum">     242</span>              :    // will later be copied on all thread data and thus &quot;reset&quot; them</span>
-<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">         177 :    ThreadData d;</span></span>
-<span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC">         177 :    d.p           = position;</span></span>
-<span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">         177 :    d.depth       = depth;</span></span>
-<span id="L246"><span class="lineNum">     246</span> <span class="tlaGNC">         177 :    d.isAnalysis  = givenState == st_analyzing;</span></span>
-<span id="L247"><span class="lineNum">     247</span> <span class="tlaGNC">         177 :    d.isPondering = givenState == st_pondering;</span></span>
-<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC">         177 :    ThreadPool::instance().startSearch(d); // data is copied !</span></span>
-<span id="L249"><span class="lineNum">     249</span> <span class="tlaGNC">         177 : }</span></span>
+<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">         166 :    ThreadData d;</span></span>
+<span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC">         166 :    d.p           = position;</span></span>
+<span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">         166 :    d.depth       = depth;</span></span>
+<span id="L246"><span class="lineNum">     246</span> <span class="tlaGNC">         166 :    d.isAnalysis  = givenState == st_analyzing;</span></span>
+<span id="L247"><span class="lineNum">     247</span> <span class="tlaGNC">         166 :    d.isPondering = givenState == st_pondering;</span></span>
+<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC">         166 :    ThreadPool::instance().startSearch(d); // data is copied !</span></span>
+<span id="L249"><span class="lineNum">     249</span> <span class="tlaGNC">         166 : }</span></span>
 <span id="L250"><span class="lineNum">     250</span>              : </span>
 <span id="L251"><span class="lineNum">     251</span> <span class="tlaGNC">           1 : Move moveFromCOM(const std::string &amp; mstr) {</span></span>
 <span id="L252"><span class="lineNum">     252</span> <span class="tlaGNC">           1 :    Square from  = INVALIDSQUARE;</span></span>

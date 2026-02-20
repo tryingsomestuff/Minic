@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-15 11:28:56</td>
+            <td class="headerValue">2026-02-20 18:34:13</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
@@ -89,31 +89,31 @@
 <span id="L27"><span class="lineNum">      27</span>              : // see cli_SEETest.cpp</span>
 <span id="L28"><span class="lineNum">      28</span>              : bool TestSEE();</span>
 <span id="L29"><span class="lineNum">      29</span>              : </span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC tlaBgGNC">         174 : void analyze(const Position&amp; p, DepthType depth, bool openBenchOutput = false) {</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC tlaBgGNC">         163 : void analyze(const Position&amp; p, DepthType depth, bool openBenchOutput = false) {</span></span>
 <span id="L31"><span class="lineNum">      31</span>              :    static double  benchms    = 0;</span>
 <span id="L32"><span class="lineNum">      32</span>              :    static Counter benchNodes = 0;</span>
 <span id="L33"><span class="lineNum">      33</span>              : </span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">         174 :    const int oldOutLvl = DynamicConfig::minOutputLevel;</span></span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">         174 :    if (openBenchOutput) { DynamicConfig::minOutputLevel = Logging::logOff; }</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">         163 :    const int oldOutLvl = DynamicConfig::minOutputLevel;</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">         163 :    if (openBenchOutput) { DynamicConfig::minOutputLevel = Logging::logOff; }</span></span>
 <span id="L36"><span class="lineNum">      36</span>              : </span>
-<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">         174 :    TimeMan::isDynamic                   = false;</span></span>
-<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">         174 :    TimeMan::nbMoveInTC                  = -1;</span></span>
-<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">         174 :    TimeMan::msecPerMove                 = INFINITETIME;</span></span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">         174 :    TimeMan::msecInTC                    = -1;</span></span>
-<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">         174 :    TimeMan::msecInc                     = -1;</span></span>
-<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">         174 :    TimeMan::msecUntilNextTC             = -1;</span></span>
-<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">         174 :    ThreadPool::instance().currentMoveMs = TimeMan::getNextMSecPerMove(p);</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">         163 :    TimeMan::isDynamic                   = false;</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">         163 :    TimeMan::nbMoveInTC                  = -1;</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">         163 :    TimeMan::msecPerMove                 = INFINITETIME;</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">         163 :    TimeMan::msecInTC                    = -1;</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">         163 :    TimeMan::msecInc                     = -1;</span></span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">         163 :    TimeMan::msecUntilNextTC             = -1;</span></span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">         163 :    ThreadPool::instance().currentMoveMs = TimeMan::getNextMSecPerMove(p);</span></span>
 <span id="L44"><span class="lineNum">      44</span>              : </span>
-<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">         174 :    ThreadData d;</span></span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">         163 :    ThreadData d;</span></span>
 <span id="L46"><span class="lineNum">      46</span>              : #ifdef WITH_ASYNC_ANALYZE</span>
-<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">         174 :    COM::depth = depth;</span></span>
-<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">         174 :    const std::string fen = GetFEN(p);</span></span>
-<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">         174 :    const bool b = readFEN(fen, COM::position, true, true);</span></span>
-<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">         174 :    if (!b) Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;Illegal FEN &quot; &lt;&lt; fen;</span></span>
-<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">         174 :    COM::thinkAsync(COM::st_searching);</span></span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">        7487 :    while(ThreadPool::instance().main().searching()){</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">         163 :    COM::depth = depth;</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">         163 :    const std::string fen = GetFEN(p);</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">         163 :    const bool b = readFEN(fen, COM::position, true, true);</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">         163 :    if (!b) Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;Illegal FEN &quot; &lt;&lt; fen;</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">         163 :    COM::thinkAsync(COM::st_searching);</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">        2358 :    while(ThreadPool::instance().main().searching()){</span></span>
 <span id="L53"><span class="lineNum">      53</span>              :       using namespace std::chrono_literals;</span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">        7313 :       std::this_thread::sleep_for(10ms);</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">        2195 :       std::this_thread::sleep_for(10ms);</span></span>
 <span id="L55"><span class="lineNum">      55</span>              :    }</span>
 <span id="L56"><span class="lineNum">      56</span>              : #else</span>
 <span id="L57"><span class="lineNum">      57</span>              :    d.p     = p;</span>
@@ -122,10 +122,10 @@
 <span id="L60"><span class="lineNum">      60</span>              :    ThreadPool::instance().main().stopFlag = false;</span>
 <span id="L61"><span class="lineNum">      61</span>              :    ThreadPool::instance().main().searchDriver(false);</span>
 <span id="L62"><span class="lineNum">      62</span>              : #endif</span>
-<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">         174 :    d = ThreadPool::instance().main().getData();</span></span>
-<span id="L64"><span class="lineNum">      64</span> <span class="tlaGNC">         696 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Best move is &quot; &lt;&lt; ToString(d.best) &lt;&lt; &quot; &quot; &lt;&lt; static_cast&lt;int&gt;(d.depth) &lt;&lt; &quot; &quot; &lt;&lt; d.score &lt;&lt; &quot; pv : &quot; &lt;&lt; ToString(d.pv);</span></span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">         163 :    d = ThreadPool::instance().main().getData();</span></span>
+<span id="L64"><span class="lineNum">      64</span> <span class="tlaGNC">         652 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Best move is &quot; &lt;&lt; ToString(d.best) &lt;&lt; &quot; &quot; &lt;&lt; static_cast&lt;int&gt;(d.depth) &lt;&lt; &quot; &quot; &lt;&lt; d.score &lt;&lt; &quot; pv : &quot; &lt;&lt; ToString(d.pv);</span></span>
 <span id="L65"><span class="lineNum">      65</span>              : </span>
-<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">         174 :    if (openBenchOutput) {</span></span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">         163 :    if (openBenchOutput) {</span></span>
 <span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">           5 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Next two lines are for OpenBench&quot;;</span></span>
 <span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">           5 :       const TimeType ms = getTimeDiff(ThreadPool::instance().main().startTime);</span></span>
 <span id="L69"><span class="lineNum">      69</span>              :       const Counter nodeCount =</span>
@@ -136,7 +136,7 @@
 <span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">           5 :       std::cerr &lt;&lt; &quot;NODES &quot; &lt;&lt; benchNodes &lt;&lt; std::endl;</span></span>
 <span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">           5 :       std::cerr &lt;&lt; &quot;NPS &quot; &lt;&lt; static_cast&lt;int&gt;(static_cast&lt;decltype(benchms)&gt;(benchNodes) / benchms) &lt;&lt; std::endl;</span></span>
 <span id="L76"><span class="lineNum">      76</span>              :    }</span>
-<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">         174 : }</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">         163 : }</span></span>
 <span id="L78"><span class="lineNum">      78</span>              : </span>
 <span id="L79"><span class="lineNum">      79</span>              : // This struct is dedicated to display beta cut statistics in benchmark</span>
 <span id="L80"><span class="lineNum">      80</span>              : struct BetaCutStat{</span>

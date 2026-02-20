@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-15 11:28:56</td>
+            <td class="headerValue">2026-02-20 18:34:13</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
@@ -332,8 +332,8 @@
 <span id="L270"><span class="lineNum">     270</span>              :    }</span>
 <span id="L271"><span class="lineNum">     271</span> <span class="tlaGNC">           2 :    else if (uciCommand == &quot;wait&quot;) { // only used for testing purpose</span></span>
 <span id="L272"><span class="lineNum">     272</span>              :       using namespace std::chrono_literals;</span>
-<span id="L273"><span class="lineNum">     273</span> <span class="tlaGNC">         828 :       while (!ThreadPool::instance().main().stopFlag) { </span></span>
-<span id="L274"><span class="lineNum">     274</span> <span class="tlaGNC">         826 :          std::this_thread::sleep_for(10ms);</span></span>
+<span id="L273"><span class="lineNum">     273</span> <span class="tlaGNC">         135 :       while (!ThreadPool::instance().main().stopFlag) { </span></span>
+<span id="L274"><span class="lineNum">     274</span> <span class="tlaGNC">         133 :          std::this_thread::sleep_for(10ms);</span></span>
 <span id="L275"><span class="lineNum">     275</span>              :       }</span>
 <span id="L276"><span class="lineNum">     276</span> <span class="tlaGNC">           2 :       std::this_thread::sleep_for(200ms);</span></span>
 <span id="L277"><span class="lineNum">     277</span>              :    }</span>
@@ -359,10 +359,10 @@
 <span id="L297"><span class="lineNum">     297</span> <span class="tlaUNC">           0 :    return ss.str();</span></span>
 <span id="L298"><span class="lineNum">     298</span> <span class="tlaUNC">           0 : }</span></span>
 <span id="L299"><span class="lineNum">     299</span>              : </span>
-<span id="L300"><span class="lineNum">     300</span> <span class="tlaGNC tlaBgGNC">         310 : std::string uciScore(const ScoreType score, const unsigned int ply) {</span></span>
-<span id="L301"><span class="lineNum">     301</span> <span class="tlaGNC">         310 :    if (isMatedScore(score)) return &quot;mate &quot; + std::to_string((-MATE - score) / 2);</span></span>
-<span id="L302"><span class="lineNum">     302</span> <span class="tlaGNC">         310 :    if (isMateScore(score)) return &quot;mate &quot; + std::to_string((MATE - score + 1) / 2);</span></span>
-<span id="L303"><span class="lineNum">     303</span> <span class="tlaGNC">         930 :    return &quot;cp &quot; + std::to_string(score) + (DynamicConfig::withWDL ? wdlStat(score, ply) : &quot;&quot;);</span></span>
+<span id="L300"><span class="lineNum">     300</span> <span class="tlaGNC tlaBgGNC">         352 : std::string uciScore(const ScoreType score, const unsigned int ply) {</span></span>
+<span id="L301"><span class="lineNum">     301</span> <span class="tlaGNC">         352 :    if (isMatedScore(score)) return &quot;mate &quot; + std::to_string((-MATE - score) / 2);</span></span>
+<span id="L302"><span class="lineNum">     302</span> <span class="tlaGNC">         352 :    if (isMateScore(score)) return &quot;mate &quot; + std::to_string((MATE - score + 1) / 2);</span></span>
+<span id="L303"><span class="lineNum">     303</span> <span class="tlaGNC">        1056 :    return &quot;cp &quot; + std::to_string(score) + (DynamicConfig::withWDL ? wdlStat(score, ply) : &quot;&quot;);</span></span>
 <span id="L304"><span class="lineNum">     304</span>              : }</span>
 <span id="L305"><span class="lineNum">     305</span>              : </span>
 <span id="L306"><span class="lineNum">     306</span> <span class="tlaUNC tlaBgUNC">           0 : void handleVariant(){</span></span>

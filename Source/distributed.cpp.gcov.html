@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2025-12-15 11:28:56</td>
+            <td class="headerValue">2026-02-20 18:34:13</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
@@ -116,265 +116,322 @@
 <span id="L54"><span class="lineNum">      54</span>              : uint8_t     _doubleBufferTTParity;</span>
 <span id="L55"><span class="lineNum">      55</span>              : std::mutex  _ttMutex;</span>
 <span id="L56"><span class="lineNum">      56</span>              : uint64_t    _nbTTTransfert;</span>
-<span id="L57"><span class="lineNum">      57</span>              : </span>
-<span id="L58"><span class="lineNum">      58</span>              : void checkError(int err) {</span>
-<span id="L59"><span class="lineNum">      59</span>              :    if (err != MPI_SUCCESS) { Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;MPI error&quot;; }</span>
-<span id="L60"><span class="lineNum">      60</span>              : }</span>
-<span id="L61"><span class="lineNum">      61</span>              : </span>
-<span id="L62"><span class="lineNum">      62</span>              : void init() {</span>
-<span id="L63"><span class="lineNum">      63</span>              :    std::cout &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot;Initializing MPI ...&quot; &lt;&lt; std::endl;</span>
-<span id="L64"><span class="lineNum">      64</span>              :    int provided;</span>
-<span id="L65"><span class="lineNum">      65</span>              :    checkError(MPI_Init_thread(nullptr, nullptr, MPI_THREAD_MULTIPLE, &amp;provided));</span>
-<span id="L66"><span class="lineNum">      66</span>              :    checkError(MPI_Comm_size(MPI_COMM_WORLD, &amp;worldSize));</span>
-<span id="L67"><span class="lineNum">      67</span>              :    checkError(MPI_Comm_rank(MPI_COMM_WORLD, &amp;rank));</span>
-<span id="L68"><span class="lineNum">      68</span>              :    char processor_name[MPI_MAX_PROCESSOR_NAME];</span>
-<span id="L69"><span class="lineNum">      69</span>              :    int  name_len;</span>
-<span id="L70"><span class="lineNum">      70</span>              :    checkError(MPI_Get_processor_name(processor_name, &amp;name_len));</span>
-<span id="L71"><span class="lineNum">      71</span>              :    name = processor_name;</span>
-<span id="L72"><span class="lineNum">      72</span>              : </span>
-<span id="L73"><span class="lineNum">      73</span>              :    if (!isMainProcess()) DynamicConfig::minOutputLevel = Logging::logOff;</span>
-<span id="L74"><span class="lineNum">      74</span>              : </span>
-<span id="L75"><span class="lineNum">      75</span>              :    if (provided &lt; MPI_THREAD_MULTIPLE) { Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;The threading support level is lesser than needed&quot;; }</span>
-<span id="L76"><span class="lineNum">      76</span>              : </span>
-<span id="L77"><span class="lineNum">      77</span>              :    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &amp;_commTT));</span>
-<span id="L78"><span class="lineNum">      78</span>              :    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &amp;_commTT2));</span>
-<span id="L79"><span class="lineNum">      79</span>              :    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &amp;_commStat));</span>
-<span id="L80"><span class="lineNum">      80</span>              :    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &amp;_commStat2));</span>
-<span id="L81"><span class="lineNum">      81</span>              :    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &amp;_commInput));</span>
-<span id="L82"><span class="lineNum">      82</span>              :    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &amp;_commMove));</span>
-<span id="L83"><span class="lineNum">      83</span>              :    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &amp;_commStopFromR0));</span>
-<span id="L84"><span class="lineNum">      84</span>              : </span>
-<span id="L85"><span class="lineNum">      85</span>              :    _nbStatPoll             = 0ull;</span>
-<span id="L86"><span class="lineNum">      86</span>              :    _doubleBufferStatParity = 0;</span>
-<span id="L87"><span class="lineNum">      87</span>              : </span>
-<span id="L88"><span class="lineNum">      88</span>              :    // buffer size depends on worldsize</span>
-<span id="L89"><span class="lineNum">      89</span>              :    _ttBufSend[0].resize(_ttBufSize);</span>
-<span id="L90"><span class="lineNum">      90</span>              :    _ttBufSend[1].resize(_ttBufSize);</span>
-<span id="L91"><span class="lineNum">      91</span>              :    _ttBufRecv.resize(worldSize * _ttBufSize);</span>
-<span id="L92"><span class="lineNum">      92</span>              :    _ttCurPos      = 0ull;</span>
-<span id="L93"><span class="lineNum">      93</span>              :    _nbTTTransfert = 0ull;</span>
-<span id="L94"><span class="lineNum">      94</span>              :    _doubleBufferTTParity = 0;</span>
-<span id="L95"><span class="lineNum">      95</span>              : }</span>
-<span id="L96"><span class="lineNum">      96</span>              : </span>
-<span id="L97"><span class="lineNum">      97</span>              : void lateInit() {</span>
-<span id="L98"><span class="lineNum">      98</span>              :    if (moreThanOneProcess()) {</span>
-<span id="L99"><span class="lineNum">      99</span>              :       checkError(MPI_Win_create(&amp;ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStopFromR0, &amp;_winStopFromR0));</span>
-<span id="L100"><span class="lineNum">     100</span>              :       checkError(MPI_Win_fence(0, _winStopFromR0));</span>
-<span id="L101"><span class="lineNum">     101</span>              :    }</span>
-<span id="L102"><span class="lineNum">     102</span>              : }</span>
-<span id="L103"><span class="lineNum">     103</span>              : </span>
-<span id="L104"><span class="lineNum">     104</span>              : void finalize() {</span>
-<span id="L105"><span class="lineNum">     105</span>              :    checkError(MPI_Comm_free(&amp;_commTT));</span>
-<span id="L106"><span class="lineNum">     106</span>              :    checkError(MPI_Comm_free(&amp;_commTT2));</span>
-<span id="L107"><span class="lineNum">     107</span>              :    checkError(MPI_Comm_free(&amp;_commStat));</span>
-<span id="L108"><span class="lineNum">     108</span>              :    checkError(MPI_Comm_free(&amp;_commStat2));</span>
-<span id="L109"><span class="lineNum">     109</span>              :    checkError(MPI_Comm_free(&amp;_commInput));</span>
-<span id="L110"><span class="lineNum">     110</span>              :    checkError(MPI_Comm_free(&amp;_commMove));</span>
-<span id="L111"><span class="lineNum">     111</span>              :    checkError(MPI_Comm_free(&amp;_commStopFromR0));</span>
-<span id="L112"><span class="lineNum">     112</span>              : </span>
-<span id="L113"><span class="lineNum">     113</span>              :    if (moreThanOneProcess()) checkError(MPI_Win_free(&amp;_winStopFromR0));</span>
-<span id="L114"><span class="lineNum">     114</span>              : </span>
-<span id="L115"><span class="lineNum">     115</span>              :    checkError(MPI_Finalize());</span>
+<span id="L57"><span class="lineNum">      57</span>              : uint64_t    _nbTTBufferOverruns;</span>
+<span id="L58"><span class="lineNum">      58</span>              : </span>
+<span id="L59"><span class="lineNum">      59</span>              : void checkError(int err, const std::string&amp; context) {</span>
+<span id="L60"><span class="lineNum">      60</span>              :    if (err != MPI_SUCCESS) {</span>
+<span id="L61"><span class="lineNum">      61</span>              :       char error_string[MPI_MAX_ERROR_STRING];</span>
+<span id="L62"><span class="lineNum">      62</span>              :       int length;</span>
+<span id="L63"><span class="lineNum">      63</span>              :       MPI_Error_string(err, error_string, &amp;length);</span>
+<span id="L64"><span class="lineNum">      64</span>              :       Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;MPI error&quot; &lt;&lt; (context.empty() ? &quot;&quot; : &quot; in &quot; + context) </span>
+<span id="L65"><span class="lineNum">      65</span>              :                                         &lt;&lt; &quot;: &quot; &lt;&lt; error_string &lt;&lt; &quot; (code: &quot; &lt;&lt; err &lt;&lt; &quot;)&quot;;</span>
+<span id="L66"><span class="lineNum">      66</span>              :    }</span>
+<span id="L67"><span class="lineNum">      67</span>              : }</span>
+<span id="L68"><span class="lineNum">      68</span>              : </span>
+<span id="L69"><span class="lineNum">      69</span>              : void init() {</span>
+<span id="L70"><span class="lineNum">      70</span>              :    std::cout &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot;Initializing MPI ...&quot; &lt;&lt; std::endl;</span>
+<span id="L71"><span class="lineNum">      71</span>              :    int provided;</span>
+<span id="L72"><span class="lineNum">      72</span>              :    checkError(MPI_Init_thread(nullptr, nullptr, MPI_THREAD_MULTIPLE, &amp;provided));</span>
+<span id="L73"><span class="lineNum">      73</span>              :    checkError(MPI_Comm_size(MPI_COMM_WORLD, &amp;worldSize));</span>
+<span id="L74"><span class="lineNum">      74</span>              :    checkError(MPI_Comm_rank(MPI_COMM_WORLD, &amp;rank));</span>
+<span id="L75"><span class="lineNum">      75</span>              :    char processor_name[MPI_MAX_PROCESSOR_NAME];</span>
+<span id="L76"><span class="lineNum">      76</span>              :    int  name_len;</span>
+<span id="L77"><span class="lineNum">      77</span>              :    checkError(MPI_Get_processor_name(processor_name, &amp;name_len));</span>
+<span id="L78"><span class="lineNum">      78</span>              :    name = processor_name;</span>
+<span id="L79"><span class="lineNum">      79</span>              : </span>
+<span id="L80"><span class="lineNum">      80</span>              :    if (!isMainProcess()) DynamicConfig::minOutputLevel = Logging::logOff;</span>
+<span id="L81"><span class="lineNum">      81</span>              : </span>
+<span id="L82"><span class="lineNum">      82</span>              :    if (provided &lt; MPI_THREAD_MULTIPLE) { Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;The threading support level is lesser than needed&quot;; }</span>
+<span id="L83"><span class="lineNum">      83</span>              : </span>
+<span id="L84"><span class="lineNum">      84</span>              :    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &amp;_commTT));</span>
+<span id="L85"><span class="lineNum">      85</span>              :    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &amp;_commTT2));</span>
+<span id="L86"><span class="lineNum">      86</span>              :    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &amp;_commStat));</span>
+<span id="L87"><span class="lineNum">      87</span>              :    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &amp;_commStat2));</span>
+<span id="L88"><span class="lineNum">      88</span>              :    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &amp;_commInput));</span>
+<span id="L89"><span class="lineNum">      89</span>              :    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &amp;_commMove));</span>
+<span id="L90"><span class="lineNum">      90</span>              :    checkError(MPI_Comm_dup(MPI_COMM_WORLD, &amp;_commStopFromR0));</span>
+<span id="L91"><span class="lineNum">      91</span>              : </span>
+<span id="L92"><span class="lineNum">      92</span>              :    // Initialize MPI requests to NULL</span>
+<span id="L93"><span class="lineNum">      93</span>              :    _requestTT = MPI_REQUEST_NULL;</span>
+<span id="L94"><span class="lineNum">      94</span>              :    _requestStat = MPI_REQUEST_NULL;</span>
+<span id="L95"><span class="lineNum">      95</span>              :    _requestInput = MPI_REQUEST_NULL;</span>
+<span id="L96"><span class="lineNum">      96</span>              :    _requestMove = MPI_REQUEST_NULL;</span>
+<span id="L97"><span class="lineNum">      97</span>              : </span>
+<span id="L98"><span class="lineNum">      98</span>              :    _nbStatPoll             = 0ull;</span>
+<span id="L99"><span class="lineNum">      99</span>              :    _doubleBufferStatParity = 0;</span>
+<span id="L100"><span class="lineNum">     100</span>              : </span>
+<span id="L101"><span class="lineNum">     101</span>              :    // buffer size depends on worldsize</span>
+<span id="L102"><span class="lineNum">     102</span>              :    _ttBufSend[0].resize(_ttBufSize);</span>
+<span id="L103"><span class="lineNum">     103</span>              :    _ttBufSend[1].resize(_ttBufSize);</span>
+<span id="L104"><span class="lineNum">     104</span>              :    _ttBufRecv.resize(worldSize * _ttBufSize);</span>
+<span id="L105"><span class="lineNum">     105</span>              :    _ttCurPos      = 0ull;</span>
+<span id="L106"><span class="lineNum">     106</span>              :    _nbTTTransfert = 0ull;</span>
+<span id="L107"><span class="lineNum">     107</span>              :    _nbTTBufferOverruns = 0ull;</span>
+<span id="L108"><span class="lineNum">     108</span>              :    _doubleBufferTTParity = 0;</span>
+<span id="L109"><span class="lineNum">     109</span>              : }</span>
+<span id="L110"><span class="lineNum">     110</span>              : </span>
+<span id="L111"><span class="lineNum">     111</span>              : void lateInit() {</span>
+<span id="L112"><span class="lineNum">     112</span>              :    if (moreThanOneProcess()) {</span>
+<span id="L113"><span class="lineNum">     113</span>              :       checkError(MPI_Win_create(&amp;ThreadPool::instance().main().stopFlag, sizeof(bool), sizeof(bool), MPI_INFO_NULL, _commStopFromR0, &amp;_winStopFromR0), &quot;MPI_Win_create&quot;);</span>
+<span id="L114"><span class="lineNum">     114</span>              :       checkError(MPI_Win_fence(0, _winStopFromR0), &quot;MPI_Win_fence in lateInit&quot;);</span>
+<span id="L115"><span class="lineNum">     115</span>              :    }</span>
 <span id="L116"><span class="lineNum">     116</span>              : }</span>
 <span id="L117"><span class="lineNum">     117</span>              : </span>
-<span id="L118"><span class="lineNum">     118</span>              : bool isMainProcess() { return rank == 0; }</span>
-<span id="L119"><span class="lineNum">     119</span>              : </span>
-<span id="L120"><span class="lineNum">     120</span>              : bool moreThanOneProcess() {</span>
-<span id="L121"><span class="lineNum">     121</span>              :    return worldSize &gt; 1;</span>
-<span id="L122"><span class="lineNum">     122</span>              : }</span>
-<span id="L123"><span class="lineNum">     123</span>              : </span>
-<span id="L124"><span class="lineNum">     124</span>              : // classic busy wait</span>
-<span id="L125"><span class="lineNum">     125</span>              : void sync(MPI_Comm&amp; com, const std::string&amp; msg) {</span>
-<span id="L126"><span class="lineNum">     126</span>              :    if (!moreThanOneProcess()) return;</span>
-<span id="L127"><span class="lineNum">     127</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; &quot;syncing: &quot; &lt;&lt; msg;</span>
-<span id="L128"><span class="lineNum">     128</span>              :    checkError(MPI_Barrier(com));</span>
-<span id="L129"><span class="lineNum">     129</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; &quot;...done&quot;;</span>
+<span id="L118"><span class="lineNum">     118</span>              : void finalize() {</span>
+<span id="L119"><span class="lineNum">     119</span>              :    checkError(MPI_Comm_free(&amp;_commTT), &quot;MPI_Comm_free _commTT&quot;);</span>
+<span id="L120"><span class="lineNum">     120</span>              :    checkError(MPI_Comm_free(&amp;_commTT2), &quot;MPI_Comm_free _commTT2&quot;);</span>
+<span id="L121"><span class="lineNum">     121</span>              :    checkError(MPI_Comm_free(&amp;_commStat), &quot;MPI_Comm_free _commStat&quot;);</span>
+<span id="L122"><span class="lineNum">     122</span>              :    checkError(MPI_Comm_free(&amp;_commStat2), &quot;MPI_Comm_free _commStat2&quot;);</span>
+<span id="L123"><span class="lineNum">     123</span>              :    checkError(MPI_Comm_free(&amp;_commInput), &quot;MPI_Comm_free _commInput&quot;);</span>
+<span id="L124"><span class="lineNum">     124</span>              :    checkError(MPI_Comm_free(&amp;_commMove), &quot;MPI_Comm_free _commMove&quot;);</span>
+<span id="L125"><span class="lineNum">     125</span>              :    checkError(MPI_Comm_free(&amp;_commStopFromR0), &quot;MPI_Comm_free _commStopFromR0&quot;);</span>
+<span id="L126"><span class="lineNum">     126</span>              : </span>
+<span id="L127"><span class="lineNum">     127</span>              :    if (moreThanOneProcess()) checkError(MPI_Win_free(&amp;_winStopFromR0), &quot;MPI_Win_free&quot;);</span>
+<span id="L128"><span class="lineNum">     128</span>              : </span>
+<span id="L129"><span class="lineNum">     129</span>              :    checkError(MPI_Finalize(), &quot;MPI_Finalize&quot;);</span>
 <span id="L130"><span class="lineNum">     130</span>              : }</span>
 <span id="L131"><span class="lineNum">     131</span>              : </span>
-<span id="L132"><span class="lineNum">     132</span>              : // &quot;softer&quot; wait on other process</span>
-<span id="L133"><span class="lineNum">     133</span>              : void waitRequest(MPI_Request&amp; req) {</span>
-<span id="L134"><span class="lineNum">     134</span>              :    if (!moreThanOneProcess()) return;</span>
-<span id="L135"><span class="lineNum">     135</span>              :    // don't rely on MPI to do a &quot;passive wait&quot;, most implementations are doing a busy-wait, so use 100% cpu</span>
-<span id="L136"><span class="lineNum">     136</span>              :    if (Distributed::isMainProcess()) { checkError(MPI_Wait(&amp;req, MPI_STATUS_IGNORE)); }</span>
-<span id="L137"><span class="lineNum">     137</span>              :    else {</span>
-<span id="L138"><span class="lineNum">     138</span>              :       while (true) {</span>
-<span id="L139"><span class="lineNum">     139</span>              :          int flag;</span>
-<span id="L140"><span class="lineNum">     140</span>              :          checkError(MPI_Test(&amp;req, &amp;flag, MPI_STATUS_IGNORE));</span>
-<span id="L141"><span class="lineNum">     141</span>              :          if (flag) break;</span>
-<span id="L142"><span class="lineNum">     142</span>              :          else</span>
-<span id="L143"><span class="lineNum">     143</span>              :             std::this_thread::sleep_for(std::chrono::milliseconds(1));</span>
-<span id="L144"><span class="lineNum">     144</span>              :       }</span>
-<span id="L145"><span class="lineNum">     145</span>              :    }</span>
-<span id="L146"><span class="lineNum">     146</span>              : }</span>
-<span id="L147"><span class="lineNum">     147</span>              : </span>
-<span id="L148"><span class="lineNum">     148</span>              : void initStat() {</span>
-<span id="L149"><span class="lineNum">     149</span>              :    if (!moreThanOneProcess()) return;</span>
-<span id="L150"><span class="lineNum">     150</span>              :    _countersBufSend.fill(0ull);</span>
-<span id="L151"><span class="lineNum">     151</span>              :    _countersBufRecv[0].fill(0ull);</span>
-<span id="L152"><span class="lineNum">     152</span>              :    _countersBufRecv[1].fill(0ull);</span>
-<span id="L153"><span class="lineNum">     153</span>              : }</span>
-<span id="L154"><span class="lineNum">     154</span>              : </span>
-<span id="L155"><span class="lineNum">     155</span>              : void sendStat() {</span>
-<span id="L156"><span class="lineNum">     156</span>              :    if (!moreThanOneProcess()) return;</span>
-<span id="L157"><span class="lineNum">     157</span>              :    // launch an async reduce</span>
-<span id="L158"><span class="lineNum">     158</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; rank &lt;&lt; &quot; sendstat&quot;;</span>
-<span id="L159"><span class="lineNum">     159</span>              :    asyncAllReduceSum(_countersBufSend.data(), _countersBufRecv[_doubleBufferStatParity % 2].data(), Stats::sid_maxid, _requestStat, _commStat);</span>
-<span id="L160"><span class="lineNum">     160</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; rank &lt;&lt; &quot; sendstat done&quot;;</span>
-<span id="L161"><span class="lineNum">     161</span>              :    ++_nbStatPoll;</span>
-<span id="L162"><span class="lineNum">     162</span>              : }</span>
-<span id="L163"><span class="lineNum">     163</span>              : </span>
-<span id="L164"><span class="lineNum">     164</span>              : void pollStat() { // only called from main thread</span>
-<span id="L165"><span class="lineNum">     165</span>              :    if (!moreThanOneProcess()) return;</span>
-<span id="L166"><span class="lineNum">     166</span>              :    int flag = 1;</span>
-<span id="L167"><span class="lineNum">     167</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; rank &lt;&lt; &quot; pollstat&quot;;</span>
-<span id="L168"><span class="lineNum">     168</span>              :    checkError(MPI_Test(&amp;_requestStat, &amp;flag, MPI_STATUS_IGNORE));</span>
-<span id="L169"><span class="lineNum">     169</span>              :    // if previous comm is done, launch another one</span>
-<span id="L170"><span class="lineNum">     170</span>              :    if (flag) {</span>
-<span id="L171"><span class="lineNum">     171</span>              :       ++_doubleBufferStatParity;</span>
-<span id="L172"><span class="lineNum">     172</span>              :       // gather stats from all local threads</span>
-<span id="L173"><span class="lineNum">     173</span>              :       for (size_t k = 0; k &lt; Stats::sid_maxid; ++k) {</span>
-<span id="L174"><span class="lineNum">     174</span>              :          _countersBufSend[k] = 0ull;</span>
-<span id="L175"><span class="lineNum">     175</span>              :          for (const auto&amp; it : ThreadPool::instance()) { _countersBufSend[k] += it-&gt;stats.counters[k]; }</span>
-<span id="L176"><span class="lineNum">     176</span>              :       }</span>
-<span id="L177"><span class="lineNum">     177</span>              :       sendStat();</span>
-<span id="L178"><span class="lineNum">     178</span>              :    }</span>
-<span id="L179"><span class="lineNum">     179</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; rank &lt;&lt; &quot; pollstat done&quot;;</span>
-<span id="L180"><span class="lineNum">     180</span>              : }</span>
-<span id="L181"><span class="lineNum">     181</span>              : </span>
-<span id="L182"><span class="lineNum">     182</span>              : // get all rank to a common synchronous state at the end of search</span>
-<span id="L183"><span class="lineNum">     183</span>              : void syncStat() { // only called from main thread</span>
-<span id="L184"><span class="lineNum">     184</span>              :    if (!moreThanOneProcess()) return;</span>
-<span id="L185"><span class="lineNum">     185</span>              :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Syncing stat&quot;;</span>
-<span id="L186"><span class="lineNum">     186</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; rank &lt;&lt; &quot; syncstat&quot;;</span>
-<span id="L187"><span class="lineNum">     187</span>              :    // wait for equilibrium</span>
-<span id="L188"><span class="lineNum">     188</span>              :    uint64_t globalNbPoll = 0ull;</span>
-<span id="L189"><span class="lineNum">     189</span>              :    allReduceMax(&amp;_nbStatPoll, &amp;globalNbPoll, 1, _commStat2);</span>
-<span id="L190"><span class="lineNum">     190</span>              :    while (_nbStatPoll &lt; globalNbPoll) {</span>
-<span id="L191"><span class="lineNum">     191</span>              :       checkError(MPI_Wait(&amp;_requestStat, MPI_STATUS_IGNORE));</span>
-<span id="L192"><span class="lineNum">     192</span>              :       sendStat();</span>
-<span id="L193"><span class="lineNum">     193</span>              :    }</span>
-<span id="L194"><span class="lineNum">     194</span>              : </span>
-<span id="L195"><span class="lineNum">     195</span>              :    // final resync</span>
-<span id="L196"><span class="lineNum">     196</span>              :    checkError(MPI_Wait(&amp;_requestStat, MPI_STATUS_IGNORE));</span>
-<span id="L197"><span class="lineNum">     197</span>              :    pollStat();</span>
-<span id="L198"><span class="lineNum">     198</span>              :    checkError(MPI_Wait(&amp;_requestStat, MPI_STATUS_IGNORE));</span>
-<span id="L199"><span class="lineNum">     199</span>              : </span>
-<span id="L200"><span class="lineNum">     200</span>              :    _countersBufRecv[(_doubleBufferStatParity + 1) % 2] = _countersBufRecv[(_doubleBufferStatParity) % 2];</span>
-<span id="L201"><span class="lineNum">     201</span>              : </span>
-<span id="L202"><span class="lineNum">     202</span>              :    //showStat(); // debug</span>
-<span id="L203"><span class="lineNum">     203</span>              :    //sync(_commStat, __PRETTY_FUNCTION__);</span>
-<span id="L204"><span class="lineNum">     204</span>              :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;...ok&quot;;</span>
-<span id="L205"><span class="lineNum">     205</span>              :    _nbStatPoll = 0;</span>
-<span id="L206"><span class="lineNum">     206</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; rank &lt;&lt; &quot; syncstat done&quot;;</span>
-<span id="L207"><span class="lineNum">     207</span>              : }</span>
+<span id="L132"><span class="lineNum">     132</span>              : bool isMainProcess() { return rank == 0; }</span>
+<span id="L133"><span class="lineNum">     133</span>              : </span>
+<span id="L134"><span class="lineNum">     134</span>              : bool moreThanOneProcess() {</span>
+<span id="L135"><span class="lineNum">     135</span>              :    return worldSize &gt; 1;</span>
+<span id="L136"><span class="lineNum">     136</span>              : }</span>
+<span id="L137"><span class="lineNum">     137</span>              : </span>
+<span id="L138"><span class="lineNum">     138</span>              : // classic busy wait</span>
+<span id="L139"><span class="lineNum">     139</span>              : void sync(MPI_Comm&amp; com, const std::string&amp; msg) {</span>
+<span id="L140"><span class="lineNum">     140</span>              :    if (!moreThanOneProcess()) return;</span>
+<span id="L141"><span class="lineNum">     141</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; &quot;syncing: &quot; &lt;&lt; msg;</span>
+<span id="L142"><span class="lineNum">     142</span>              :    checkError(MPI_Barrier(com), &quot;MPI_Barrier: &quot; + msg);</span>
+<span id="L143"><span class="lineNum">     143</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; &quot;...done&quot;;</span>
+<span id="L144"><span class="lineNum">     144</span>              : }</span>
+<span id="L145"><span class="lineNum">     145</span>              : </span>
+<span id="L146"><span class="lineNum">     146</span>              : // &quot;softer&quot; wait on other process</span>
+<span id="L147"><span class="lineNum">     147</span>              : void waitRequest(MPI_Request&amp; req) {</span>
+<span id="L148"><span class="lineNum">     148</span>              :    if (!moreThanOneProcess()) return;</span>
+<span id="L149"><span class="lineNum">     149</span>              :    // don't rely on MPI to do a &quot;passive wait&quot;, most implementations are doing a busy-wait, so use 100% cpu</span>
+<span id="L150"><span class="lineNum">     150</span>              :    if (Distributed::isMainProcess()) { checkError(MPI_Wait(&amp;req, MPI_STATUS_IGNORE), &quot;MPI_Wait in waitRequest&quot;); }</span>
+<span id="L151"><span class="lineNum">     151</span>              :    else {</span>
+<span id="L152"><span class="lineNum">     152</span>              :       while (true) {</span>
+<span id="L153"><span class="lineNum">     153</span>              :          int flag;</span>
+<span id="L154"><span class="lineNum">     154</span>              :          checkError(MPI_Test(&amp;req, &amp;flag, MPI_STATUS_IGNORE), &quot;MPI_Test in waitRequest&quot;);</span>
+<span id="L155"><span class="lineNum">     155</span>              :          if (flag) break;</span>
+<span id="L156"><span class="lineNum">     156</span>              :          else</span>
+<span id="L157"><span class="lineNum">     157</span>              :             std::this_thread::sleep_for(std::chrono::milliseconds(1));</span>
+<span id="L158"><span class="lineNum">     158</span>              :       }</span>
+<span id="L159"><span class="lineNum">     159</span>              :    }</span>
+<span id="L160"><span class="lineNum">     160</span>              : }</span>
+<span id="L161"><span class="lineNum">     161</span>              : </span>
+<span id="L162"><span class="lineNum">     162</span>              : void initStat() {</span>
+<span id="L163"><span class="lineNum">     163</span>              :    if (!moreThanOneProcess()) return;</span>
+<span id="L164"><span class="lineNum">     164</span>              :    _countersBufSend.fill(0ull);</span>
+<span id="L165"><span class="lineNum">     165</span>              :    _countersBufRecv[0].fill(0ull);</span>
+<span id="L166"><span class="lineNum">     166</span>              :    _countersBufRecv[1].fill(0ull);</span>
+<span id="L167"><span class="lineNum">     167</span>              : }</span>
+<span id="L168"><span class="lineNum">     168</span>              : </span>
+<span id="L169"><span class="lineNum">     169</span>              : void sendStat() {</span>
+<span id="L170"><span class="lineNum">     170</span>              :    if (!moreThanOneProcess()) return;</span>
+<span id="L171"><span class="lineNum">     171</span>              :    // launch an async reduce</span>
+<span id="L172"><span class="lineNum">     172</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; rank &lt;&lt; &quot; sendstat&quot;;</span>
+<span id="L173"><span class="lineNum">     173</span>              :    asyncAllReduceSum(_countersBufSend.data(), _countersBufRecv[_doubleBufferStatParity % 2].data(), Stats::sid_maxid, _requestStat, _commStat);</span>
+<span id="L174"><span class="lineNum">     174</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; rank &lt;&lt; &quot; sendstat done&quot;;</span>
+<span id="L175"><span class="lineNum">     175</span>              :    ++_nbStatPoll;</span>
+<span id="L176"><span class="lineNum">     176</span>              : }</span>
+<span id="L177"><span class="lineNum">     177</span>              : </span>
+<span id="L178"><span class="lineNum">     178</span>              : void pollStat() { // only called from main thread</span>
+<span id="L179"><span class="lineNum">     179</span>              :    if (!moreThanOneProcess()) return;</span>
+<span id="L180"><span class="lineNum">     180</span>              :    int flag = 1;</span>
+<span id="L181"><span class="lineNum">     181</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; rank &lt;&lt; &quot; pollstat&quot;;</span>
+<span id="L182"><span class="lineNum">     182</span>              :    checkError(MPI_Test(&amp;_requestStat, &amp;flag, MPI_STATUS_IGNORE), &quot;MPI_Test in pollStat&quot;);</span>
+<span id="L183"><span class="lineNum">     183</span>              :    // if previous comm is done, launch another one</span>
+<span id="L184"><span class="lineNum">     184</span>              :    if (flag) {</span>
+<span id="L185"><span class="lineNum">     185</span>              :       ++_doubleBufferStatParity;</span>
+<span id="L186"><span class="lineNum">     186</span>              :       // gather stats from all local threads</span>
+<span id="L187"><span class="lineNum">     187</span>              :       for (size_t k = 0; k &lt; Stats::sid_maxid; ++k) {</span>
+<span id="L188"><span class="lineNum">     188</span>              :          _countersBufSend[k] = 0ull;</span>
+<span id="L189"><span class="lineNum">     189</span>              :          for (const auto&amp; it : ThreadPool::instance()) { _countersBufSend[k] += it-&gt;stats.counters[k]; }</span>
+<span id="L190"><span class="lineNum">     190</span>              :       }</span>
+<span id="L191"><span class="lineNum">     191</span>              :       sendStat();</span>
+<span id="L192"><span class="lineNum">     192</span>              :    }</span>
+<span id="L193"><span class="lineNum">     193</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; rank &lt;&lt; &quot; pollstat done&quot;;</span>
+<span id="L194"><span class="lineNum">     194</span>              : }</span>
+<span id="L195"><span class="lineNum">     195</span>              : </span>
+<span id="L196"><span class="lineNum">     196</span>              : // get all rank to a common synchronous state at the end of search</span>
+<span id="L197"><span class="lineNum">     197</span>              : void syncStat() { // only called from main thread</span>
+<span id="L198"><span class="lineNum">     198</span>              :    if (!moreThanOneProcess()) return;</span>
+<span id="L199"><span class="lineNum">     199</span>              :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Syncing stat&quot;;</span>
+<span id="L200"><span class="lineNum">     200</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; rank &lt;&lt; &quot; syncstat&quot;;</span>
+<span id="L201"><span class="lineNum">     201</span>              :    // wait for equilibrium</span>
+<span id="L202"><span class="lineNum">     202</span>              :    uint64_t globalNbPoll = 0ull;</span>
+<span id="L203"><span class="lineNum">     203</span>              :    allReduceMax(&amp;_nbStatPoll, &amp;globalNbPoll, 1, _commStat2);</span>
+<span id="L204"><span class="lineNum">     204</span>              :    while (_nbStatPoll &lt; globalNbPoll) {</span>
+<span id="L205"><span class="lineNum">     205</span>              :       checkError(MPI_Wait(&amp;_requestStat, MPI_STATUS_IGNORE), &quot;MPI_Wait in syncStat loop&quot;);</span>
+<span id="L206"><span class="lineNum">     206</span>              :       sendStat();</span>
+<span id="L207"><span class="lineNum">     207</span>              :    }</span>
 <span id="L208"><span class="lineNum">     208</span>              : </span>
-<span id="L209"><span class="lineNum">     209</span>              : void showStat() {</span>
-<span id="L210"><span class="lineNum">     210</span>              :    // show reduced stats</span>
-<span id="L211"><span class="lineNum">     211</span>              :    for (size_t k = 0; k &lt; Stats::sid_maxid; ++k) {</span>
-<span id="L212"><span class="lineNum">     212</span>              :       Logging::LogIt(Logging::logInfo) &lt;&lt; Stats::Names[k] &lt;&lt; &quot; &quot; &lt;&lt; _countersBufRecv[(_doubleBufferStatParity + 1) % 2][k];</span>
-<span id="L213"><span class="lineNum">     213</span>              :    }</span>
-<span id="L214"><span class="lineNum">     214</span>              : }</span>
+<span id="L209"><span class="lineNum">     209</span>              :    // final resync</span>
+<span id="L210"><span class="lineNum">     210</span>              :    checkError(MPI_Wait(&amp;_requestStat, MPI_STATUS_IGNORE), &quot;MPI_Wait in syncStat final 1&quot;);</span>
+<span id="L211"><span class="lineNum">     211</span>              :    pollStat();</span>
+<span id="L212"><span class="lineNum">     212</span>              :    checkError(MPI_Wait(&amp;_requestStat, MPI_STATUS_IGNORE), &quot;MPI_Wait in syncStat final 2&quot;);</span>
+<span id="L213"><span class="lineNum">     213</span>              : </span>
+<span id="L214"><span class="lineNum">     214</span>              :    _countersBufRecv[(_doubleBufferStatParity + 1) % 2] = _countersBufRecv[(_doubleBufferStatParity) % 2];</span>
 <span id="L215"><span class="lineNum">     215</span>              : </span>
-<span id="L216"><span class="lineNum">     216</span>              : Counter counter(Stats::StatId id) {</span>
-<span id="L217"><span class="lineNum">     217</span>              :    // because doubleBuffer is by design not initially filled, we return locals data at the beginning)</span>
-<span id="L218"><span class="lineNum">     218</span>              :    const Counter global = _countersBufRecv[(_doubleBufferStatParity + 1) % 2][id];</span>
-<span id="L219"><span class="lineNum">     219</span>              :    return global != 0 ? global : ThreadPool::instance().counter(id, true);</span>
-<span id="L220"><span class="lineNum">     220</span>              : }</span>
-<span id="L221"><span class="lineNum">     221</span>              : </span>
-<span id="L222"><span class="lineNum">     222</span>              : void setEntry(const Hash h, const TT::Entry&amp; e) {</span>
-<span id="L223"><span class="lineNum">     223</span>              :    if (!moreThanOneProcess()) return;</span>
-<span id="L224"><span class="lineNum">     224</span>              :    DEBUGCOUT(&quot;set entry&quot;)</span>
-<span id="L225"><span class="lineNum">     225</span>              :    // do not share entry near leaf, their are changing to quickly</span>
-<span id="L226"><span class="lineNum">     226</span>              :    if (e.d &gt; _ttMinDepth) {</span>
-<span id="L227"><span class="lineNum">     227</span>              :       DEBUGCOUT(&quot;depth ok&quot;)</span>
-<span id="L228"><span class="lineNum">     228</span>              :       if (_ttMutex.try_lock()) { // this can be called from multiple threads of this process !</span>
-<span id="L229"><span class="lineNum">     229</span>              :          DEBUGCOUT(&quot;lock ok&quot;)</span>
-<span id="L230"><span class="lineNum">     230</span>              :          _ttBufSend[_doubleBufferTTParity % 2][_ttCurPos++] = {h, e};</span>
-<span id="L231"><span class="lineNum">     231</span>              :          if (_ttCurPos == _ttBufSize) { // buffer is full</span>
-<span id="L232"><span class="lineNum">     232</span>              :             DEBUGCOUT(&quot;buffer full&quot;)</span>
-<span id="L233"><span class="lineNum">     233</span>              :             _ttCurPos = 0ull; // reset index</span>
-<span id="L234"><span class="lineNum">     234</span>              :             // if previous comm is done then use data and launch another one</span>
-<span id="L235"><span class="lineNum">     235</span>              :             int flag;</span>
-<span id="L236"><span class="lineNum">     236</span>              :             checkError(MPI_Test(&amp;_requestTT, &amp;flag, MPI_STATUS_IGNORE));</span>
-<span id="L237"><span class="lineNum">     237</span>              :             if (flag) {</span>
-<span id="L238"><span class="lineNum">     238</span>              :                // receive previous data</span>
-<span id="L239"><span class="lineNum">     239</span>              : #ifdef DEBUG_DISTRIBUTED</span>
-<span id="L240"><span class="lineNum">     240</span>              :                static uint64_t received = 0;</span>
-<span id="L241"><span class="lineNum">     241</span>              : #endif</span>
-<span id="L242"><span class="lineNum">     242</span>              :                DEBUGCOUT(&quot;buffer received &quot; +std::to_string(received++))</span>
-<span id="L243"><span class="lineNum">     243</span>              :                for (const auto&amp; i : _ttBufRecv) {</span>
-<span id="L244"><span class="lineNum">     244</span>              :                   TT::_setEntry(i.h, i.e); // always replace (favour data from other process)</span>
-<span id="L245"><span class="lineNum">     245</span>              :                }</span>
-<span id="L246"><span class="lineNum">     246</span>              :                // send new ones</span>
-<span id="L247"><span class="lineNum">     247</span>              :                ++_doubleBufferTTParity; // switch buffer</span>
-<span id="L248"><span class="lineNum">     248</span>              :                DEBUGCOUT(&quot;sending data &quot; + std::to_string(_nbTTTransfert))</span>
-<span id="L249"><span class="lineNum">     249</span>              :                asyncAllGather(_ttBufSend[(_doubleBufferTTParity + 1) % 2].data(), _ttBufRecv.data(), _ttBufSize * sizeof(EntryHash), _requestTT,</span>
-<span id="L250"><span class="lineNum">     250</span>              :                               _commTT);</span>
-<span id="L251"><span class="lineNum">     251</span>              :                ++_nbTTTransfert;</span>
-<span id="L252"><span class="lineNum">     252</span>              :             }</span>
-<span id="L253"><span class="lineNum">     253</span>              :             // else we reuse the same buffer and loosing current data</span>
-<span id="L254"><span class="lineNum">     254</span>              :             /*else {</span>
-<span id="L255"><span class="lineNum">     255</span>              :                   DEBUGCOUT(&quot;previous comm not done, skipping&quot;)</span>
-<span id="L256"><span class="lineNum">     256</span>              :             }*/</span>
-<span id="L257"><span class="lineNum">     257</span>              :          }</span>
-<span id="L258"><span class="lineNum">     258</span>              :          _ttMutex.unlock();</span>
-<span id="L259"><span class="lineNum">     259</span>              :       } // end of lock</span>
-<span id="L260"><span class="lineNum">     260</span>              :    }    // depth ok</span>
-<span id="L261"><span class="lineNum">     261</span>              : }</span>
-<span id="L262"><span class="lineNum">     262</span>              : </span>
-<span id="L263"><span class="lineNum">     263</span>              : // get all rank to a common synchronous state at the end of search</span>
-<span id="L264"><span class="lineNum">     264</span>              : void syncTT() { // only called from main thread</span>
-<span id="L265"><span class="lineNum">     265</span>              :    if (!moreThanOneProcess()) return;</span>
-<span id="L266"><span class="lineNum">     266</span>              :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Syncing TT&quot;;</span>
-<span id="L267"><span class="lineNum">     267</span>              :    // wait for equilibrium</span>
-<span id="L268"><span class="lineNum">     268</span>              :    uint64_t globalNbPoll = 0ull;</span>
-<span id="L269"><span class="lineNum">     269</span>              :    allReduceMax(&amp;_nbTTTransfert, &amp;globalNbPoll, 1, _commTT2);</span>
-<span id="L270"><span class="lineNum">     270</span>              :    DEBUGCOUT(&quot;sync TT &quot; + std::to_string(_nbTTTransfert) + &quot; &quot; + std::to_string(globalNbPoll))</span>
-<span id="L271"><span class="lineNum">     271</span>              :    if (_nbTTTransfert &lt; globalNbPoll) {</span>
-<span id="L272"><span class="lineNum">     272</span>              :       DEBUGCOUT(&quot;sync TT middle wait&quot;)</span>
-<span id="L273"><span class="lineNum">     273</span>              :       checkError(MPI_Wait(&amp;_requestTT, MPI_STATUS_IGNORE));</span>
-<span id="L274"><span class="lineNum">     274</span>              :       // we don't really care which buffer is sent here</span>
-<span id="L275"><span class="lineNum">     275</span>              :       asyncAllGather(_ttBufSend[(_doubleBufferTTParity + 1) % 2].data(), _ttBufRecv.data(), _ttBufSize * sizeof(EntryHash), _requestTT, _commTT);</span>
-<span id="L276"><span class="lineNum">     276</span>              :       ++_nbTTTransfert;</span>
-<span id="L277"><span class="lineNum">     277</span>              :    }</span>
-<span id="L278"><span class="lineNum">     278</span>              :    // final resync</span>
-<span id="L279"><span class="lineNum">     279</span>              :    DEBUGCOUT(&quot;sync TT final wait&quot;)</span>
-<span id="L280"><span class="lineNum">     280</span>              :    checkError(MPI_Wait(&amp;_requestTT, MPI_STATUS_IGNORE));</span>
-<span id="L281"><span class="lineNum">     281</span>              :    DEBUGCOUT(&quot;sync TT final wait done 1&quot;)</span>
-<span id="L282"><span class="lineNum">     282</span>              :    //sync(_commTT, __PRETTY_FUNCTION__);</span>
-<span id="L283"><span class="lineNum">     283</span>              :    DEBUGCOUT(&quot;sync TT final wait done 2&quot;)</span>
-<span id="L284"><span class="lineNum">     284</span>              :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;... ok&quot;;</span>
-<span id="L285"><span class="lineNum">     285</span>              :    _nbTTTransfert = 0;</span>
-<span id="L286"><span class="lineNum">     286</span>              : }</span>
-<span id="L287"><span class="lineNum">     287</span>              : } // namespace Distributed</span>
+<span id="L216"><span class="lineNum">     216</span>              :    //showStat(); // debug</span>
+<span id="L217"><span class="lineNum">     217</span>              :    //sync(_commStat, __PRETTY_FUNCTION__);</span>
+<span id="L218"><span class="lineNum">     218</span>              :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;...ok&quot;;</span>
+<span id="L219"><span class="lineNum">     219</span>              :    _nbStatPoll = 0;</span>
+<span id="L220"><span class="lineNum">     220</span>              :    Logging::LogIt(Logging::logDebug) &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; rank &lt;&lt; &quot; syncstat done&quot;;</span>
+<span id="L221"><span class="lineNum">     221</span>              : }</span>
+<span id="L222"><span class="lineNum">     222</span>              : </span>
+<span id="L223"><span class="lineNum">     223</span>              : void showStat() {</span>
+<span id="L224"><span class="lineNum">     224</span>              :    // show reduced stats</span>
+<span id="L225"><span class="lineNum">     225</span>              :    for (size_t k = 0; k &lt; Stats::sid_maxid; ++k) {</span>
+<span id="L226"><span class="lineNum">     226</span>              :       Logging::LogIt(Logging::logInfo) &lt;&lt; Stats::Names[k] &lt;&lt; &quot; &quot; &lt;&lt; _countersBufRecv[(_doubleBufferStatParity + 1) % 2][k];</span>
+<span id="L227"><span class="lineNum">     227</span>              :    }</span>
+<span id="L228"><span class="lineNum">     228</span>              : }</span>
+<span id="L229"><span class="lineNum">     229</span>              : </span>
+<span id="L230"><span class="lineNum">     230</span>              : Counter counter(Stats::StatId id) {</span>
+<span id="L231"><span class="lineNum">     231</span>              :    // because doubleBuffer is by design not initially filled, we return locals data at the beginning)</span>
+<span id="L232"><span class="lineNum">     232</span>              :    const Counter global = _countersBufRecv[(_doubleBufferStatParity + 1) % 2][id];</span>
+<span id="L233"><span class="lineNum">     233</span>              :    return global != 0 ? global : ThreadPool::instance().counter(id, true);</span>
+<span id="L234"><span class="lineNum">     234</span>              : }</span>
+<span id="L235"><span class="lineNum">     235</span>              : </span>
+<span id="L236"><span class="lineNum">     236</span>              : void setEntry(const Hash h, const TT::Entry&amp; e) {</span>
+<span id="L237"><span class="lineNum">     237</span>              :    if (!moreThanOneProcess()) return;</span>
+<span id="L238"><span class="lineNum">     238</span>              :    DEBUGCOUT(&quot;set entry&quot;)</span>
+<span id="L239"><span class="lineNum">     239</span>              :    // do not share entry near leaf, their are changing to quickly</span>
+<span id="L240"><span class="lineNum">     240</span>              :    if (e.d &gt; _ttMinDepth) {</span>
+<span id="L241"><span class="lineNum">     241</span>              :       DEBUGCOUT(&quot;depth ok&quot;)</span>
+<span id="L242"><span class="lineNum">     242</span>              :       if (_ttMutex.try_lock()) { // this can be called from multiple threads of this process !</span>
+<span id="L243"><span class="lineNum">     243</span>              :          DEBUGCOUT(&quot;lock ok&quot;)</span>
+<span id="L244"><span class="lineNum">     244</span>              :          const uint8_t writeBuffer = _doubleBufferTTParity % 2;</span>
+<span id="L245"><span class="lineNum">     245</span>              :          _ttBufSend[writeBuffer][_ttCurPos++] = {h, e};</span>
+<span id="L246"><span class="lineNum">     246</span>              :          if (_ttCurPos == _ttBufSize) { // buffer is full</span>
+<span id="L247"><span class="lineNum">     247</span>              :             DEBUGCOUT(&quot;buffer full&quot;)</span>
+<span id="L248"><span class="lineNum">     248</span>              :             // if previous comm is done then use data and launch another one</span>
+<span id="L249"><span class="lineNum">     249</span>              :             int flag;</span>
+<span id="L250"><span class="lineNum">     250</span>              :             checkError(MPI_Test(&amp;_requestTT, &amp;flag, MPI_STATUS_IGNORE), &quot;MPI_Test in setEntry&quot;);</span>
+<span id="L251"><span class="lineNum">     251</span>              :             if (flag) {</span>
+<span id="L252"><span class="lineNum">     252</span>              :                // receive previous data (if this is not the first send)</span>
+<span id="L253"><span class="lineNum">     253</span>              :                if (_nbTTTransfert &gt; 0) {</span>
+<span id="L254"><span class="lineNum">     254</span>              : #ifdef DEBUG_DISTRIBUTED</span>
+<span id="L255"><span class="lineNum">     255</span>              :                   static uint64_t received = 0;</span>
+<span id="L256"><span class="lineNum">     256</span>              : #endif</span>
+<span id="L257"><span class="lineNum">     257</span>              :                   DEBUGCOUT(&quot;buffer received &quot; +std::to_string(received++))</span>
+<span id="L258"><span class="lineNum">     258</span>              :                   for (const auto&amp; i : _ttBufRecv) {</span>
+<span id="L259"><span class="lineNum">     259</span>              :                      if (i.h != nullHash) { // Only process valid entries</span>
+<span id="L260"><span class="lineNum">     260</span>              :                         TT::_setEntry(i.h, i.e); // always replace (favour data from other process)</span>
+<span id="L261"><span class="lineNum">     261</span>              :                      }</span>
+<span id="L262"><span class="lineNum">     262</span>              :                   }</span>
+<span id="L263"><span class="lineNum">     263</span>              :                }</span>
+<span id="L264"><span class="lineNum">     264</span>              :                // send current buffer (writeBuffer)</span>
+<span id="L265"><span class="lineNum">     265</span>              :                DEBUGCOUT(&quot;sending data &quot; + std::to_string(_nbTTTransfert))</span>
+<span id="L266"><span class="lineNum">     266</span>              :                asyncAllGather(_ttBufSend[writeBuffer].data(), _ttBufRecv.data(), _ttBufSize * sizeof(EntryHash), _requestTT, _commTT);</span>
+<span id="L267"><span class="lineNum">     267</span>              :                ++_nbTTTransfert;</span>
+<span id="L268"><span class="lineNum">     268</span>              :                // switch to other buffer and reset position</span>
+<span id="L269"><span class="lineNum">     269</span>              :                ++_doubleBufferTTParity;</span>
+<span id="L270"><span class="lineNum">     270</span>              :                _ttCurPos = 0ull;</span>
+<span id="L271"><span class="lineNum">     271</span>              :             }</span>
+<span id="L272"><span class="lineNum">     272</span>              :             else {</span>
+<span id="L273"><span class="lineNum">     273</span>              :                // Previous comm not done, reset position and overwrite old data in same buffer</span>
+<span id="L274"><span class="lineNum">     274</span>              :                // This means we're losing TT entries - track this for monitoring</span>
+<span id="L275"><span class="lineNum">     275</span>              :                ++_nbTTBufferOverruns;</span>
+<span id="L276"><span class="lineNum">     276</span>              :                if (_nbTTBufferOverruns % 100 == 1) { // Log occasionally to avoid spam</span>
+<span id="L277"><span class="lineNum">     277</span>              :                   Logging::LogIt(Logging::logWarn) &lt;&lt; &quot;Rank &quot; &lt;&lt; rank &lt;&lt; &quot;: TT buffer overrun #&quot; </span>
+<span id="L278"><span class="lineNum">     278</span>              :                                                     &lt;&lt; _nbTTBufferOverruns &lt;&lt; &quot; (MPI send slower than generation)&quot;;</span>
+<span id="L279"><span class="lineNum">     279</span>              :                }</span>
+<span id="L280"><span class="lineNum">     280</span>              :                DEBUGCOUT(&quot;previous comm not done, reusing buffer&quot;)</span>
+<span id="L281"><span class="lineNum">     281</span>              :                _ttCurPos = 0ull;</span>
+<span id="L282"><span class="lineNum">     282</span>              :             }</span>
+<span id="L283"><span class="lineNum">     283</span>              :          }</span>
+<span id="L284"><span class="lineNum">     284</span>              :          _ttMutex.unlock();</span>
+<span id="L285"><span class="lineNum">     285</span>              :       } // end of lock</span>
+<span id="L286"><span class="lineNum">     286</span>              :    }    // depth ok</span>
+<span id="L287"><span class="lineNum">     287</span>              : }</span>
 <span id="L288"><span class="lineNum">     288</span>              : </span>
-<span id="L289"><span class="lineNum">     289</span>              : #else</span>
-<span id="L290"><span class="lineNum">     290</span>              : </span>
-<span id="L291"><span class="lineNum">     291</span>              : namespace Distributed {</span>
-<span id="L292"><span class="lineNum">     292</span>              : int worldSize = 1;</span>
-<span id="L293"><span class="lineNum">     293</span>              : int rank      = 0;</span>
-<span id="L294"><span class="lineNum">     294</span>              : </span>
-<span id="L295"><span class="lineNum">     295</span>              : DummyType _commTT         = 0;</span>
-<span id="L296"><span class="lineNum">     296</span>              : DummyType _commTT2        = 0;</span>
-<span id="L297"><span class="lineNum">     297</span>              : DummyType _commStat       = 0;</span>
-<span id="L298"><span class="lineNum">     298</span>              : DummyType _commStat2      = 0;</span>
-<span id="L299"><span class="lineNum">     299</span>              : DummyType _commInput      = 0;</span>
-<span id="L300"><span class="lineNum">     300</span>              : DummyType _commMove       = 0;</span>
-<span id="L301"><span class="lineNum">     301</span>              : DummyType _commStopFromR0 = 0;</span>
-<span id="L302"><span class="lineNum">     302</span>              : </span>
-<span id="L303"><span class="lineNum">     303</span>              : DummyType _requestTT         = 0;</span>
-<span id="L304"><span class="lineNum">     304</span>              : DummyType _requestStat       = 0;</span>
-<span id="L305"><span class="lineNum">     305</span>              : DummyType _requestInput      = 0;</span>
-<span id="L306"><span class="lineNum">     306</span>              : DummyType _requestMove       = 0;</span>
-<span id="L307"><span class="lineNum">     307</span>              : //DummyType _requestStopFromR0 = 0;</span>
-<span id="L308"><span class="lineNum">     308</span>              : </span>
-<span id="L309"><span class="lineNum">     309</span>              : DummyType _winStopFromR0 = 0;</span>
-<span id="L310"><span class="lineNum">     310</span>              : </span>
-<span id="L311"><span class="lineNum">     311</span> <span class="tlaUNC tlaBgUNC">           0 : Counter counter(Stats::StatId id) { return ThreadPool::instance().counter(id, true); }</span></span>
-<span id="L312"><span class="lineNum">     312</span>              : </span>
-<span id="L313"><span class="lineNum">     313</span>              : } // namespace Distributed</span>
-<span id="L314"><span class="lineNum">     314</span>              : </span>
-<span id="L315"><span class="lineNum">     315</span>              : #endif</span>
+<span id="L289"><span class="lineNum">     289</span>              : // get all rank to a common synchronous state at the end of search</span>
+<span id="L290"><span class="lineNum">     290</span>              : void syncTT() { // only called from main thread</span>
+<span id="L291"><span class="lineNum">     291</span>              :    if (!moreThanOneProcess()) return;</span>
+<span id="L292"><span class="lineNum">     292</span>              :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Syncing TT&quot;;</span>
+<span id="L293"><span class="lineNum">     293</span>              :    </span>
+<span id="L294"><span class="lineNum">     294</span>              :    // First, ensure any pending TT transfer is complete</span>
+<span id="L295"><span class="lineNum">     295</span>              :    DEBUGCOUT(&quot;sync TT initial wait&quot;)</span>
+<span id="L296"><span class="lineNum">     296</span>              :    if (_requestTT != MPI_REQUEST_NULL) {</span>
+<span id="L297"><span class="lineNum">     297</span>              :       checkError(MPI_Wait(&amp;_requestTT, MPI_STATUS_IGNORE), &quot;MPI_Wait in syncTT initial&quot;);</span>
+<span id="L298"><span class="lineNum">     298</span>              :       // Process received data</span>
+<span id="L299"><span class="lineNum">     299</span>              :       if (_nbTTTransfert &gt; 0) {</span>
+<span id="L300"><span class="lineNum">     300</span>              :          for (const auto&amp; i : _ttBufRecv) {</span>
+<span id="L301"><span class="lineNum">     301</span>              :             if (i.h != nullHash) {</span>
+<span id="L302"><span class="lineNum">     302</span>              :                TT::_setEntry(i.h, i.e);</span>
+<span id="L303"><span class="lineNum">     303</span>              :             }</span>
+<span id="L304"><span class="lineNum">     304</span>              :          }</span>
+<span id="L305"><span class="lineNum">     305</span>              :       }</span>
+<span id="L306"><span class="lineNum">     306</span>              :    }</span>
+<span id="L307"><span class="lineNum">     307</span>              :    </span>
+<span id="L308"><span class="lineNum">     308</span>              :    // Synchronize transfer counts across all processes</span>
+<span id="L309"><span class="lineNum">     309</span>              :    uint64_t globalNbPoll = 0ull;</span>
+<span id="L310"><span class="lineNum">     310</span>              :    allReduceMax(&amp;_nbTTTransfert, &amp;globalNbPoll, 1, _commTT2);</span>
+<span id="L311"><span class="lineNum">     311</span>              :    DEBUGCOUT(&quot;sync TT &quot; + std::to_string(_nbTTTransfert) + &quot; &quot; + std::to_string(globalNbPoll))</span>
+<span id="L312"><span class="lineNum">     312</span>              :    </span>
+<span id="L313"><span class="lineNum">     313</span>              :    // Make sure all processes have done the same number of transfers</span>
+<span id="L314"><span class="lineNum">     314</span>              :    while (_nbTTTransfert &lt; globalNbPoll) {</span>
+<span id="L315"><span class="lineNum">     315</span>              :       DEBUGCOUT(&quot;sync TT catchup&quot;)</span>
+<span id="L316"><span class="lineNum">     316</span>              :       // Send a partial buffer or empty buffer to catch up</span>
+<span id="L317"><span class="lineNum">     317</span>              :       std::lock_guard&lt;std::mutex&gt; lock(_ttMutex);</span>
+<span id="L318"><span class="lineNum">     318</span>              :       const uint8_t sendBuffer = _doubleBufferTTParity % 2;</span>
+<span id="L319"><span class="lineNum">     319</span>              :       asyncAllGather(_ttBufSend[sendBuffer].data(), _ttBufRecv.data(), _ttBufSize * sizeof(EntryHash), _requestTT, _commTT);</span>
+<span id="L320"><span class="lineNum">     320</span>              :       checkError(MPI_Wait(&amp;_requestTT, MPI_STATUS_IGNORE), &quot;MPI_Wait in syncTT catchup&quot;);</span>
+<span id="L321"><span class="lineNum">     321</span>              :       ++_nbTTTransfert;</span>
+<span id="L322"><span class="lineNum">     322</span>              :       // Process received data</span>
+<span id="L323"><span class="lineNum">     323</span>              :       for (const auto&amp; i : _ttBufRecv) {</span>
+<span id="L324"><span class="lineNum">     324</span>              :          if (i.h != nullHash) {</span>
+<span id="L325"><span class="lineNum">     325</span>              :             TT::_setEntry(i.h, i.e);</span>
+<span id="L326"><span class="lineNum">     326</span>              :          }</span>
+<span id="L327"><span class="lineNum">     327</span>              :       }</span>
+<span id="L328"><span class="lineNum">     328</span>              :    }</span>
+<span id="L329"><span class="lineNum">     329</span>              :    </span>
+<span id="L330"><span class="lineNum">     330</span>              :    DEBUGCOUT(&quot;sync TT final barrier&quot;)</span>
+<span id="L331"><span class="lineNum">     331</span>              :    sync(_commTT2, &quot;syncTT final&quot;);</span>
+<span id="L332"><span class="lineNum">     332</span>              :    </span>
+<span id="L333"><span class="lineNum">     333</span>              :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;... ok&quot;;</span>
+<span id="L334"><span class="lineNum">     334</span>              :    </span>
+<span id="L335"><span class="lineNum">     335</span>              :    if (_nbTTBufferOverruns &gt; 0) {</span>
+<span id="L336"><span class="lineNum">     336</span>              :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Rank &quot; &lt;&lt; rank &lt;&lt; &quot;: Total TT buffer overruns: &quot; &lt;&lt; _nbTTBufferOverruns;</span>
+<span id="L337"><span class="lineNum">     337</span>              :    }</span>
+<span id="L338"><span class="lineNum">     338</span>              :    </span>
+<span id="L339"><span class="lineNum">     339</span>              :    _nbTTTransfert = 0;</span>
+<span id="L340"><span class="lineNum">     340</span>              :    _nbTTBufferOverruns = 0;</span>
+<span id="L341"><span class="lineNum">     341</span>              :    _ttCurPos = 0;</span>
+<span id="L342"><span class="lineNum">     342</span>              :    _requestTT = MPI_REQUEST_NULL;</span>
+<span id="L343"><span class="lineNum">     343</span>              : }</span>
+<span id="L344"><span class="lineNum">     344</span>              : } // namespace Distributed</span>
+<span id="L345"><span class="lineNum">     345</span>              : </span>
+<span id="L346"><span class="lineNum">     346</span>              : #else</span>
+<span id="L347"><span class="lineNum">     347</span>              : </span>
+<span id="L348"><span class="lineNum">     348</span>              : namespace Distributed {</span>
+<span id="L349"><span class="lineNum">     349</span>              : int worldSize = 1;</span>
+<span id="L350"><span class="lineNum">     350</span>              : int rank      = 0;</span>
+<span id="L351"><span class="lineNum">     351</span>              : </span>
+<span id="L352"><span class="lineNum">     352</span>              : DummyType _commTT         = 0;</span>
+<span id="L353"><span class="lineNum">     353</span>              : DummyType _commTT2        = 0;</span>
+<span id="L354"><span class="lineNum">     354</span>              : DummyType _commStat       = 0;</span>
+<span id="L355"><span class="lineNum">     355</span>              : DummyType _commStat2      = 0;</span>
+<span id="L356"><span class="lineNum">     356</span>              : DummyType _commInput      = 0;</span>
+<span id="L357"><span class="lineNum">     357</span>              : DummyType _commMove       = 0;</span>
+<span id="L358"><span class="lineNum">     358</span>              : DummyType _commStopFromR0 = 0;</span>
+<span id="L359"><span class="lineNum">     359</span>              : </span>
+<span id="L360"><span class="lineNum">     360</span>              : DummyType _requestTT         = 0;</span>
+<span id="L361"><span class="lineNum">     361</span>              : DummyType _requestStat       = 0;</span>
+<span id="L362"><span class="lineNum">     362</span>              : DummyType _requestInput      = 0;</span>
+<span id="L363"><span class="lineNum">     363</span>              : DummyType _requestMove       = 0;</span>
+<span id="L364"><span class="lineNum">     364</span>              : //DummyType _requestStopFromR0 = 0;</span>
+<span id="L365"><span class="lineNum">     365</span>              : </span>
+<span id="L366"><span class="lineNum">     366</span>              : DummyType _winStopFromR0 = 0;</span>
+<span id="L367"><span class="lineNum">     367</span>              : </span>
+<span id="L368"><span class="lineNum">     368</span> <span class="tlaUNC tlaBgUNC">           0 : Counter counter(Stats::StatId id) { return ThreadPool::instance().counter(id, true); }</span></span>
+<span id="L369"><span class="lineNum">     369</span>              : </span>
+<span id="L370"><span class="lineNum">     370</span>              : } // namespace Distributed</span>
+<span id="L371"><span class="lineNum">     371</span>              : </span>
+<span id="L372"><span class="lineNum">     372</span>              : #endif</span>
         </pre>
               </td>
             </tr>
