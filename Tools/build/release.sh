@@ -15,24 +15,34 @@ echo "====================================="
 
 # Intel main arch
 for m in -march=core2 -march=nehalem -march=sandybridge -march=skylake; do
+   echo $dir/build.sh $e $v $m $n $d
    $dir/build.sh $e $v $m $n $d
+   echo "=================================="
+   echo $dir/buildGW.sh $e $v $m $n $d
    $dir/buildGW.sh $e $v $m $n $d
 done
 
 # AMD main arch
 export NOPROFILE=1
 for m in -march=athlon64-sse3 -march=barcelona -march=bdver1 -march=znver1 -march=znver3; do
+   echo $dir/build.sh $e $v $m $n $d
    $dir/build.sh $e $v $m $n $d
+   echo "=================================="
+   echo $dir/buildGW.sh $e $v $m $n $d
    $dir/buildGW.sh $e $v $m $n $d
 done
 export NOPROFILE
 
 # an old win32 build (super slow engine)
+echo $dir/buildGW32.sh $e $v "-march=pentium2" $n $d
 $dir/buildGW32.sh $e $v "-march=pentium2" $n $d
 
 # some fun stuff (experimental)
+echo $dir/buildAndroid.sh $e $v $n $d
 $dir/buildAndroid.sh $e $v $n $d
+echo $dir/buildRPi32.sh $e $v $n $d
 $dir/buildRPi32.sh $e $v $n $d
+echo $dir/buildRPi64.sh $e $v $n $d
 $dir/buildRPi64.sh $e $v $n $d
 
 #TODO WASM

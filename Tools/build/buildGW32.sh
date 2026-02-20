@@ -1,7 +1,9 @@
 #!/bin/bash
 
-export CXX=x86_64-w64-mingw32-gcc-posix
-export CC=x86_64-w64-mingw32-g++-posix
+set -e
+
+export CXX=i686-w64-mingw32-g++
+export CC=i686-w64-mingw32-gcc
 
 source $(dirname $0)/common
 cd_root
@@ -37,4 +39,4 @@ if [ $FATHOM_PRESENT = "1" ]; then
 fi
 
 $CXX $OPT $STANDARDSOURCE -ISource -ISource/nnue -static -static-libgcc -static-libstdc++ -o $buildDir/$exe -Wl,-Bstatic -lpthread -lstdc++ -lgcc
-x86_64-w64-mingw32-strip $buildDir/$exe
+i686-w64-mingw32-strip $buildDir/$exe

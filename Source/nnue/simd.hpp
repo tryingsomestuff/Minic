@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+
 // Highly inspired by/copied from https://github.com/xianyi/OpenBLAS, same naming convention here.
 
 /*
@@ -257,6 +259,17 @@ FORCE_FINLINE float v_sum_f32_128(__m128 a) {
 #define v_max_f32_128   _mm_max_ps
 #define v_min_f32_128   _mm_min_ps
 
+#if defined(__SSE2__)
+#if defined(__SSE4_1__)
+#define v_cvtepi16_epi32_128 _mm_cvtepi16_epi32
+#else
+FORCE_FINLINE __m128i v_cvtepi16_epi32_128(__m128i src_i16) {
+   const __m128i sign = _mm_srai_epi16(src_i16, 15);
+   return _mm_unpacklo_epi16(src_i16, sign);
+}
+#endif
+#endif
+
 template<bool Q>
 FORCE_FINLINE void simdClippedReLU128Helper(float * RESTRICT x, const v_f32_128 & zero, const v_f32_128 & un){
    v_store_f32_128(x, v_max_f32_128(zero, v_min_f32_128(un, v_load_f32_128(x))));
@@ -365,7 +378,8 @@ FORCE_FINLINE void simdAdd_i16(int16_t* RESTRICT dst, const int16_t* RESTRICT sr
       i += vstep128;
    }
 #endif
-   while (i < N) { dst[i] += src[i]; ++i; }
+   const size_t tail = N - i;
+   for (size_t j = 0; j < tail; ++j) dst[i + j] += src[i + j];
 }
 
 template<size_t N>
@@ -396,7 +410,8 @@ FORCE_FINLINE void simdSub_i16(int16_t* RESTRICT dst, const int16_t* RESTRICT sr
       i += vstep128;
    }
 #endif
-   while (i < N) { dst[i] -= src[i]; ++i; }
+   const size_t tail = N - i;
+   for (size_t j = 0; j < tail; ++j) dst[i + j] -= src[i + j];
 }
 
 template<size_t N>
@@ -416,7 +431,8 @@ FORCE_FINLINE void simdCopy_i16(int16_t* RESTRICT dst, const int16_t* RESTRICT s
       i += vstep128;
    }
 #endif
-   while (i < N) { dst[i] = src[i]; ++i; }
+   const size_t tail = N - i;
+   if (tail) std::memcpy(dst + i, src + i, tail * sizeof(int16_t));
 }
 
 template<size_t N>
@@ -436,7 +452,8 @@ FORCE_FINLINE void simdCopy_f32(float* RESTRICT dst, const float* RESTRICT src) 
       i += vstep128;
    }
 #endif
-   while (i < N) { dst[i] = src[i]; ++i; }
+   const size_t tail = N - i;
+   if (tail) std::memcpy(dst + i, src + i, tail * sizeof(float));
 }
 
 template<size_t N>
@@ -460,13 +477,14 @@ FORCE_FINLINE void simdDequantize_i16_f32(float* RESTRICT dst, const int16_t* RE
    while (i + vstep128 <= N) {
       // Load 4 x int16 (as 64-bit), sign-extend to 4 x int32, convert to 4 x float
       const __m128i src_i16 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(src + i));
-      const __m128i src_i32 = _mm_cvtepi16_epi32(src_i16);
+      const __m128i src_i32 = v_cvtepi16_epi32_128(src_i16);
       const __m128  src_f32 = _mm_cvtepi32_ps(src_i32);
       _mm_store_ps(dst + i, _mm_mul_ps(src_f32, vscale128));
       i += vstep128;
    }
 #endif
-   while (i < N) { dst[i] = scale * static_cast<float>(src[i]); ++i; }
+   const size_t tail = N - i;
+   for (size_t j = 0; j < tail; ++j) dst[i + j] = scale * static_cast<float>(src[i + j]);
 }
 
 template<size_t N0, size_t N1>
@@ -498,16 +516,16 @@ FORCE_FINLINE void simdDequantizeActivate_i16_f32(float* RESTRICT dst, const int
    const __m128 vone128   = _mm_set1_ps(1.0f);
    while (i + vstep128 <= N) {
       const __m128i src_i16 = _mm_loadl_epi64(reinterpret_cast<const __m128i*>(src + i));
-      const __m128i src_i32 = _mm_cvtepi16_epi32(src_i16);
+      const __m128i src_i32 = v_cvtepi16_epi32_128(src_i16);
       const __m128  deq     = _mm_mul_ps(_mm_cvtepi32_ps(src_i32), vscale128);
       _mm_store_ps(dst + i, _mm_max_ps(vzero128, _mm_min_ps(vone128, deq)));
       i += vstep128;
    }
 #endif
-   while (i < N) {
-      const float deq = scale * static_cast<float>(src[i]);
-      dst[i] = std::max(0.f, std::min(1.f, deq));
-      ++i;
+   const size_t tail = N - i;
+   for (size_t j = 0; j < tail; ++j) {
+      const float deq = scale * static_cast<float>(src[i + j]);
+      dst[i + j] = std::max(0.f, std::min(1.f, deq));
    }
 }
 
