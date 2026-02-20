@@ -151,7 +151,7 @@
 #  define INCBIN_TYPE(...)
 #else
 #  define INCBIN_SECTION         ".section " INCBIN_OUTPUT_SECTION "\n"
-#  define INCBIN_GLOBAL(NAME)    ".global " INCBIN_STRINGIZE(INCBIN_PREFIX) #NAME "\n"
+#  define INCBIN_GLOBAL(NAME)    ".global " INCBIN_MANGLE INCBIN_STRINGIZE(INCBIN_PREFIX) #NAME "\n"
 #  if defined(__ghs__)
 #    define INCBIN_INT           ".word "
 #  else
@@ -316,6 +316,10 @@
             INCBIN_CONCATENATE(INCBIN_PREFIX, NAME), \
             INCBIN_STYLE_IDENT(SIZE))
 
+#ifndef INCBIN_EMIT_EXTERN
+#  define INCBIN_EMIT_EXTERN(NAME) INCBIN_EXTERN(NAME)
+#endif
+
 /**
  * @brief Include a binary file into the current translation unit.
  *
@@ -345,7 +349,7 @@
  */
 #ifdef _MSC_VER
 #define INCBIN(NAME, FILENAME) \
-    INCBIN_EXTERN(NAME)
+    INCBIN_EMIT_EXTERN(NAME)
 #else
 #define INCBIN(NAME, FILENAME) \
     __asm__(INCBIN_SECTION \
@@ -365,7 +369,7 @@
             INCBIN_ALIGN_HOST \
             ".text\n" \
     ); \
-    INCBIN_EXTERN(NAME)
+    INCBIN_EMIT_EXTERN(NAME)
 
 #endif
 #endif

@@ -153,7 +153,12 @@ int EnergyMonitor::countPhysicalCores() {
       }
    }
    if (!cores.empty()) return static_cast<int>(cores.size());
-   return sysconf(_SC_NPROCESSORS_ONLN); // fallback
+#if defined(_SC_NPROCESSORS_ONLN)
+   return static_cast<int>(sysconf(_SC_NPROCESSORS_ONLN));
+#else
+   const unsigned int n = std::thread::hardware_concurrency();
+   return static_cast<int>(n > 0 ? n : 1u);
+#endif
 }
 
 long long EnergyMonitor::readUj(const char* path) {

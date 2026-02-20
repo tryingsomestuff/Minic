@@ -37,6 +37,7 @@
 #include <vector>
 #ifdef _WIN32
 #include <intrin.h>
+#include <process.h>
 #include <stdlib.h>
 typedef uint64_t u_int64_t;
 #else

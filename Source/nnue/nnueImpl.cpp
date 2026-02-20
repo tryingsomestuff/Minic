@@ -4,6 +4,7 @@
 
 #define INCBIN_PREFIX
 #define INCBIN_STYLE INCBIN_STYLE_CAMEL
+#define INCBIN_EMIT_EXTERN(NAME)
 #include "incbin.h"
 
 namespace nnue {
