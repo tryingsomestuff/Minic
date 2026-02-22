@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-20 18:34:13</td>
+            <td class="headerValue">2026-02-22 19:03:02</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -88,19 +88,19 @@
 <span id="L26"><span class="lineNum">      26</span>              :    alignas(NNUEALIGNMENT) BIT b[nbB];</span>
 <span id="L27"><span class="lineNum">      27</span>              : </span>
 <span id="L28"><span class="lineNum">      28</span>              :    FORCE_FINLINE void insertIdx(const size_t idx, StackVector&lt;BIT, nbB, Q&gt;&amp; x) const {</span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC tlaBgGNC">   325042836 :       const WIT* wPtr = W + idx * dim1;</span></span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">   516859700 :       x.add_(wPtr);</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC tlaBgGNC">   325282684 :       const WIT* wPtr = W + idx * dim1;</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">   517613274 :       x.add_(wPtr);</span></span>
 <span id="L31"><span class="lineNum">      31</span>              :    }</span>
 <span id="L32"><span class="lineNum">      32</span>              : </span>
 <span id="L33"><span class="lineNum">      33</span>              :    FORCE_FINLINE void eraseIdx(const size_t idx, StackVector&lt;BIT, nbB, Q&gt;&amp; x) const {</span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">    17185746 :       const WIT* wPtr = W + idx * dim1;</span></span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">   342228582 :       x.sub_(wPtr);</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">    17258269 :       const WIT* wPtr = W + idx * dim1;</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">   342540953 :       x.sub_(wPtr);</span></span>
 <span id="L36"><span class="lineNum">      36</span>              :    }</span>
 <span id="L37"><span class="lineNum">      37</span>              : </span>
-<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">          16 :    InputLayer&lt;NT, dim0, dim1, Q&gt;&amp; load_(WeightsReader&lt;NT&gt;&amp; ws) {</span></span>
-<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">          16 :       ws.template streamWI&lt;WIT, Q&gt;(W, nbW)</span></span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">          16 :         .template streamBI&lt;BIT, Q&gt;(b, nbB);</span></span>
-<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">          16 :       return *this;</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">          38 :    InputLayer&lt;NT, dim0, dim1, Q&gt;&amp; load_(WeightsReader&lt;NT&gt;&amp; ws) {</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">          38 :       ws.template streamWI&lt;WIT, Q&gt;(W, nbW)</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">          38 :         .template streamBI&lt;BIT, Q&gt;(b, nbB);</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">          38 :       return *this;</span></span>
 <span id="L42"><span class="lineNum">      42</span>              :    }</span>
 <span id="L43"><span class="lineNum">      43</span>              : </span>
 <span id="L44"><span class="lineNum">      44</span>              :    // non copyable</span>

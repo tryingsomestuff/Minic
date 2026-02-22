@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-20 18:34:13</td>
+            <td class="headerValue">2026-02-22 19:03:02</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -77,9 +77,9 @@
 <span id="L15"><span class="lineNum">      15</span> <span class="tlaUNC">           0 :    return std::max(0, (intcorrectedElo - 500) / 29 - 10);</span></span>
 <span id="L16"><span class="lineNum">      16</span>              : } ///@todo to be tuned</span>
 <span id="L17"><span class="lineNum">      17</span> <span class="tlaUNC">           0 : [[nodiscard]] FORCE_FINLINE unsigned int convertLevel2Elo() { return 29 * (DynamicConfig::level + 10) + 500; }                 ///@todo to be tuned</span></span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC tlaBgGNC">         672 : [[nodiscard]] FORCE_FINLINE bool         enabled() { return DynamicConfig::level &gt; 0 &amp;&amp; DynamicConfig::level &lt; 100; }          // 0 is random mover !</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC tlaBgGNC">         692 : [[nodiscard]] FORCE_FINLINE bool         enabled() { return DynamicConfig::level &gt; 0 &amp;&amp; DynamicConfig::level &lt; 100; }          // 0 is random mover !</span></span>
 <span id="L19"><span class="lineNum">      19</span>              : [[nodiscard]] FORCE_FINLINE DepthType    limitedDepth() {</span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">          16 :    return DepthType(1 + 2 * std::sqrt(std::max(0, static_cast&lt;int&gt;(DynamicConfig::level - 20))));</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">          32 :    return DepthType(1 + 2 * std::sqrt(std::max(0, static_cast&lt;int&gt;(DynamicConfig::level - 20))));</span></span>
 <span id="L21"><span class="lineNum">      21</span>              : } ///@todo to be tuned</span>
 <span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC tlaBgUNC">           0 : [[nodiscard]] FORCE_FINLINE uint64_t limitedNodes() { return static_cast&lt;uint64_t&gt;(std::exp((convertLevel2Elo() + 840.) / 240.)); } ///@todo to be tuned</span></span>
 <span id="L23"><span class="lineNum">      23</span>              : [[nodiscard]] Move pick(std::vector&lt;MultiPVScores&gt;&amp; multiPVMoves);</span>

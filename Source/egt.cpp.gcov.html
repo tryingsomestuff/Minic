@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-20 18:34:13</td>
+            <td class="headerValue">2026-02-22 19:03:02</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">20.0&nbsp;%</td>
@@ -96,10 +96,10 @@
 <span id="L34"><span class="lineNum">      34</span> <span class="tlaUNC">           0 :    return ToMove(TB_GET_FROM(res), TB_GET_TO(res), TB_GET_EP(res) ? T_ep : getMoveType(p, res));</span></span>
 <span id="L35"><span class="lineNum">      35</span>              : } // Note: castling not possible</span>
 <span id="L36"><span class="lineNum">      36</span>              : </span>
-<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC tlaBgGNC">           8 : bool initTB() {</span></span>
-<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">           8 :    if (DynamicConfig::syzygyPath.empty()) {</span></span>
-<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">           7 :       MAX_TB_MEN = -1;</span></span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">           7 :       return false;</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC tlaBgGNC">          19 : bool initTB() {</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">          19 :    if (DynamicConfig::syzygyPath.empty()) {</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">          18 :       MAX_TB_MEN = -1;</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">          18 :       return false;</span></span>
 <span id="L41"><span class="lineNum">      41</span>              :    }</span>
 <span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Init tb from path &quot; &lt;&lt; DynamicConfig::syzygyPath;</span></span>
 <span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">           1 :    if (!tb_init(DynamicConfig::syzygyPath.c_str())){</span></span>

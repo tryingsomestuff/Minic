@@ -31,18 +31,18 @@
             <td class="headerValue">coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">56.0&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">25</td>
-            <td class="headerCovTableEntry">14</td>
+            <td class="headerCovTableEntry">25</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-20 18:34:13</td>
+            <td class="headerValue">2026-02-22 19:03:02</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
             <td class="headerCovTableEntry">3</td>
-            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">3</td>
           </tr>
                   <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -69,10 +69,10 @@
 <span id="L7"><span class="lineNum">       7</span>              : #pragma GCC diagnostic push</span>
 <span id="L8"><span class="lineNum">       8</span>              : #pragma GCC diagnostic ignored &quot;-Wconversion&quot;</span>
 <span id="L9"><span class="lineNum">       9</span>              : </span>
-<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC tlaBgGNC">     3603130 : EvalScore EvalFeatures::SumUp() const {</span></span>
-<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC">     3603130 :    EvalScore score = scores[F_material] + scores[F_positional] + scores[F_development] + scores[F_mobility] + scores[F_pawnStruct] + scores[F_attack];</span></span>
-<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC">     3603130 :    score += scores[F_complexity] * sgn(score[MG]);</span></span>
-<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">     3603130 :    return score;</span></span>
+<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC tlaBgGNC">     3677869 : EvalScore EvalFeatures::SumUp() const {</span></span>
+<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC">     3677869 :    EvalScore score = scores[F_material] + scores[F_positional] + scores[F_development] + scores[F_mobility] + scores[F_pawnStruct] + scores[F_attack];</span></span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC">     3677869 :    score += scores[F_complexity] * sgn(score[MG]);</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">     3677869 :    return score;</span></span>
 <span id="L14"><span class="lineNum">      14</span>              : }</span>
 <span id="L15"><span class="lineNum">      15</span>              : </span>
 <span id="L16"><span class="lineNum">      16</span>              : #pragma GCC diagnostic pop</span>
@@ -89,17 +89,17 @@
 <span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">           1 :    DynamicConfig::stylized |= DynamicConfig::styleForwardness != 50;</span></span>
 <span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">           1 : }</span></span>
 <span id="L29"><span class="lineNum">      29</span>              : </span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaUNC tlaBgUNC">           0 : void displayEval(const EvalData&amp; data, const EvalFeatures&amp; features) {</span></span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaUNC">           0 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Game phase    &quot; &lt;&lt; data.gp;</span></span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaUNC">           0 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;ScalingFactor &quot; &lt;&lt; features.scalingFactor;</span></span>
-<span id="L33"><span class="lineNum">      33</span> <span class="tlaUNC">           0 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Material      &quot; &lt;&lt; features.scores[F_material];</span></span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaUNC">           0 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Positional    &quot; &lt;&lt; features.scores[F_positional];</span></span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaUNC">           0 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Development   &quot; &lt;&lt; features.scores[F_development];</span></span>
-<span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC">           0 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Mobility      &quot; &lt;&lt; features.scores[F_mobility];</span></span>
-<span id="L37"><span class="lineNum">      37</span> <span class="tlaUNC">           0 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Pawn          &quot; &lt;&lt; features.scores[F_pawnStruct];</span></span>
-<span id="L38"><span class="lineNum">      38</span> <span class="tlaUNC">           0 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Attack        &quot; &lt;&lt; features.scores[F_attack];</span></span>
-<span id="L39"><span class="lineNum">      39</span> <span class="tlaUNC">           0 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Complexity    &quot; &lt;&lt; features.scores[F_complexity];</span></span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaUNC">           0 : }</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">           1 : void displayEval(const EvalData&amp; data, const EvalFeatures&amp; features) {</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Game phase    &quot; &lt;&lt; data.gp;</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;ScalingFactor &quot; &lt;&lt; features.scalingFactor;</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Material      &quot; &lt;&lt; features.scores[F_material];</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Positional    &quot; &lt;&lt; features.scores[F_positional];</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Development   &quot; &lt;&lt; features.scores[F_development];</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Mobility      &quot; &lt;&lt; features.scores[F_mobility];</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Pawn          &quot; &lt;&lt; features.scores[F_pawnStruct];</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Attack        &quot; &lt;&lt; features.scores[F_attack];</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Complexity    &quot; &lt;&lt; features.scores[F_complexity];</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">           1 : }</span></span>
         </pre>
               </td>
             </tr>
