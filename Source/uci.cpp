@@ -134,7 +134,7 @@ void processCommand(const std::string & command) {
       TimeMan::overHead = getTimeDiff(startTimePos);
    }
    else if (uciCommand == "go") {
-      if (!ThreadPool::instance().main().stopFlag) {
+      if (ThreadPool::instance().main().searching()) {
          Logging::LogIt(Logging::logGUI) << "info string go command received, but search already in progress";
       }
       else {
@@ -270,10 +270,12 @@ void processCommand(const std::string & command) {
    }
    else if (uciCommand == "wait") { // only used for testing purpose
       using namespace std::chrono_literals;
+      Logging::LogIt(Logging::logInfo) << "Start to wait";
       while (!ThreadPool::instance().main().stopFlag) { 
          std::this_thread::sleep_for(10ms);
       }
       std::this_thread::sleep_for(200ms);
+      Logging::LogIt(Logging::logInfo) << "End of wait";
    }
    else if (uciCommand == "bench") {
       int bd = 10;

@@ -45,6 +45,17 @@ cd coverage-dir
 ./minic.cov bench 10 -minOutputLevel 0
 ./minic.cov -selfplay 5 1 -minOutputLevel 0
 ./minic.cov -perft_test -minOutputLevel 0
+./minic.cov -spsa -minOutputLevel 0
+./minic.cov -timeTest 1000 0 20 0 -minOutputLevel 0
+./minic.cov -qsearch "start" -minOutputLevel 0
+./minic.cov -eval "start" -minOutputLevel 0
+./minic.cov -evalHCE "start" -minOutputLevel 0
+./minic.cov -gen "start" -minOutputLevel 0
+./minic.cov -testmove "start" -minOutputLevel 0
+./minic.cov -see "start" e2e4 0 -minOutputLevel 0
+./minic.cov -attacked "start" 28 -minOutputLevel 0
+./minic.cov -cov "start" 12 -minOutputLevel 0
+./minic.cov -kpk "8/8/8/8/8/8/4k1P1/6K1 w - - 0 1" -minOutputLevel 0
 ./minic.cov -uci -minOutputLevel 0 <<EOF
 uci
 ucinewgame
@@ -55,14 +66,29 @@ setoption name UCI_Opponent value berserk
 setoption name UCI_RatingAdv value 3000
 setoption name StyleAttack value 55
 setoption name Level value 55
+setoption name Hash value 32
+isready
 position fen r1bqkb1r/pp3ppp/1np1pn2/6N1/2BP4/8/PPP1QPPP/R1B1K1NR w KQkq - 1 1
 go depth 20
 wait
 stop
 debug on
-position startpos moves e2e4
+position startpos
+go movetime 50
+wait
+position startpos moves e2e4 e7e5 g1f3 b8c6
 go nodes 300
 wait
+go wtime 2000 btime 2000 winc 20 binc 20 movestogo 20
+wait
+go infinite
+stop
+wait
+ucinewgame
+position fen 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1
+go depth 6
+wait
+isready
 quit
 EOF
 
