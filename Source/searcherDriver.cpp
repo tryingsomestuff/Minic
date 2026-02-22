@@ -499,5 +499,7 @@ pvsout:
       Distributed::sync(Distributed::_commMove, "end of search driver");
    } // isMainThread()
 
+   Logging::LogIt(Logging::logInfoPrio) << "End of search driver for thread " << id();
+
    _searching = false;
 }

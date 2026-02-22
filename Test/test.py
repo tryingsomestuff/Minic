@@ -43,7 +43,70 @@ def run_program(input, *args):
            "stdout": "",
            "stderr": "",
         }, 
-        id="uci_test")
+        id="uci_test"),
+    pytest.param(
+        b"", 
+        ["-spsa"], 
+        {
+           "returncode": 0,
+           "stdout": "",
+           "stderr": "",
+        }, 
+        id="spsa_test"),
+    pytest.param(
+        b"", 
+        ["-timeTest", "1000", "0", "20", "0"], 
+        {
+           "returncode": 0,
+           "stdout": "",
+           "stderr": "",
+        }, 
+        id="time_test"),
+    pytest.param(
+        b"", 
+        ["-qsearch", "start"], 
+        {
+           "returncode": 0,
+           "stdout": "",
+           "stderr": "",
+        }, 
+        id="qsearch_test"),
+    pytest.param(
+        b"", 
+        ["-eval", "start"], 
+        {
+           "returncode": 0,
+           "stdout": "",
+           "stderr": "",
+        }, 
+        id="eval_test"),
+    pytest.param(
+        b"", 
+        ["-gen", "start"], 
+        {
+           "returncode": 0,
+           "stdout": "",
+           "stderr": "",
+        }, 
+        id="gen_test"),
+    pytest.param(
+        b"", 
+        ["-see", "start", "e2e4", "0"], 
+        {
+           "returncode": 0,
+           "stdout": "",
+           "stderr": "",
+        }, 
+        id="see_cli_test"),
+    pytest.param(
+        b"", 
+        ["-kpk", "8/8/8/8/8/8/4k1P1/6K1 w - - 0 1"], 
+        {
+           "returncode": 0,
+           "stdout": "",
+           "stderr": "",
+        }, 
+        id="kpk_test")
 ])
 def test_program(input, args, want):
     completed_process = run_program(input, args)
