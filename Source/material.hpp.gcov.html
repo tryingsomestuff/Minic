@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-24 18:42:30</td>
+            <td class="headerValue">2026-02-24 20:08:09</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -125,8 +125,8 @@
 <span id="L63"><span class="lineNum">      63</span>              :    EvalScore    score = {0, 0};</span>
 <span id="L64"><span class="lineNum">      64</span>              :    uint8_t      gp    = 255;</span>
 <span id="L65"><span class="lineNum">      65</span>              :    Terminaison  t     = Ter_Unknown;</span>
-<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC tlaBgGNC">     2386302 :    FORCE_FINLINE float gamePhase() const { return gp / 255.f; }</span></span>
-<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">    86093442 :    FORCE_FINLINE void  setGamePhase(float gpf) { gp = (uint8_t)(255 * gpf); }</span></span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC tlaBgGNC">     2386601 :    FORCE_FINLINE float gamePhase() const { return gp / 255.f; }</span></span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">    95659380 :    FORCE_FINLINE void  setGamePhase(float gpf) { gp = (uint8_t)(255 * gpf); }</span></span>
 <span id="L68"><span class="lineNum">      68</span>              : };</span>
 <span id="L69"><span class="lineNum">      69</span>              : </span>
 <span id="L70"><span class="lineNum">      70</span>              : extern array1d&lt;MaterialHashEntry,TotalMat&gt; materialHashTable;</span>
@@ -136,11 +136,11 @@
 <span id="L74"><span class="lineNum">      74</span>              : void InitMaterialScore(bool display = true);</span>
 <span id="L75"><span class="lineNum">      75</span>              : </span>
 <span id="L76"><span class="lineNum">      76</span>              : struct MaterialHashInitializer {</span>
-<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">        1440 :    MaterialHashInitializer(const Position::Material &amp;mat, Terminaison t) { materialHashTable[getMaterialHash(mat)].t = t; }</span></span>
-<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">         540 :    MaterialHashInitializer(const Position::Material &amp;mat, Terminaison t, ScoreType (*helper)(const Position &amp;, Color, ScoreType, DepthType)) {</span></span>
-<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">         540 :       materialHashTable[getMaterialHash(mat)].t = t;</span></span>
-<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">         540 :       helperTable[getMaterialHash(mat)]         = helper;</span></span>
-<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">         540 :    }</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">        1600 :    MaterialHashInitializer(const Position::Material &amp;mat, Terminaison t) { materialHashTable[getMaterialHash(mat)].t = t; }</span></span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">         600 :    MaterialHashInitializer(const Position::Material &amp;mat, Terminaison t, ScoreType (*helper)(const Position &amp;, Color, ScoreType, DepthType)) {</span></span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">         600 :       materialHashTable[getMaterialHash(mat)].t = t;</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">         600 :       helperTable[getMaterialHash(mat)]         = helper;</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">         600 :    }</span></span>
 <span id="L82"><span class="lineNum">      82</span>              :    static void init();</span>
 <span id="L83"><span class="lineNum">      83</span>              : };</span>
 <span id="L84"><span class="lineNum">      84</span>              : </span>

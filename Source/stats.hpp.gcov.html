@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-24 18:42:30</td>
+            <td class="headerValue">2026-02-24 20:08:09</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -303,15 +303,15 @@
 <span id="L241"><span class="lineNum">     241</span>              :    array1d&lt;Counter, sid_maxid&gt; counters;</span>
 <span id="L242"><span class="lineNum">     242</span>              : </span>
 <span id="L243"><span class="lineNum">     243</span>              : #ifdef WITH_STATS</span>
-<span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC tlaBgGNC">    21048943 :    FORCE_FINLINE void incr(StatId id) { ++counters[id]; }</span></span>
+<span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC tlaBgGNC">    21052093 :    FORCE_FINLINE void incr(StatId id) { ++counters[id]; }</span></span>
 <span id="L245"><span class="lineNum">     245</span>              : #else</span>
 <span id="L246"><span class="lineNum">     246</span>              :    FORCE_FINLINE void incr(StatId) {}</span>
 <span id="L247"><span class="lineNum">     247</span>              : #endif</span>
 <span id="L248"><span class="lineNum">     248</span>              : </span>
-<span id="L249"><span class="lineNum">     249</span> <span class="tlaGNC">         199 :    void init() {</span></span>
-<span id="L250"><span class="lineNum">     250</span> <span class="tlaGNC">         199 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Init stat&quot;;</span></span>
+<span id="L249"><span class="lineNum">     249</span> <span class="tlaGNC">         236 :    void init() {</span></span>
+<span id="L250"><span class="lineNum">     250</span> <span class="tlaGNC">         236 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Init stat&quot;;</span></span>
 <span id="L251"><span class="lineNum">     251</span>              :       counters.fill(0ull);</span>
-<span id="L252"><span class="lineNum">     252</span> <span class="tlaGNC">         199 :    }</span></span>
+<span id="L252"><span class="lineNum">     252</span> <span class="tlaGNC">         236 :    }</span></span>
 <span id="L253"><span class="lineNum">     253</span>              : };</span>
 <span id="L254"><span class="lineNum">     254</span>              : </span>
         </pre>

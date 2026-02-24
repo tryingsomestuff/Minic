@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-24 18:42:30</td>
+            <td class="headerValue">2026-02-24 20:08:09</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -82,38 +82,38 @@
 <span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">           6 :    return strongSide == Co_White ? nsq : VFlip(nsq);</span></span>
 <span id="L21"><span class="lineNum">      21</span>              : }</span>
 <span id="L22"><span class="lineNum">      22</span>              : </span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">     3538944 : KPKPosition::KPKPosition(const unsigned idx) :</span></span>
-<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">     3538944 :       ksq ({ static_cast&lt;Square&gt;(idx &amp; 0x3F), static_cast&lt;Square&gt;((idx &gt;&gt; 6) &amp; 0x3F) }),</span></span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">     3538944 :       us  (static_cast&lt;Color&gt;((idx &gt;&gt; 12) &amp; 0x01)),</span></span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">     3538944 :       psq (MakeSquare(File((idx &gt;&gt; 13) &amp; 0x3), Rank(6 - ((idx &gt;&gt; 15) &amp; 0x7)))){ // first init</span></span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">     3538944 :    if (chebyshevDistance(ksq[Co_White], ksq[Co_Black]) &lt;= 1 || ksq[Co_White] == psq || ksq[Co_Black] == psq ||</span></span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">     1512216 :        (us == Co_White &amp;&amp; (BBTools::mask[psq].pawnAttack[Co_White] &amp; SquareToBitboard(ksq[Co_Black]))))</span></span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">      556776 :       result = kpk_invalid;</span></span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">     3222648 :    else if (us == Co_White &amp;&amp; SQRANK(psq) == 6 &amp;&amp; ksq[us] != psq + 8 &amp;&amp;</span></span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">      251676 :             (chebyshevDistance(ksq[~us], psq + 8) &gt; 1 || (BBTools::mask[ksq[us]].king &amp; SquareToBitboard(psq + 8))))</span></span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">      229500 :       result = kpk_win;</span></span>
-<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">     2752668 :    else if (us == Co_Black &amp;&amp; (!(BBTools::mask[ksq[us]].king &amp; ~(BBTools::mask[ksq[~us]].king | BBTools::mask[psq].pawnAttack[~us])) ||</span></span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">     1512054 :                                (BBTools::mask[ksq[us]].king &amp; SquareToBitboard(psq) &amp; ~BBTools::mask[ksq[~us]].king)))</span></span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">      163926 :       result = kpk_draw;</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">     3932160 : KPKPosition::KPKPosition(const unsigned idx) :</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">     3932160 :       ksq ({ static_cast&lt;Square&gt;(idx &amp; 0x3F), static_cast&lt;Square&gt;((idx &gt;&gt; 6) &amp; 0x3F) }),</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">     3932160 :       us  (static_cast&lt;Color&gt;((idx &gt;&gt; 12) &amp; 0x01)),</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">     3932160 :       psq (MakeSquare(File((idx &gt;&gt; 13) &amp; 0x3), Rank(6 - ((idx &gt;&gt; 15) &amp; 0x7)))){ // first init</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">     3932160 :    if (chebyshevDistance(ksq[Co_White], ksq[Co_Black]) &lt;= 1 || ksq[Co_White] == psq || ksq[Co_Black] == psq ||</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">     1680240 :        (us == Co_White &amp;&amp; (BBTools::mask[psq].pawnAttack[Co_White] &amp; SquareToBitboard(ksq[Co_Black]))))</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">      618640 :       result = kpk_invalid;</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">     3580720 :    else if (us == Co_White &amp;&amp; SQRANK(psq) == 6 &amp;&amp; ksq[us] != psq + 8 &amp;&amp;</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">      279640 :             (chebyshevDistance(ksq[~us], psq + 8) &gt; 1 || (BBTools::mask[ksq[us]].king &amp; SquareToBitboard(psq + 8))))</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">      255000 :       result = kpk_win;</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">     3058520 :    else if (us == Co_Black &amp;&amp; (!(BBTools::mask[ksq[us]].king &amp; ~(BBTools::mask[ksq[~us]].king | BBTools::mask[psq].pawnAttack[~us])) ||</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">     1680060 :                                (BBTools::mask[ksq[us]].king &amp; SquareToBitboard(psq) &amp; ~BBTools::mask[ksq[~us]].king)))</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">      182140 :       result = kpk_draw;</span></span>
 <span id="L36"><span class="lineNum">      36</span>              :    else</span>
-<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">     2588742 :       result = kpk_unknown; // done later</span></span>
-<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">     3538944 : }</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">     2876380 :       result = kpk_unknown; // done later</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">     3932160 : }</span></span>
 <span id="L39"><span class="lineNum">      39</span>              : </span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">     9239994 : kpk_result KPKPosition::preCompute(const array1d&lt;KPKPosition, KPKmaxIndex&gt;&amp; db) {</span></span>
-<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">     9239994 :    return us == Co_White ? preCompute&lt;Co_White&gt;(db) : preCompute&lt;Co_Black&gt;(db);</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">    10266660 : kpk_result KPKPosition::preCompute(const array1d&lt;KPKPosition, KPKmaxIndex&gt;&amp; db) {</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">    10266660 :    return us == Co_White ? preCompute&lt;Co_White&gt;(db) : preCompute&lt;Co_Black&gt;(db);</span></span>
 <span id="L42"><span class="lineNum">      42</span>              : }</span>
 <span id="L43"><span class="lineNum">      43</span>              : </span>
-<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">     9239994 : template&lt;Color Us&gt; kpk_result KPKPosition::preCompute(const array1d&lt;KPKPosition, KPKmaxIndex&gt;&amp; db) {</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">    10266660 : template&lt;Color Us&gt; kpk_result KPKPosition::preCompute(const array1d&lt;KPKPosition, KPKmaxIndex&gt;&amp; db) {</span></span>
 <span id="L45"><span class="lineNum">      45</span>              :    constexpr Color      Them = (Us == Co_White ? Co_Black : Co_White);</span>
 <span id="L46"><span class="lineNum">      46</span>              :    constexpr kpk_result good = (Us == Co_White ? kpk_win : kpk_draw);</span>
 <span id="L47"><span class="lineNum">      47</span>              :    constexpr kpk_result bad  = (Us == Co_White ? kpk_draw : kpk_win);</span>
-<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">     9239994 :    kpk_result r = kpk_invalid;</span></span>
-<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">    69234804 :    BB::applyOn(BBTools::mask[ksq[us]].king, [&amp;](const Square &amp; k){ r |= (Us == Co_White ? db[KPKindex(Them, ksq[Them], k, psq)] : db[KPKindex(Them, k, ksq[Them], psq)]); });</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">    10266660 :    kpk_result r = kpk_invalid;</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">    76927560 :    BB::applyOn(BBTools::mask[ksq[us]].king, [&amp;](const Square &amp; k){ r |= (Us == Co_White ? db[KPKindex(Them, ksq[Them], k, psq)] : db[KPKindex(Them, k, ksq[Them], psq)]); });</span></span>
 <span id="L50"><span class="lineNum">      50</span>              :    if (Us == Co_White) {</span>
-<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">     4477680 :       if (SQRANK(psq) &lt; 6) r |= db[KPKindex(Them, ksq[Them], ksq[Us], psq + 8)];</span></span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">     4477680 :       if (SQRANK(psq) == 1 &amp;&amp; psq + 8 != ksq[Us] &amp;&amp; psq + 8 != ksq[Them]) r |= db[KPKindex(Them, ksq[Them], ksq[Us], psq + 8 + 8)];</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">     4975200 :       if (SQRANK(psq) &lt; 6) r |= db[KPKindex(Them, ksq[Them], ksq[Us], psq + 8)];</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">     4975200 :       if (SQRANK(psq) == 1 &amp;&amp; psq + 8 != ksq[Us] &amp;&amp; psq + 8 != ksq[Them]) r |= db[KPKindex(Them, ksq[Them], ksq[Us], psq + 8 + 8)];</span></span>
 <span id="L53"><span class="lineNum">      53</span>              :    }</span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">     9239994 :    return result = r &amp; good ? good : r &amp; kpk_unknown ? kpk_unknown : bad;</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">    10266660 :    return result = r &amp; good ? good : r &amp; kpk_unknown ? kpk_unknown : bad;</span></span>
 <span id="L55"><span class="lineNum">      55</span>              : }</span>
 <span id="L56"><span class="lineNum">      56</span>              : </span>
 <span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">           2 : bool probe(Square wksq, const Square wpsq, const Square bksq, const Color us) {</span></span>
@@ -127,28 +127,28 @@
 <span id="L65"><span class="lineNum">      65</span>              : }</span>
 <span id="L66"><span class="lineNum">      66</span>              : #endif</span>
 <span id="L67"><span class="lineNum">      67</span>              : </span>
-<span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">          18 : void init() {</span></span>
+<span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">          20 : void init() {</span></span>
 <span id="L69"><span class="lineNum">      69</span>              : #if !defined(WITH_SMALL_MEMORY)</span>
-<span id="L70"><span class="lineNum">      70</span> <span class="tlaGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;KPK init&quot;;</span></span>
-<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;KPK table size : &quot; &lt;&lt; KPKmaxIndex / 32 * sizeof(uint32_t) / 1024 &lt;&lt; &quot;Kb&quot;;</span></span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaGNC">          20 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;KPK init&quot;;</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">          20 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;KPK table size : &quot; &lt;&lt; KPKmaxIndex / 32 * sizeof(uint32_t) / 1024 &lt;&lt; &quot;Kb&quot;;</span></span>
 <span id="L72"><span class="lineNum">      72</span>              :    array1d&lt;KPKPosition, KPKmaxIndex&gt; db;</span>
 <span id="L73"><span class="lineNum">      73</span>              :    bool repeat = true;</span>
-<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">     3538962 :    for (unsigned idx = 0; idx &lt; KPKmaxIndex; ++idx) db[idx] = KPKPosition(idx); // init</span></span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">     3932180 :    for (unsigned idx = 0; idx &lt; KPKmaxIndex; ++idx) db[idx] = KPKPosition(idx); // init</span></span>
 <span id="L75"><span class="lineNum">      75</span>              :    // loop until all the dababase is filled</span>
 <span id="L76"><span class="lineNum">      76</span>              :    //int count = 0;</span>
-<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">         288 :    while (repeat){</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">         320 :    while (repeat){</span></span>
 <span id="L78"><span class="lineNum">      78</span>              :       repeat = false;</span>
 <span id="L79"><span class="lineNum">      79</span>              :       //std::cout &lt;&lt; count++ &lt;&lt; std::endl;</span>
-<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">    53084430 :       for (unsigned idx = 0; idx &lt; KPKmaxIndex; ++idx){</span></span>
-<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">   103900446 :          repeat |= (db[idx] == kpk_unknown &amp;&amp; db[idx].preCompute(db) != kpk_unknown);</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">    58982700 :       for (unsigned idx = 0; idx &lt; KPKmaxIndex; ++idx){</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">   115444940 :          repeat |= (db[idx] == kpk_unknown &amp;&amp; db[idx].preCompute(db) != kpk_unknown);</span></span>
 <span id="L82"><span class="lineNum">      82</span>              :       }</span>
 <span id="L83"><span class="lineNum">      83</span>              :    }</span>
 <span id="L84"><span class="lineNum">      84</span>              :    // compress</span>
-<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">     3538962 :    for (unsigned idx = 0; idx &lt; KPKmaxIndex; ++idx) {</span></span>
-<span id="L86"><span class="lineNum">      86</span> <span class="tlaGNC">     3538944 :       if (db[idx] == kpk_win) { KPKBitbase[idx / 32] |= 1 &lt;&lt; (idx &amp; 0x1F); }</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">     3932180 :    for (unsigned idx = 0; idx &lt; KPKmaxIndex; ++idx) {</span></span>
+<span id="L86"><span class="lineNum">      86</span> <span class="tlaGNC">     3932160 :       if (db[idx] == kpk_win) { KPKBitbase[idx / 32] |= 1 &lt;&lt; (idx &amp; 0x1F); }</span></span>
 <span id="L87"><span class="lineNum">      87</span>              :    }</span>
 <span id="L88"><span class="lineNum">      88</span>              : #endif</span>
-<span id="L89"><span class="lineNum">      89</span> <span class="tlaGNC">          18 : }</span></span>
+<span id="L89"><span class="lineNum">      89</span> <span class="tlaGNC">          20 : }</span></span>
 <span id="L90"><span class="lineNum">      90</span>              : </span>
 <span id="L91"><span class="lineNum">      91</span>              : } // namespace KPK</span>
         </pre>

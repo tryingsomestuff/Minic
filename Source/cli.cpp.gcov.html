@@ -31,13 +31,13 @@
             <td class="headerValue">coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">60.8&nbsp;%</td>
+            <td class="headerCovTableEntryLo">63.5&nbsp;%</td>
             <td class="headerCovTableEntry">288</td>
-            <td class="headerCovTableEntry">175</td>
+            <td class="headerCovTableEntry">183</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-24 18:42:30</td>
+            <td class="headerValue">2026-02-24 20:08:09</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
@@ -111,9 +111,9 @@
 <span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">         163 :    const bool b = readFEN(fen, COM::position, true, true);</span></span>
 <span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">         163 :    if (!b) Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;Illegal FEN &quot; &lt;&lt; fen;</span></span>
 <span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">         163 :    COM::thinkAsync(COM::st_searching);</span></span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">        2367 :    while(ThreadPool::instance().main().searching()){</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">        2380 :    while(ThreadPool::instance().main().searching()){</span></span>
 <span id="L53"><span class="lineNum">      53</span>              :       using namespace std::chrono_literals;</span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">        2204 :       std::this_thread::sleep_for(10ms);</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">        2217 :       std::this_thread::sleep_for(10ms);</span></span>
 <span id="L55"><span class="lineNum">      55</span>              :    }</span>
 <span id="L56"><span class="lineNum">      56</span>              : #else</span>
 <span id="L57"><span class="lineNum">      57</span>              :    d.p     = p;</span>
@@ -286,27 +286,27 @@
 <span id="L224"><span class="lineNum">     224</span> <span class="tlaUNC">           0 :    return true;</span></span>
 <span id="L225"><span class="lineNum">     225</span> <span class="tlaUNC">           0 : }</span></span>
 <span id="L226"><span class="lineNum">     226</span>              : </span>
-<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC tlaBgGNC">          18 : bool cliManagement(const std::string &amp; firstArg, int argc, char** argv) {</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC tlaBgGNC">          20 : bool cliManagement(const std::string &amp; firstArg, int argc, char** argv) {</span></span>
 <span id="L228"><span class="lineNum">     228</span>              :    </span>
 <span id="L229"><span class="lineNum">     229</span>              :    // first we will look for options that do not need extra parameters</span>
 <span id="L230"><span class="lineNum">     230</span>              : </span>
 <span id="L231"><span class="lineNum">     231</span>              : #ifdef WITH_UCI</span>
-<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">          18 :    if (firstArg == &quot;-uci&quot;) {</span></span>
-<span id="L233"><span class="lineNum">     233</span> <span class="tlaUNC tlaBgUNC">           0 :       UCI::init();</span></span>
-<span id="L234"><span class="lineNum">     234</span> <span class="tlaUNC">           0 :       TimeMan::init();</span></span>
-<span id="L235"><span class="lineNum">     235</span> <span class="tlaUNC">           0 :       UCI::uci();</span></span>
-<span id="L236"><span class="lineNum">     236</span> <span class="tlaUNC">           0 :       return true;</span></span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">          20 :    if (firstArg == &quot;-uci&quot;) {</span></span>
+<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">           1 :       UCI::init();</span></span>
+<span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">           1 :       TimeMan::init();</span></span>
+<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">           1 :       UCI::uci();</span></span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">           1 :       return true;</span></span>
 <span id="L237"><span class="lineNum">     237</span>              :    }</span>
-<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC tlaBgGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;You can use -uci command line option to enter uci mode&quot;;</span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">          19 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;You can use -uci command line option to enter uci mode&quot;;</span></span>
 <span id="L239"><span class="lineNum">     239</span>              : #endif</span>
 <span id="L240"><span class="lineNum">     240</span>              : #ifdef WITH_XBOARD</span>
-<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">          18 :    if (firstArg == &quot;-xboard&quot;) {</span></span>
-<span id="L242"><span class="lineNum">     242</span> <span class="tlaUNC tlaBgUNC">           0 :       XBoard::init();</span></span>
-<span id="L243"><span class="lineNum">     243</span> <span class="tlaUNC">           0 :       TimeMan::init();</span></span>
-<span id="L244"><span class="lineNum">     244</span> <span class="tlaUNC">           0 :       XBoard::xboard();</span></span>
-<span id="L245"><span class="lineNum">     245</span> <span class="tlaUNC">           0 :       return true;</span></span>
+<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">          19 :    if (firstArg == &quot;-xboard&quot;) {</span></span>
+<span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">           1 :       XBoard::init();</span></span>
+<span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">           1 :       TimeMan::init();</span></span>
+<span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC">           1 :       XBoard::xboard();</span></span>
+<span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">           1 :       return true;</span></span>
 <span id="L246"><span class="lineNum">     246</span>              :    }</span>
-<span id="L247"><span class="lineNum">     247</span> <span class="tlaGNC tlaBgGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;You can use -xboard command line option to enter xboard mode&quot;;</span></span>
+<span id="L247"><span class="lineNum">     247</span> <span class="tlaGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;You can use -xboard command line option to enter xboard mode&quot;;</span></span>
 <span id="L248"><span class="lineNum">     248</span>              : #endif</span>
 <span id="L249"><span class="lineNum">     249</span>              : </span>
 <span id="L250"><span class="lineNum">     250</span>              : #ifdef WITH_FMTLIB   </span>
