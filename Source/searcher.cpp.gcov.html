@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-24 07:59:00</td>
+            <td class="headerValue">2026-02-24 18:42:30</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryMed">75.0&nbsp;%</td>
@@ -233,7 +233,7 @@
 <span id="L171"><span class="lineNum">     171</span> <span class="tlaGNC">         199 : void Searcher::wait() {</span></span>
 <span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC">         199 :    std::unique_lock lock(_mutex);</span></span>
 <span id="L173"><span class="lineNum">     173</span> <span class="tlaGNC">         199 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Thread waiting &quot; &lt;&lt; id();</span></span>
-<span id="L174"><span class="lineNum">     174</span> <span class="tlaGNC">         216 :    _cv.wait(lock, [&amp;] { return !_searching; });</span></span>
+<span id="L174"><span class="lineNum">     174</span> <span class="tlaGNC">         215 :    _cv.wait(lock, [&amp;] { return !_searching; });</span></span>
 <span id="L175"><span class="lineNum">     175</span> <span class="tlaGNC">         199 : }</span></span>
 <span id="L176"><span class="lineNum">     176</span>              : </span>
 <span id="L177"><span class="lineNum">     177</span>              : // multi-threaded search (blocking call)</span>
@@ -273,7 +273,7 @@
 <span id="L211"><span class="lineNum">     211</span>              : </span>
 <span id="L212"><span class="lineNum">     212</span> <span class="tlaUNC tlaBgUNC">           0 : const SearchData&amp; Searcher::getSearchData() const { return _data.datas; }</span></span>
 <span id="L213"><span class="lineNum">     213</span>              : </span>
-<span id="L214"><span class="lineNum">     214</span> <span class="tlaGNC tlaBgGNC">        2381 : bool Searcher::searching() const { return _searching; }</span></span>
+<span id="L214"><span class="lineNum">     214</span> <span class="tlaGNC tlaBgGNC">        2367 : bool Searcher::searching() const { return _searching; }</span></span>
 <span id="L215"><span class="lineNum">     215</span>              : </span>
 <span id="L216"><span class="lineNum">     216</span> <span class="tlaGNC">          36 : void Searcher::clearGame() {</span></span>
 <span id="L217"><span class="lineNum">     217</span>              :    clearPawnTT();</span>

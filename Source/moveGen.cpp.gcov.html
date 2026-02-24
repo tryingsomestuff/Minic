@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-24 07:59:00</td>
+            <td class="headerValue">2026-02-24 18:42:30</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -78,20 +78,20 @@
 <span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">          46 :    static std::random_device rd;</span></span>
 <span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">          48 :    static std::mt19937       g(rd()); // here really random</span></span>
 <span id="L18"><span class="lineNum">      18</span>              :    std::ranges::shuffle(moves, g);</span>
-<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">          48 :    for (const auto &amp; it : moves) {</span></span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">          48 :       Position p2 = p;</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">          57 :    for (const auto &amp; it : moves) {</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">          57 :       Position p2 = p;</span></span>
 <span id="L21"><span class="lineNum">      21</span>              : #if defined(WITH_NNUE) &amp;&amp; defined(DEBUG_NNUE_UPDATE)</span>
 <span id="L22"><span class="lineNum">      22</span>              :       NNUEEvaluator evaluator = p.evaluator();</span>
 <span id="L23"><span class="lineNum">      23</span>              :       p2.associateEvaluator(evaluator);</span>
 <span id="L24"><span class="lineNum">      24</span>              : #endif</span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">          48 :       if (const MoveInfo moveInfo(p2, it); !applyMove(p2, moveInfo)) continue;</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">          57 :       if (const MoveInfo moveInfo(p2, it); !applyMove(p2, moveInfo)) continue;</span></span>
 <span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">          46 :       pv.emplace_back(it); // updatePV</span></span>
 <span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">          46 :       const Square to = Move2To(it);</span></span>
 <span id="L28"><span class="lineNum">      28</span>              :       // king capture (works only for most standard chess variants)</span>
 <span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">          46 :       if (p.c == Co_White &amp;&amp; to == p.king[Co_Black]) return matingScore(0);</span></span>
 <span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">          46 :       if (p.c == Co_Black &amp;&amp; to == p.king[Co_White]) return matingScore(0);</span></span>
 <span id="L31"><span class="lineNum">      31</span>              :       return 0; // found one valid move</span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">          48 :    }</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">          57 :    }</span></span>
 <span id="L33"><span class="lineNum">      33</span>              :    // no move is valid ...</span>
 <span id="L34"><span class="lineNum">      34</span> <span class="tlaUNC tlaBgUNC">           0 :    return isInCheck ? matedScore(0) : 0;</span></span>
 <span id="L35"><span class="lineNum">      35</span>              : }</span>

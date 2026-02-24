@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-24 07:59:00</td>
+            <td class="headerValue">2026-02-24 18:42:30</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -435,8 +435,8 @@
 <span id="L373"><span class="lineNum">     373</span>              : #endif</span>
 <span id="L374"><span class="lineNum">     374</span>              : #if V_SIMD_128</span>
 <span id="L375"><span class="lineNum">     375</span>              :    constexpr size_t vstep128 = 8;</span>
-<span id="L376"><span class="lineNum">     376</span> <span class="tlaGNC"> 24775826243 :    while (i + vstep128 &lt;= N) {</span></span>
-<span id="L377"><span class="lineNum">     377</span> <span class="tlaGNC"> 24270197136 :       _mm_store_si128(reinterpret_cast&lt;__m128i*&gt;(dst + i), _mm_add_epi16(_mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(dst + i)), _mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(src + i))));</span></span>
+<span id="L376"><span class="lineNum">     376</span> <span class="tlaGNC"> 24775812915 :    while (i + vstep128 &lt;= N) {</span></span>
+<span id="L377"><span class="lineNum">     377</span> <span class="tlaGNC"> 24270184080 :       _mm_store_si128(reinterpret_cast&lt;__m128i*&gt;(dst + i), _mm_add_epi16(_mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(dst + i)), _mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(src + i))));</span></span>
 <span id="L378"><span class="lineNum">     378</span>              :       i += vstep128;</span>
 <span id="L379"><span class="lineNum">     379</span>              :    }</span>
 <span id="L380"><span class="lineNum">     380</span>              : #endif</span>
@@ -467,8 +467,8 @@
 <span id="L405"><span class="lineNum">     405</span>              : #endif</span>
 <span id="L406"><span class="lineNum">     406</span>              : #if V_SIMD_128</span>
 <span id="L407"><span class="lineNum">     407</span>              :    constexpr size_t vstep128 = 8;</span>
-<span id="L408"><span class="lineNum">     408</span> <span class="tlaGNC"> 16494780673 :    while (i + vstep128 &lt;= N) {</span></span>
-<span id="L409"><span class="lineNum">     409</span> <span class="tlaGNC"> 16158152496 :       _mm_store_si128(reinterpret_cast&lt;__m128i*&gt;(dst + i), _mm_sub_epi16(_mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(dst + i)), _mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(src + i))));</span></span>
+<span id="L408"><span class="lineNum">     408</span> <span class="tlaGNC"> 16494780575 :    while (i + vstep128 &lt;= N) {</span></span>
+<span id="L409"><span class="lineNum">     409</span> <span class="tlaGNC"> 16158152400 :       _mm_store_si128(reinterpret_cast&lt;__m128i*&gt;(dst + i), _mm_sub_epi16(_mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(dst + i)), _mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(src + i))));</span></span>
 <span id="L410"><span class="lineNum">     410</span>              :       i += vstep128;</span>
 <span id="L411"><span class="lineNum">     411</span>              :    }</span>
 <span id="L412"><span class="lineNum">     412</span>              : #endif</span>
@@ -488,8 +488,8 @@
 <span id="L426"><span class="lineNum">     426</span>              : #endif</span>
 <span id="L427"><span class="lineNum">     427</span>              : #if V_SIMD_128</span>
 <span id="L428"><span class="lineNum">     428</span>              :    constexpr size_t vstep128 = 8;</span>
-<span id="L429"><span class="lineNum">     429</span> <span class="tlaGNC">   401999969 :    while (i + vstep128 &lt;= N) {</span></span>
-<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC">   393796896 :       _mm_store_si128(reinterpret_cast&lt;__m128i*&gt;(dst + i), _mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(src + i)));</span></span>
+<span id="L429"><span class="lineNum">     429</span> <span class="tlaGNC">   401999479 :    while (i + vstep128 &lt;= N) {</span></span>
+<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC">   393796416 :       _mm_store_si128(reinterpret_cast&lt;__m128i*&gt;(dst + i), _mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(src + i)));</span></span>
 <span id="L431"><span class="lineNum">     431</span>              :       i += vstep128;</span>
 <span id="L432"><span class="lineNum">     432</span>              :    }</span>
 <span id="L433"><span class="lineNum">     433</span>              : #endif</span>
