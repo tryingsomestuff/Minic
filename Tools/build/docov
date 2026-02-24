@@ -4,7 +4,7 @@ ulimit -s unlimited
 export CXX=g++
 export CC=gcc
 
-if [ -n $EVALFILE ];then
+if [ -n "$EVALFILE" ];then
    export EMBEDDEDNNUEPATH=$EVALFILE
 else
    export EMBEDDEDNNUENAME=nyctophobic_narwhal.bin
@@ -30,6 +30,12 @@ if [ $FATHOM_PRESENT = "1" ]; then
 fi
 
 mkdir -p coverage-dir
+
+rm -f coverage-dir/*.gcno
+rm -f coverage-dir/*.gcda
+rm -f coverage-dir/*.gcov
+rm -rf coverage-dir/rapport
+rm -f coverage-dir/rapport.info
 
 rm -f *.gcno
 rm -f *.gcda
@@ -136,7 +142,10 @@ for file in *.gcno; do
    gcov -p $file
 done
 
-lcov -d $(readlink -f ../) -c -o rapport.info --no-external --ignore-errors negative
+echo "Checking protocol coverage artifacts ..."
+ls -1 minic.cov-uci.gcda minic.cov-xboard.gcda
+
+lcov -d "$(pwd)" -b "$(readlink -f ../)" -c -o rapport.info --no-external --ignore-errors negative
 genhtml -o rapport -t "coverage" rapport.info
 lcov -l rapport.info
 
