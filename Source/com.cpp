@@ -205,6 +205,14 @@ bool makeMove(const Move m, const bool disp, const std::string & tag, const Move
    // there is a possible race condition here, as position can be changed from UCI or XBOARD command line
    // while it is still in use here. For instance in a multi-process context where the move has already been send to GUI by rank 0
    // and other ranks are still using the previous position. Thus mutexGUI...
+   if (!isValidMove(m)) {
+      Logging::LogIt(Logging::logWarn) << "Rejected invalid move " << ToString(m);
+      return false;
+   }
+   if (!isPseudoLegal(position, m)) {
+      Logging::LogIt(Logging::logWarn) << "Rejected non pseudo-legal move " << ToString(m) << " on " << ToString(position);
+      return false;
+   }
 #ifdef WITH_NNUE
    position.resetNNUEEvaluator(position.evaluator());
 #endif

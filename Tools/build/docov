@@ -125,6 +125,8 @@ otim 500
 option Hash=64
 ping 123
 usermove c7c5
+usermove a2a3
+usermove a7a6
 undo
 remove
 ?
