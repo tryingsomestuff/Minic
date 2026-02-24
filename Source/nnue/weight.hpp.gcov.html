@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-22 19:03:02</td>
+            <td class="headerValue">2026-02-24 07:59:00</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -88,24 +88,24 @@
 <span id="L26"><span class="lineNum">      26</span>              : </span>
 <span id="L27"><span class="lineNum">      27</span>              :    uint32_t version {0};</span>
 <span id="L28"><span class="lineNum">      28</span>              : </span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC tlaBgGNC">          19 :    NNUEWeights&lt;NT, Q&gt;&amp; load(WeightsReader&lt;NT&gt;&amp; ws, bool readVersion) {</span></span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">          19 :       quantizationInfo&lt;Q&gt;();</span></span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">          19 :       if (readVersion) ws.readVersion(version);</span></span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">          19 :       w.load_(ws);</span></span>
-<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">          19 :       b.load_(ws);</span></span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">          57 :       for (auto &amp; l : innerLayer) l.fc0.load_(ws);</span></span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">          57 :       for (auto &amp; l : innerLayer) l.fc1.load_(ws);</span></span>
-<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">          57 :       for (auto &amp; l : innerLayer) l.fc2.load_(ws);</span></span>
-<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">          57 :       for (auto &amp; l : innerLayer) l.fc3.load_(ws);</span></span>
-<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">          19 :       return *this;</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC tlaBgGNC">          18 :    NNUEWeights&lt;NT, Q&gt;&amp; load(WeightsReader&lt;NT&gt;&amp; ws, bool readVersion) {</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">          18 :       quantizationInfo&lt;Q&gt;();</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">          18 :       if (readVersion) ws.readVersion(version);</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">          18 :       w.load_(ws);</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">          18 :       b.load_(ws);</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">          54 :       for (auto &amp; l : innerLayer) l.fc0.load_(ws);</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">          54 :       for (auto &amp; l : innerLayer) l.fc1.load_(ws);</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">          54 :       for (auto &amp; l : innerLayer) l.fc2.load_(ws);</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">          54 :       for (auto &amp; l : innerLayer) l.fc3.load_(ws);</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">          18 :       return *this;</span></span>
 <span id="L39"><span class="lineNum">      39</span>              :    }</span>
 <span id="L40"><span class="lineNum">      40</span>              : </span>
-<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">          19 :    static bool load(const std::string&amp; path, NNUEWeights&lt;NT, Q&gt;&amp; loadedWeights) {</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">          18 :    static bool load(const std::string&amp; path, NNUEWeights&lt;NT, Q&gt;&amp; loadedWeights) {</span></span>
 <span id="L42"><span class="lineNum">      42</span>              :       [[maybe_unused]] constexpr uint32_t expectedVersion {0xc0ffee03};</span>
 <span id="L43"><span class="lineNum">      43</span>              :       [[maybe_unused]] constexpr int      expectedSize    {151049100}; // net size + 4 for version</span>
 <span id="L44"><span class="lineNum">      44</span>              :       [[maybe_unused]] constexpr bool     withVersion     {true}; // used for backward compatiblity and debug</span>
 <span id="L45"><span class="lineNum">      45</span>              : </span>
-<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">          19 :       if (path != &quot;embedded&quot;) { // read from disk</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">          18 :       if (path != &quot;embedded&quot;) { // read from disk</span></span>
 <span id="L47"><span class="lineNum">      47</span>              : #ifndef WITHOUT_FILESYSTEM</span>
 <span id="L48"><span class="lineNum">      48</span>              :          std::error_code ec;</span>
 <span id="L49"><span class="lineNum">      49</span> <span class="tlaUNC tlaBgUNC">           0 :          const auto fsize = std::filesystem::file_size(path, ec);</span></span>
@@ -124,14 +124,14 @@
 <span id="L62"><span class="lineNum">      62</span> <span class="tlaUNC">           0 :       }</span></span>
 <span id="L63"><span class="lineNum">      63</span>              : #ifdef EMBEDDEDNNUEPATH</span>
 <span id="L64"><span class="lineNum">      64</span>              :       else {                                             // read from embedded data</span>
-<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC tlaBgGNC">          19 :          if (embedded::weightsFileSize != expectedSize) { // with or without version</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC tlaBgGNC">          18 :          if (embedded::weightsFileSize != expectedSize) { // with or without version</span></span>
 <span id="L66"><span class="lineNum">      66</span> <span class="tlaUNC tlaBgUNC">           0 :             Logging::LogIt(Logging::logError) &lt;&lt; &quot;File &quot; &lt;&lt; path &lt;&lt; &quot; does not look like a compatible net&quot;;</span></span>
 <span id="L67"><span class="lineNum">      67</span> <span class="tlaUNC">           0 :             return false;</span></span>
 <span id="L68"><span class="lineNum">      68</span>              :          }</span>
-<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC tlaBgGNC">          38 :          std::istringstream stream(std::string((const char*)embedded::weightsFileData, embedded::weightsFileSize), std::stringstream::binary);</span></span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC tlaBgGNC">          36 :          std::istringstream stream(std::string((const char*)embedded::weightsFileData, embedded::weightsFileSize), std::stringstream::binary);</span></span>
 <span id="L70"><span class="lineNum">      70</span>              :          auto               ws = WeightsReader&lt;NT&gt;(stream);</span>
-<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">          19 :          loadedWeights.load(ws, withVersion);</span></span>
-<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">          19 :       }</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">          18 :          loadedWeights.load(ws, withVersion);</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">          18 :       }</span></span>
 <span id="L73"><span class="lineNum">      73</span>              : #else</span>
 <span id="L74"><span class="lineNum">      74</span>              :       else {</span>
 <span id="L75"><span class="lineNum">      75</span>              :          Logging::LogIt(Logging::logError) &lt;&lt; &quot;Minic was not compiled with an embedded net&quot;;</span>
@@ -140,9 +140,9 @@
 <span id="L78"><span class="lineNum">      78</span>              : #endif</span>
 <span id="L79"><span class="lineNum">      79</span>              : </span>
 <span id="L80"><span class="lineNum">      80</span>              :       if (withVersion) {</span>
-<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">          19 :          Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Expected net version : &quot; &lt;&lt; toHexString(expectedVersion);</span></span>
-<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">          38 :          Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Read net version     : &quot; &lt;&lt; toHexString(loadedWeights.version);</span></span>
-<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">          19 :          if (loadedWeights.version != expectedVersion) {</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">          18 :          Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Expected net version : &quot; &lt;&lt; toHexString(expectedVersion);</span></span>
+<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">          36 :          Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Read net version     : &quot; &lt;&lt; toHexString(loadedWeights.version);</span></span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">          18 :          if (loadedWeights.version != expectedVersion) {</span></span>
 <span id="L84"><span class="lineNum">      84</span> <span class="tlaUNC tlaBgUNC">           0 :             Logging::LogIt(Logging::logError) &lt;&lt; &quot;File &quot; &lt;&lt; path &lt;&lt; &quot; is not a compatible version of the net&quot;;</span></span>
 <span id="L85"><span class="lineNum">      85</span> <span class="tlaUNC">           0 :             return false;</span></span>
 <span id="L86"><span class="lineNum">      86</span>              :          }</span>

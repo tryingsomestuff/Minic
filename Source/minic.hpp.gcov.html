@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-22 19:03:02</td>
+            <td class="headerValue">2026-02-24 07:59:00</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
@@ -90,56 +90,56 @@
 <span id="L28"><span class="lineNum">      28</span>              : #include &quot;xboard.hpp&quot;</span>
 <span id="L29"><span class="lineNum">      29</span>              : </span>
 <span id="L30"><span class="lineNum">      30</span>              : </span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC tlaBgGNC">          19 : inline void sizeOf(){</span></span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">          19 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of Position &quot; &lt;&lt; sizeof(Position) &lt;&lt; &quot;b&quot;;</span></span>
-<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">          19 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of PVSData  &quot; &lt;&lt; sizeof(Searcher::PVSData) &lt;&lt; &quot;b&quot;;</span></span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">          19 : }</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC tlaBgGNC">          18 : inline void sizeOf(){</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of Position &quot; &lt;&lt; sizeof(Position) &lt;&lt; &quot;b&quot;;</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of PVSData  &quot; &lt;&lt; sizeof(Searcher::PVSData) &lt;&lt; &quot;b&quot;;</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">          18 : }</span></span>
 <span id="L35"><span class="lineNum">      35</span>              : </span>
 <span id="L36"><span class="lineNum">      36</span>              : // Initialize all the things that should be ...</span>
-<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">          19 : inline void init(int argc, char** argv) {</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">          18 : inline void init(int argc, char** argv) {</span></span>
 <span id="L38"><span class="lineNum">      38</span>              :    Distributed::init();</span>
-<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">          19 :    Logging::hellooo();</span></span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">          19 :    Options::initOptions(argc, argv);</span></span>
-<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">          19 :    Logging::init(); // after reading options</span></span>
-<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">          19 :    Zobrist::initHash();</span></span>
-<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">          19 :    TT::initTable();</span></span>
-<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">          19 :    BBTools::initMask();</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">          18 :    Logging::hellooo();</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">          18 :    Options::initOptions(argc, argv);</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">          18 :    Logging::init(); // after reading options</span></span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">          18 :    Zobrist::initHash();</span></span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">          18 :    TT::initTable();</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">          18 :    BBTools::initMask();</span></span>
 <span id="L45"><span class="lineNum">      45</span>              : #ifdef WITH_MAGIC</span>
-<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">          19 :    BBTools::MagicBB::initMagic();</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">          18 :    BBTools::MagicBB::initMagic();</span></span>
 <span id="L47"><span class="lineNum">      47</span>              : #endif</span>
-<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">          19 :    KPK::init();</span></span>
-<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">          19 :    MaterialHash::MaterialHashInitializer::init();</span></span>
-<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">          19 :    EvalConfig::initEval();</span></span>
-<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">          19 :    ThreadPool::instance().setup();</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">          18 :    KPK::init();</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">          18 :    MaterialHash::MaterialHashInitializer::init();</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">          18 :    EvalConfig::initEval();</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">          18 :    ThreadPool::instance().setup();</span></span>
 <span id="L52"><span class="lineNum">      52</span>              :    Distributed::lateInit();</span>
 <span id="L53"><span class="lineNum">      53</span>              : #ifdef WITH_SYZYGY</span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">          19 :    SyzygyTb::initTB();</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">          18 :    SyzygyTb::initTB();</span></span>
 <span id="L55"><span class="lineNum">      55</span>              : #endif</span>
 <span id="L56"><span class="lineNum">      56</span>              : #ifdef WITH_NNUE</span>
-<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">          19 :    NNUEWrapper::init();</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">          18 :    NNUEWrapper::init();</span></span>
 <span id="L58"><span class="lineNum">      58</span>              : #endif</span>
-<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">          19 :    COM::init(COM::p_uci); // let's do this ... (usefull to reset position in case of NNUE)</span></span>
-<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">          19 :    sizeOf();</span></span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">          18 :    COM::init(COM::p_uci); // let's do this ... (usefull to reset position in case of NNUE)</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">          18 :    sizeOf();</span></span>
 <span id="L61"><span class="lineNum">      61</span>              :    // Start energy monitoring</span>
-<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">          19 :    initEnergyMonitor(500);</span></span>
-<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">          19 : }</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">          18 :    initEnergyMonitor(500);</span></span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">          18 : }</span></span>
 <span id="L64"><span class="lineNum">      64</span>              : </span>
-<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">          19 : inline void finalize() {</span></span>
-<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">          19 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Stopping all threads&quot;;</span></span>
-<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">          19 :    ThreadPool::instance().stop();</span></span>
-<span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">          19 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Waiting all threads&quot;;</span></span>
-<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC">          19 :    ThreadPool::instance().wait(); ///@todo is this necessary ?</span></span>
-<span id="L70"><span class="lineNum">      70</span> <span class="tlaGNC">          19 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Deleting all threads&quot;;</span></span>
-<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">          19 :    ThreadPool::instance().resize(0);</span></span>
-<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">          19 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Syncing process...&quot;;</span></span>
-<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">          19 :    Distributed::sync(Distributed::_commInput, __PRETTY_FUNCTION__);</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">          18 : inline void finalize() {</span></span>
+<span id="L66"><span class="lineNum">      66</span> <span class="tlaGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Stopping all threads&quot;;</span></span>
+<span id="L67"><span class="lineNum">      67</span> <span class="tlaGNC">          18 :    ThreadPool::instance().stop();</span></span>
+<span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Waiting all threads&quot;;</span></span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC">          18 :    ThreadPool::instance().wait(); ///@todo is this necessary ?</span></span>
+<span id="L70"><span class="lineNum">      70</span> <span class="tlaGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Deleting all threads&quot;;</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">          18 :    ThreadPool::instance().resize(0);</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Syncing process...&quot;;</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">          18 :    Distributed::sync(Distributed::_commInput, __PRETTY_FUNCTION__);</span></span>
 <span id="L74"><span class="lineNum">      74</span>              :    // Report and cleanup energy monitoring</span>
-<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">          19 :    finalizeEnergyMonitor();</span></span>
-<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">          19 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Bye bye...&quot;;</span></span>
-<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">          19 :    Logging::finalize();</span></span>
-<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">          19 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;See you soon...&quot;;</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">          18 :    finalizeEnergyMonitor();</span></span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Bye bye...&quot;;</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">          18 :    Logging::finalize();</span></span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;See you soon...&quot;;</span></span>
 <span id="L79"><span class="lineNum">      79</span>              :    Distributed::finalize();</span>
-<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">          19 : }</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">          18 : }</span></span>
 <span id="L81"><span class="lineNum">      81</span>              : </span>
 <span id="L82"><span class="lineNum">      82</span>              : #define RETURN(x)   \</span>
 <span id="L83"><span class="lineNum">      83</span>              :    {                \</span>
@@ -247,25 +247,25 @@
 <span id="L185"><span class="lineNum">     185</span>              : }</span>
 <span id="L186"><span class="lineNum">     186</span>              : #endif</span>
 <span id="L187"><span class="lineNum">     187</span>              : </span>
-<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC tlaBgGNC">          19 : inline bool minic(int argc, char** argv) {</span></span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC tlaBgGNC">          18 : inline bool minic(int argc, char** argv) {</span></span>
 <span id="L189"><span class="lineNum">     189</span>              :    START_TIMER</span>
 <span id="L190"><span class="lineNum">     190</span>              : </span>
 <span id="L191"><span class="lineNum">     191</span>              :    // initialization is **always** called</span>
 <span id="L192"><span class="lineNum">     192</span>              :    // for sure this can be optimized in some situations </span>
 <span id="L193"><span class="lineNum">     193</span>              :    // but it may not worth the pain/risks</span>
-<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">          19 :    init(argc, argv);</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">          18 :    init(argc, argv);</span></span>
 <span id="L195"><span class="lineNum">     195</span>              : </span>
-<span id="L196"><span class="lineNum">     196</span> <span class="tlaGNC">          19 :    std::string firstArg = argc &gt; 1 ? argv[1] : &quot;&quot;;</span></span>
+<span id="L196"><span class="lineNum">     196</span> <span class="tlaGNC">          18 :    std::string firstArg = argc &gt; 1 ? argv[1] : &quot;&quot;;</span></span>
 <span id="L197"><span class="lineNum">     197</span>              :    const bool hasParam = argc &gt; 2;</span>
-<span id="L198"><span class="lineNum">     198</span> <span class="tlaGNC">          19 :    const std::string secondArg = hasParam ? argv[2] : &quot;&quot;;</span></span>
+<span id="L198"><span class="lineNum">     198</span> <span class="tlaGNC">          18 :    const std::string secondArg = hasParam ? argv[2] : &quot;&quot;;</span></span>
 <span id="L199"><span class="lineNum">     199</span>              : </span>
 <span id="L200"><span class="lineNum">     200</span>              : #ifdef WITH_TEST_SUITE</span>
-<span id="L201"><span class="lineNum">     201</span> <span class="tlaGNC">          19 :    if (firstArg == &quot;help_test&quot; || firstArg == &quot;-help_test&quot; || firstArg == &quot;--help_test&quot;) {</span></span>
+<span id="L201"><span class="lineNum">     201</span> <span class="tlaGNC">          18 :    if (firstArg == &quot;help_test&quot; || firstArg == &quot;-help_test&quot; || firstArg == &quot;--help_test&quot;) {</span></span>
 <span id="L202"><span class="lineNum">     202</span> <span class="tlaUNC tlaBgUNC">           0 :       return helpTest();</span></span>
 <span id="L203"><span class="lineNum">     203</span>              :    }</span>
 <span id="L204"><span class="lineNum">     204</span>              : #endif</span>
 <span id="L205"><span class="lineNum">     205</span>              : </span>
-<span id="L206"><span class="lineNum">     206</span> <span class="tlaGNC tlaBgGNC">          19 :    if (firstArg == &quot;-h&quot; || firstArg == &quot;-help&quot; || firstArg == &quot;--help&quot; || firstArg == &quot;help&quot;) {</span></span>
+<span id="L206"><span class="lineNum">     206</span> <span class="tlaGNC tlaBgGNC">          18 :    if (firstArg == &quot;-h&quot; || firstArg == &quot;-help&quot; || firstArg == &quot;--help&quot; || firstArg == &quot;help&quot;) {</span></span>
 <span id="L207"><span class="lineNum">     207</span> <span class="tlaUNC tlaBgUNC">           0 :       return help();</span></span>
 <span id="L208"><span class="lineNum">     208</span>              :    }</span>
 <span id="L209"><span class="lineNum">     209</span>              : </span>
@@ -273,7 +273,7 @@
 <span id="L211"><span class="lineNum">     211</span>              : </span>
 <span id="L212"><span class="lineNum">     212</span>              : #ifdef WITH_TEST_SUITE</span>
 <span id="L213"><span class="lineNum">     213</span>              :    // this will run a test suite if requiered</span>
-<span id="L214"><span class="lineNum">     214</span> <span class="tlaGNC tlaBgGNC">          19 :    if (test(firstArg)) RETURN(true)</span></span>
+<span id="L214"><span class="lineNum">     214</span> <span class="tlaGNC tlaBgGNC">          18 :    if (test(firstArg)) RETURN(true)</span></span>
 <span id="L215"><span class="lineNum">     215</span>              : #endif // WITH_TEST_SUITE</span>
 <span id="L216"><span class="lineNum">     216</span>              : </span>
 <span id="L217"><span class="lineNum">     217</span>              : #ifdef WITH_EVAL_TUNING</span>
@@ -288,29 +288,29 @@
 <span id="L226"><span class="lineNum">     226</span>              : #endif // WITH_PGN_PARSER</span>
 <span id="L227"><span class="lineNum">     227</span>              : </span>
 <span id="L228"><span class="lineNum">     228</span>              : #ifdef WITH_DATA2BIN</span>
-<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">          57 :    if (hasParam &amp;&amp; std::string(firstArg) == &quot;-plain2bin&quot;) { </span></span>
+<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">          54 :    if (hasParam &amp;&amp; std::string(firstArg) == &quot;-plain2bin&quot;) { </span></span>
 <span id="L230"><span class="lineNum">     230</span> <span class="tlaUNC tlaBgUNC">           0 :       RETURN(convert_plain_to_bin({secondArg}, secondArg + &quot;.bin&quot;, 1, 300)) </span></span>
 <span id="L231"><span class="lineNum">     231</span>              :    }</span>
-<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC tlaBgGNC">          57 :    if (hasParam &amp;&amp; std::string(firstArg) == &quot;-pgn2bin&quot;)   { </span></span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC tlaBgGNC">          54 :    if (hasParam &amp;&amp; std::string(firstArg) == &quot;-pgn2bin&quot;)   { </span></span>
 <span id="L233"><span class="lineNum">     233</span> <span class="tlaUNC tlaBgUNC">           0 :       RETURN(convert_bin_from_pgn_extract({secondArg}, secondArg + &quot;.bin&quot;, true, false)) </span></span>
 <span id="L234"><span class="lineNum">     234</span>              :    }</span>
-<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC tlaBgGNC">          57 :    if (hasParam &amp;&amp; std::string(firstArg) == &quot;-bin2plain&quot;) { </span></span>
+<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC tlaBgGNC">          54 :    if (hasParam &amp;&amp; std::string(firstArg) == &quot;-bin2plain&quot;) { </span></span>
 <span id="L236"><span class="lineNum">     236</span> <span class="tlaUNC tlaBgUNC">           0 :       RETURN(convert_bin_to_plain({secondArg}, secondArg + &quot;.plain&quot;)) </span></span>
 <span id="L237"><span class="lineNum">     237</span>              :    }</span>
-<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC tlaBgGNC">          57 :    if (hasParam &amp;&amp; std::string(firstArg) == &quot;-rescore&quot;)   { </span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC tlaBgGNC">          54 :    if (hasParam &amp;&amp; std::string(firstArg) == &quot;-rescore&quot;)   { </span></span>
 <span id="L239"><span class="lineNum">     239</span> <span class="tlaUNC tlaBgUNC">           0 :       RETURN(rescore({secondArg}, secondArg + &quot;.rescored&quot;)) </span></span>
 <span id="L240"><span class="lineNum">     240</span>              :    }</span>
 <span id="L241"><span class="lineNum">     241</span>              : #endif // WITH_DATA2BIN</span>
 <span id="L242"><span class="lineNum">     242</span>              : </span>
 <span id="L243"><span class="lineNum">     243</span>              : #ifdef DEBUG_TOOL</span>
-<span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC tlaBgGNC">          19 :    if (firstArg.empty()) {</span></span>
+<span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC tlaBgGNC">          18 :    if (firstArg.empty()) {</span></span>
 <span id="L245"><span class="lineNum">     245</span> <span class="tlaUNC tlaBgUNC">           0 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Hint: You can use -xboard command line option to enter xboard mode (default is uci)&quot;;</span></span>
 <span id="L246"><span class="lineNum">     246</span>              :       firstArg = &quot;-uci&quot;; // default is uci</span>
 <span id="L247"><span class="lineNum">     247</span>              :    }</span>
-<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC tlaBgGNC">          19 :    const bool ret = cliManagement(firstArg, argc, argv);</span></span>
+<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC tlaBgGNC">          18 :    const bool ret = cliManagement(firstArg, argc, argv);</span></span>
 <span id="L249"><span class="lineNum">     249</span>              :    STOP_AND_SUM_TIMER(Total)</span>
 <span id="L250"><span class="lineNum">     250</span>              :    Timers::Display();</span>
-<span id="L251"><span class="lineNum">     251</span> <span class="tlaGNC">          19 :    finalize();</span></span>
+<span id="L251"><span class="lineNum">     251</span> <span class="tlaGNC">          18 :    finalize();</span></span>
 <span id="L252"><span class="lineNum">     252</span>              :    return ret;</span>
 <span id="L253"><span class="lineNum">     253</span>              : </span>
 <span id="L254"><span class="lineNum">     254</span>              : #else // DEBUG_TOOL</span>

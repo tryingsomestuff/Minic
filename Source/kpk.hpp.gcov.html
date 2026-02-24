@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-22 19:03:02</td>
+            <td class="headerValue">2026-02-24 07:59:00</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -76,14 +76,14 @@
 <span id="L14"><span class="lineNum">      14</span>              : [[nodiscard]] Square normalizeSquare(const Position&amp; p, const Color strongSide, const Square sq);</span>
 <span id="L15"><span class="lineNum">      15</span>              : </span>
 <span id="L16"><span class="lineNum">      16</span>              : enum kpk_result : uint8_t { kpk_invalid = 0, kpk_unknown = 1, kpk_draw = 2, kpk_win = 4 };</span>
-<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC tlaBgGNC">    69291537 : constexpr kpk_result&amp; operator|=(kpk_result&amp; r, kpk_result v) { return r = kpk_result(r | v); }</span></span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC tlaBgGNC">    65644614 : constexpr kpk_result&amp; operator|=(kpk_result&amp; r, kpk_result v) { return r = kpk_result(r | v); }</span></span>
 <span id="L18"><span class="lineNum">      18</span>              : </span>
 <span id="L19"><span class="lineNum">      19</span>              : constexpr unsigned KPKmaxIndex = 2 * 24 * NbSquare * NbSquare; // Color x pawn x wk x bk</span>
 <span id="L20"><span class="lineNum">      20</span>              : </span>
 <span id="L21"><span class="lineNum">      21</span>              : struct KPKPosition {</span>
 <span id="L22"><span class="lineNum">      22</span>              :    KPKPosition() = default;</span>
 <span id="L23"><span class="lineNum">      23</span>              :    explicit KPKPosition(const unsigned idx);</span>
-<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">    65732514 :    FORCE_FINLINE operator kpk_result() const { return result; }</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">    62272908 :    FORCE_FINLINE operator kpk_result() const { return result; }</span></span>
 <span id="L25"><span class="lineNum">      25</span>              :    [[nodiscard]] kpk_result preCompute(const array1d&lt;KPKPosition, KPKmaxIndex&gt;&amp; db);</span>
 <span id="L26"><span class="lineNum">      26</span>              :    template&lt;Color Us&gt; [[nodiscard]] kpk_result preCompute(const array1d&lt;KPKPosition, KPKmaxIndex&gt;&amp; db);</span>
 <span id="L27"><span class="lineNum">      27</span>              :    colored&lt;Square&gt; ksq;</span>

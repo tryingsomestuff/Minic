@@ -31,18 +31,18 @@
             <td class="headerValue">coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">60.0&nbsp;%</td>
             <td class="headerCovTableEntry">25</td>
-            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntry">15</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-22 19:03:02</td>
+            <td class="headerValue">2026-02-24 07:59:00</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
             <td class="headerCovTableEntry">3</td>
-            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">2</td>
           </tr>
                   <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -69,27 +69,27 @@
 <span id="L7"><span class="lineNum">       7</span>              : #pragma GCC diagnostic push</span>
 <span id="L8"><span class="lineNum">       8</span>              : #pragma GCC diagnostic ignored &quot;-Wconversion&quot;</span>
 <span id="L9"><span class="lineNum">       9</span>              : </span>
-<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC tlaBgGNC">     3677869 : EvalScore EvalFeatures::SumUp() const {</span></span>
-<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC">     3677869 :    EvalScore score = scores[F_material] + scores[F_positional] + scores[F_development] + scores[F_mobility] + scores[F_pawnStruct] + scores[F_attack];</span></span>
-<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC">     3677869 :    score += scores[F_complexity] * sgn(score[MG]);</span></span>
-<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">     3677869 :    return score;</span></span>
+<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC tlaBgGNC">     1842716 : EvalScore EvalFeatures::SumUp() const {</span></span>
+<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC">     1842716 :    EvalScore score = scores[F_material] + scores[F_positional] + scores[F_development] + scores[F_mobility] + scores[F_pawnStruct] + scores[F_attack];</span></span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC">     1842716 :    score += scores[F_complexity] * sgn(score[MG]);</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">     1842716 :    return score;</span></span>
 <span id="L14"><span class="lineNum">      14</span>              : }</span>
 <span id="L15"><span class="lineNum">      15</span>              : </span>
 <span id="L16"><span class="lineNum">      16</span>              : #pragma GCC diagnostic pop</span>
 <span id="L17"><span class="lineNum">      17</span>              : </span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">           1 : void EvalFeatures::callBack() {</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaUNC tlaBgUNC">           0 : void EvalFeatures::callBack() {</span></span>
 <span id="L19"><span class="lineNum">      19</span>              :    DynamicConfig::stylized = false;</span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">           1 :    DynamicConfig::stylized |= DynamicConfig::styleComplexity  != 50;</span></span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">           1 :    DynamicConfig::stylized |= DynamicConfig::styleMaterial    != 50;</span></span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">           1 :    DynamicConfig::stylized |= DynamicConfig::stylePositional  != 50;</span></span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">           1 :    DynamicConfig::stylized |= DynamicConfig::styleDevelopment != 50;</span></span>
-<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">           1 :    DynamicConfig::stylized |= DynamicConfig::styleMobility    != 50;</span></span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC">           1 :    DynamicConfig::stylized |= DynamicConfig::styleAttack      != 50;</span></span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">           1 :    DynamicConfig::stylized |= DynamicConfig::stylePawnStruct  != 50;</span></span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">           1 :    DynamicConfig::stylized |= DynamicConfig::styleForwardness != 50;</span></span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">           1 : }</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaUNC">           0 :    DynamicConfig::stylized |= DynamicConfig::styleComplexity  != 50;</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC">           0 :    DynamicConfig::stylized |= DynamicConfig::styleMaterial    != 50;</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC">           0 :    DynamicConfig::stylized |= DynamicConfig::stylePositional  != 50;</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaUNC">           0 :    DynamicConfig::stylized |= DynamicConfig::styleDevelopment != 50;</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaUNC">           0 :    DynamicConfig::stylized |= DynamicConfig::styleMobility    != 50;</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaUNC">           0 :    DynamicConfig::stylized |= DynamicConfig::styleAttack      != 50;</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaUNC">           0 :    DynamicConfig::stylized |= DynamicConfig::stylePawnStruct  != 50;</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaUNC">           0 :    DynamicConfig::stylized |= DynamicConfig::styleForwardness != 50;</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaUNC">           0 : }</span></span>
 <span id="L29"><span class="lineNum">      29</span>              : </span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">           1 : void displayEval(const EvalData&amp; data, const EvalFeatures&amp; features) {</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC tlaBgGNC">           1 : void displayEval(const EvalData&amp; data, const EvalFeatures&amp; features) {</span></span>
 <span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Game phase    &quot; &lt;&lt; data.gp;</span></span>
 <span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;ScalingFactor &quot; &lt;&lt; features.scalingFactor;</span></span>
 <span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Material      &quot; &lt;&lt; features.scores[F_material];</span></span>
