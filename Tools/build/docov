@@ -45,6 +45,7 @@ cd coverage-dir
 ./minic.cov bench 10 -minOutputLevel 0
 ./minic.cov -selfplay 5 1 -minOutputLevel 0
 ./minic.cov -perft_test -minOutputLevel 0
+./minic.cov -see_test -minOutputLevel 0
 ./minic.cov -spsa -minOutputLevel 0
 ./minic.cov -timeTest 1000 0 20 0 -minOutputLevel 0
 ./minic.cov -qsearch "start" -minOutputLevel 0
@@ -67,9 +68,19 @@ setoption name UCI_RatingAdv value 3000
 setoption name StyleAttack value 55
 setoption name Level value 55
 setoption name Hash value 32
+setoption name UCI_LimitStrength value true
+setoption name UCI_Elo value 1350
+setoption name nodesBasedLevel value false
 isready
 position fen r1bqkb1r/pp3ppp/1np1pn2/6N1/2BP4/8/PPP1QPPP/R1B1K1NR w KQkq - 1 1
 go depth 20
+wait
+position startpos
+go mate 2
+wait
+position startpos
+go ponder
+ponderhit
 wait
 stop
 debug on
@@ -84,6 +95,8 @@ wait
 go infinite
 stop
 wait
+go depth 1 foobar
+wait
 ucinewgame
 position fen 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1
 go depth 6
@@ -94,6 +107,25 @@ EOF
 
 ./minic.cov -xboard -minOutputLevel 0 <<EOF
 xboard
+protover 2
+post
+hard
+new
+variant fischerandom
+setboard rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1
+level 40 5 0
+time 500
+otim 500
+option Hash=64
+ping 123
+usermove c7c5
+undo
+remove
+?
+easy
+analyze
+exit
+nopost
 sd 20
 go
 wait
