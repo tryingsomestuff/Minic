@@ -31,13 +31,13 @@
             <td class="headerValue">coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">63.5&nbsp;%</td>
+            <td class="headerCovTableEntryLo">64.2&nbsp;%</td>
             <td class="headerCovTableEntry">288</td>
-            <td class="headerCovTableEntry">183</td>
+            <td class="headerCovTableEntry">185</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-24 20:08:09</td>
+            <td class="headerValue">2026-02-26 19:16:57</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
@@ -111,9 +111,9 @@
 <span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">         163 :    const bool b = readFEN(fen, COM::position, true, true);</span></span>
 <span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">         163 :    if (!b) Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;Illegal FEN &quot; &lt;&lt; fen;</span></span>
 <span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">         163 :    COM::thinkAsync(COM::st_searching);</span></span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">        2380 :    while(ThreadPool::instance().main().searching()){</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">        2424 :    while(ThreadPool::instance().main().searching()){</span></span>
 <span id="L53"><span class="lineNum">      53</span>              :       using namespace std::chrono_literals;</span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">        2217 :       std::this_thread::sleep_for(10ms);</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">        2261 :       std::this_thread::sleep_for(10ms);</span></span>
 <span id="L55"><span class="lineNum">      55</span>              :    }</span>
 <span id="L56"><span class="lineNum">      56</span>              : #else</span>
 <span id="L57"><span class="lineNum">      57</span>              :    d.p     = p;</span>
@@ -286,27 +286,27 @@
 <span id="L224"><span class="lineNum">     224</span> <span class="tlaUNC">           0 :    return true;</span></span>
 <span id="L225"><span class="lineNum">     225</span> <span class="tlaUNC">           0 : }</span></span>
 <span id="L226"><span class="lineNum">     226</span>              : </span>
-<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC tlaBgGNC">          20 : bool cliManagement(const std::string &amp; firstArg, int argc, char** argv) {</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC tlaBgGNC">          21 : bool cliManagement(const std::string &amp; firstArg, int argc, char** argv) {</span></span>
 <span id="L228"><span class="lineNum">     228</span>              :    </span>
 <span id="L229"><span class="lineNum">     229</span>              :    // first we will look for options that do not need extra parameters</span>
 <span id="L230"><span class="lineNum">     230</span>              : </span>
 <span id="L231"><span class="lineNum">     231</span>              : #ifdef WITH_UCI</span>
-<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">          20 :    if (firstArg == &quot;-uci&quot;) {</span></span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">          21 :    if (firstArg == &quot;-uci&quot;) {</span></span>
 <span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">           1 :       UCI::init();</span></span>
 <span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">           1 :       TimeMan::init();</span></span>
 <span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">           1 :       UCI::uci();</span></span>
 <span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">           1 :       return true;</span></span>
 <span id="L237"><span class="lineNum">     237</span>              :    }</span>
-<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">          19 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;You can use -uci command line option to enter uci mode&quot;;</span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">          20 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;You can use -uci command line option to enter uci mode&quot;;</span></span>
 <span id="L239"><span class="lineNum">     239</span>              : #endif</span>
 <span id="L240"><span class="lineNum">     240</span>              : #ifdef WITH_XBOARD</span>
-<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">          19 :    if (firstArg == &quot;-xboard&quot;) {</span></span>
+<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">          20 :    if (firstArg == &quot;-xboard&quot;) {</span></span>
 <span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">           1 :       XBoard::init();</span></span>
 <span id="L243"><span class="lineNum">     243</span> <span class="tlaGNC">           1 :       TimeMan::init();</span></span>
 <span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC">           1 :       XBoard::xboard();</span></span>
 <span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">           1 :       return true;</span></span>
 <span id="L246"><span class="lineNum">     246</span>              :    }</span>
-<span id="L247"><span class="lineNum">     247</span> <span class="tlaGNC">          18 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;You can use -xboard command line option to enter xboard mode&quot;;</span></span>
+<span id="L247"><span class="lineNum">     247</span> <span class="tlaGNC">          19 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;You can use -xboard command line option to enter xboard mode&quot;;</span></span>
 <span id="L248"><span class="lineNum">     248</span>              : #endif</span>
 <span id="L249"><span class="lineNum">     249</span>              : </span>
 <span id="L250"><span class="lineNum">     250</span>              : #ifdef WITH_FMTLIB   </span>
@@ -316,7 +316,7 @@
 <span id="L254"><span class="lineNum">     254</span>              : </span>
 <span id="L255"><span class="lineNum">     255</span>              :    const auto args {std::span(argv, size_t(argc))};</span>
 <span id="L256"><span class="lineNum">     256</span>              : </span>
-<span id="L257"><span class="lineNum">     257</span> <span class="tlaGNC">          18 :    if (firstArg == &quot;-selfplay&quot;) {</span></span>
+<span id="L257"><span class="lineNum">     257</span> <span class="tlaGNC">          19 :    if (firstArg == &quot;-selfplay&quot;) {</span></span>
 <span id="L258"><span class="lineNum">     258</span>              :       DepthType d = 15; // this is &quot;search depth&quot;, not genFenDepth !</span>
 <span id="L259"><span class="lineNum">     259</span> <span class="tlaGNC">           1 :       if (argc &gt; 2) d = clampDepth(atoi(args[2]));</span></span>
 <span id="L260"><span class="lineNum">     260</span>              :       int64_t n = 1;</span>
@@ -339,7 +339,7 @@
 <span id="L277"><span class="lineNum">     277</span>              :       return true;</span>
 <span id="L278"><span class="lineNum">     278</span>              :    }</span>
 <span id="L279"><span class="lineNum">     279</span>              : </span>
-<span id="L280"><span class="lineNum">     280</span> <span class="tlaGNC">          17 :    if (firstArg == &quot;-perft_test&quot;) {</span></span>
+<span id="L280"><span class="lineNum">     280</span> <span class="tlaGNC">          18 :    if (firstArg == &quot;-perft_test&quot;) {</span></span>
 <span id="L281"><span class="lineNum">     281</span>              :       bool ok = true;</span>
 <span id="L282"><span class="lineNum">     282</span> <span class="tlaGNC">           1 :       ok |= perft_test(std::string(startPosition), 5, 4865609);</span></span>
 <span id="L283"><span class="lineNum">     283</span> <span class="tlaGNC">           1 :       ok |= perft_test(&quot;r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - &quot;, 4, 4085603);</span></span>
@@ -348,7 +348,7 @@
 <span id="L286"><span class="lineNum">     286</span> <span class="tlaGNC">           1 :       return ok;</span></span>
 <span id="L287"><span class="lineNum">     287</span>              :    }</span>
 <span id="L288"><span class="lineNum">     288</span>              : </span>
-<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">          16 :    if (firstArg == &quot;-perft_test_long_fischer&quot;) {</span></span>
+<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">          17 :    if (firstArg == &quot;-perft_test_long_fischer&quot;) {</span></span>
 <span id="L290"><span class="lineNum">     290</span>              :       bool ok = true;</span>
 <span id="L291"><span class="lineNum">     291</span> <span class="tlaUNC tlaBgUNC">           0 :       DynamicConfig::FRC = true;</span></span>
 <span id="L292"><span class="lineNum">     292</span> <span class="tlaUNC">           0 :       std::ifstream infile(&quot;Book_and_Test/TestSuite/fischer.txt&quot;);</span></span>
@@ -366,7 +366,7 @@
 <span id="L304"><span class="lineNum">     304</span>              :       return ok;</span>
 <span id="L305"><span class="lineNum">     305</span> <span class="tlaUNC">           0 :    }</span></span>
 <span id="L306"><span class="lineNum">     306</span>              : </span>
-<span id="L307"><span class="lineNum">     307</span> <span class="tlaGNC tlaBgGNC">          16 :    if (firstArg == &quot;-perft_test_long&quot;) {</span></span>
+<span id="L307"><span class="lineNum">     307</span> <span class="tlaGNC tlaBgGNC">          17 :    if (firstArg == &quot;-perft_test_long&quot;) {</span></span>
 <span id="L308"><span class="lineNum">     308</span>              :       bool ok = true;</span>
 <span id="L309"><span class="lineNum">     309</span> <span class="tlaUNC tlaBgUNC">           0 :       std::ifstream infile(&quot;Book_and_Test/TestSuite/perft.txt&quot;);</span></span>
 <span id="L310"><span class="lineNum">     310</span>              :       std::string   line;</span>
@@ -384,27 +384,27 @@
 <span id="L322"><span class="lineNum">     322</span>              :       return ok;</span>
 <span id="L323"><span class="lineNum">     323</span> <span class="tlaUNC">           0 :    }</span></span>
 <span id="L324"><span class="lineNum">     324</span>              : </span>
-<span id="L325"><span class="lineNum">     325</span> <span class="tlaGNC tlaBgGNC">          16 :    if (firstArg == &quot;-see_test&quot;) {</span></span>
+<span id="L325"><span class="lineNum">     325</span> <span class="tlaGNC tlaBgGNC">          17 :    if (firstArg == &quot;-see_test&quot;) {</span></span>
 <span id="L326"><span class="lineNum">     326</span> <span class="tlaGNC">           1 :       return TestSEE();</span></span>
 <span id="L327"><span class="lineNum">     327</span>              :    }</span>
 <span id="L328"><span class="lineNum">     328</span>              : </span>
-<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC">          15 :    if (firstArg == &quot;bench&quot; || firstArg == &quot;-bench&quot;) {</span></span>
+<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC">          16 :    if (firstArg == &quot;bench&quot; || firstArg == &quot;-bench&quot;) {</span></span>
 <span id="L330"><span class="lineNum">     330</span>              :       DepthType d = 16;</span>
 <span id="L331"><span class="lineNum">     331</span> <span class="tlaGNC">           2 :       if (argc &gt; 2) d = clampDepth(atoi(args[2]));</span></span>
 <span id="L332"><span class="lineNum">     332</span> <span class="tlaGNC">           1 :       return bench(d);</span></span>
 <span id="L333"><span class="lineNum">     333</span>              :    }</span>
 <span id="L334"><span class="lineNum">     334</span>              : </span>
-<span id="L335"><span class="lineNum">     335</span> <span class="tlaGNC">          14 :    if (firstArg == &quot;spsa&quot; || firstArg == &quot;-spsa&quot;) {</span></span>
+<span id="L335"><span class="lineNum">     335</span> <span class="tlaGNC">          15 :    if (firstArg == &quot;spsa&quot; || firstArg == &quot;-spsa&quot;) {</span></span>
 <span id="L336"><span class="lineNum">     336</span>              :       return spsaInputs();</span>
 <span id="L337"><span class="lineNum">     337</span>              :    }</span>
 <span id="L338"><span class="lineNum">     338</span>              : </span>
-<span id="L339"><span class="lineNum">     339</span> <span class="tlaGNC">          13 :    if (firstArg == &quot;benchBig&quot; || firstArg == &quot;-benchBig&quot;) {</span></span>
+<span id="L339"><span class="lineNum">     339</span> <span class="tlaGNC">          14 :    if (firstArg == &quot;benchBig&quot; || firstArg == &quot;-benchBig&quot;) {</span></span>
 <span id="L340"><span class="lineNum">     340</span>              :       DepthType d = 16;</span>
 <span id="L341"><span class="lineNum">     341</span> <span class="tlaUNC tlaBgUNC">           0 :       if (argc &gt; 2) d = clampDepth(atoi(args[2]));</span></span>
 <span id="L342"><span class="lineNum">     342</span> <span class="tlaUNC">           0 :       return benchBig(d);</span></span>
 <span id="L343"><span class="lineNum">     343</span>              :    }</span>
 <span id="L344"><span class="lineNum">     344</span>              : </span>
-<span id="L345"><span class="lineNum">     345</span> <span class="tlaGNC tlaBgGNC">          13 :    if (firstArg == &quot;-evalSpeed&quot;) {</span></span>
+<span id="L345"><span class="lineNum">     345</span> <span class="tlaGNC tlaBgGNC">          14 :    if (firstArg == &quot;-evalSpeed&quot;) {</span></span>
 <span id="L346"><span class="lineNum">     346</span> <span class="tlaUNC tlaBgUNC">           0 :       DynamicConfig::disableTT = true;</span></span>
 <span id="L347"><span class="lineNum">     347</span> <span class="tlaUNC">           0 :       std::string filename     = &quot;Book_and_Test/TestSuite/evalSpeed.epd&quot;;</span></span>
 <span id="L348"><span class="lineNum">     348</span> <span class="tlaUNC">           0 :       if (argc &gt; 2) filename = args[2];</span></span>
@@ -451,7 +451,7 @@
 <span id="L389"><span class="lineNum">     389</span>              :       return true;</span>
 <span id="L390"><span class="lineNum">     390</span> <span class="tlaUNC">           0 :    }</span></span>
 <span id="L391"><span class="lineNum">     391</span>              : </span>
-<span id="L392"><span class="lineNum">     392</span> <span class="tlaGNC tlaBgGNC">          13 :    if (firstArg == &quot;-timeTest&quot;) {</span></span>
+<span id="L392"><span class="lineNum">     392</span> <span class="tlaGNC tlaBgGNC">          14 :    if (firstArg == &quot;-timeTest&quot;) {</span></span>
 <span id="L393"><span class="lineNum">     393</span>              :       TimeMan::TCType tcType      = TimeMan::TC_suddendeath;</span>
 <span id="L394"><span class="lineNum">     394</span>              :       TimeType        initialTime = 50000;</span>
 <span id="L395"><span class="lineNum">     395</span>              :       TimeType        increment   = 0;</span>
@@ -466,18 +466,18 @@
 <span id="L404"><span class="lineNum">     404</span>              :    }</span>
 <span id="L405"><span class="lineNum">     405</span>              : </span>
 <span id="L406"><span class="lineNum">     406</span>              :    // in all other cases, args[2] is always the fen string</span>
-<span id="L407"><span class="lineNum">     407</span> <span class="tlaGNC">          12 :    if(argc &lt; 3){</span></span>
+<span id="L407"><span class="lineNum">     407</span> <span class="tlaGNC">          13 :    if(argc &lt; 3){</span></span>
 <span id="L408"><span class="lineNum">     408</span> <span class="tlaUNC tlaBgUNC">           0 :       Logging::LogIt(Logging::logError) &lt;&lt; &quot;your command is either wrong or needs a fen string&quot;;</span></span>
 <span id="L409"><span class="lineNum">     409</span> <span class="tlaUNC">           0 :       return true;</span></span>
 <span id="L410"><span class="lineNum">     410</span>              :    }</span>
-<span id="L411"><span class="lineNum">     411</span> <span class="tlaGNC tlaBgGNC">          12 :    std::string fen = args[2];</span></span>
+<span id="L411"><span class="lineNum">     411</span> <span class="tlaGNC tlaBgGNC">          13 :    std::string fen = args[2];</span></span>
 <span id="L412"><span class="lineNum">     412</span>              : </span>
 <span id="L413"><span class="lineNum">     413</span>              :    // some &quot;short cuts&quot; !</span>
-<span id="L414"><span class="lineNum">     414</span> <span class="tlaGNC">          12 :    if (fen == &quot;start&quot;) fen = startPosition;</span></span>
-<span id="L415"><span class="lineNum">     415</span> <span class="tlaGNC">          12 :    if (fen == &quot;fine70&quot;) fen = fine70;</span></span>
-<span id="L416"><span class="lineNum">     416</span> <span class="tlaGNC">          12 :    if (fen == &quot;shirov&quot;) fen = shirov;</span></span>
-<span id="L417"><span class="lineNum">     417</span> <span class="tlaGNC">          12 :    if (fen == &quot;shirov2&quot;) fen = shirov2;</span></span>
-<span id="L418"><span class="lineNum">     418</span> <span class="tlaGNC">          12 :    if (fen == &quot;mate4&quot;) fen = mate4;</span></span>
+<span id="L414"><span class="lineNum">     414</span> <span class="tlaGNC">          13 :    if (fen == &quot;start&quot;) fen = startPosition;</span></span>
+<span id="L415"><span class="lineNum">     415</span> <span class="tlaGNC">          13 :    if (fen == &quot;fine70&quot;) fen = fine70;</span></span>
+<span id="L416"><span class="lineNum">     416</span> <span class="tlaGNC">          13 :    if (fen == &quot;shirov&quot;) fen = shirov;</span></span>
+<span id="L417"><span class="lineNum">     417</span> <span class="tlaGNC">          13 :    if (fen == &quot;shirov2&quot;) fen = shirov2;</span></span>
+<span id="L418"><span class="lineNum">     418</span> <span class="tlaGNC">          13 :    if (fen == &quot;mate4&quot;) fen = mate4;</span></span>
 <span id="L419"><span class="lineNum">     419</span>              : </span>
 <span id="L420"><span class="lineNum">     420</span>              :    // validate the supposed fen string ...</span>
 <span id="L421"><span class="lineNum">     421</span>              :    const std::regex lookLikeFen(</span>
@@ -488,14 +488,14 @@
 <span id="L426"><span class="lineNum">     426</span>              :     &quot;((-|[a-h][36])\\s)&quot;</span>
 <span id="L427"><span class="lineNum">     427</span>              :     &quot;((\\d+)\\s(\\d+)\\s?|(\\d+)\\s?)?&quot;</span>
 <span id="L428"><span class="lineNum">     428</span>              :     &quot;$&quot;</span>
-<span id="L429"><span class="lineNum">     429</span> <span class="tlaGNC">          12 :    );</span></span>
-<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC">          12 :    if( ! std::regex_match(fen, lookLikeFen)){</span></span>
-<span id="L431"><span class="lineNum">     431</span> <span class="tlaUNC tlaBgUNC">           0 :       Logging::LogIt(Logging::logError) &lt;&lt; &quot;fen does not look good... : &quot; &lt;&lt; fen;</span></span>
-<span id="L432"><span class="lineNum">     432</span> <span class="tlaUNC">           0 :       return true;</span></span>
+<span id="L429"><span class="lineNum">     429</span> <span class="tlaGNC">          13 :    );</span></span>
+<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC">          13 :    if( ! std::regex_match(fen, lookLikeFen)){</span></span>
+<span id="L431"><span class="lineNum">     431</span> <span class="tlaGNC">           1 :       Logging::LogIt(Logging::logError) &lt;&lt; &quot;fen does not look good... : &quot; &lt;&lt; fen;</span></span>
+<span id="L432"><span class="lineNum">     432</span> <span class="tlaGNC">           1 :       return true;</span></span>
 <span id="L433"><span class="lineNum">     433</span>              :    }</span>
 <span id="L434"><span class="lineNum">     434</span>              : </span>
 <span id="L435"><span class="lineNum">     435</span>              :    // instantiate the position</span>
-<span id="L436"><span class="lineNum">     436</span> <span class="tlaGNC tlaBgGNC">          12 :    RootPosition p;</span></span>
+<span id="L436"><span class="lineNum">     436</span> <span class="tlaGNC">          12 :    RootPosition p;</span></span>
 <span id="L437"><span class="lineNum">     437</span>              : #ifdef WITH_NNUE</span>
 <span id="L438"><span class="lineNum">     438</span> <span class="tlaGNC">          12 :    NNUEEvaluator evaluator;</span></span>
 <span id="L439"><span class="lineNum">     439</span>              :    p.associateEvaluator(evaluator);</span>
@@ -673,7 +673,7 @@
 <span id="L611"><span class="lineNum">     611</span>              : </span>
 <span id="L612"><span class="lineNum">     612</span> <span class="tlaUNC">           0 :    Logging::LogIt(Logging::logError) &lt;&lt; &quot;unknown command line : &quot; &lt;&lt; firstArg;</span></span>
 <span id="L613"><span class="lineNum">     613</span> <span class="tlaUNC">           0 :    return false;</span></span>
-<span id="L614"><span class="lineNum">     614</span> <span class="tlaGNC tlaBgGNC">          12 : }</span></span>
+<span id="L614"><span class="lineNum">     614</span> <span class="tlaGNC tlaBgGNC">          13 : }</span></span>
         </pre>
               </td>
             </tr>

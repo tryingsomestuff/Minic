@@ -31,13 +31,13 @@
             <td class="headerValue">coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">4.7&nbsp;%</td>
+            <td class="headerCovTableEntryLo">5.3&nbsp;%</td>
             <td class="headerCovTableEntry">487</td>
-            <td class="headerCovTableEntry">23</td>
+            <td class="headerCovTableEntry">26</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-24 20:08:09</td>
+            <td class="headerValue">2026-02-26 19:16:57</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -68,8 +68,8 @@
 <span id="L6"><span class="lineNum">       6</span>              : #include &quot;logging.hpp&quot;</span>
 <span id="L7"><span class="lineNum">       7</span>              : #include &quot;positionTools.hpp&quot;</span>
 <span id="L8"><span class="lineNum">       8</span>              : </span>
-<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC tlaBgGNC">          20 : bool test(const std::string&amp; option) {</span></span>
-<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC">          20 :    if (option == &quot;MEA&quot;) {</span></span>
+<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC tlaBgGNC">          21 : bool test(const std::string&amp; option) {</span></span>
+<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC">          21 :    if (option == &quot;MEA&quot;) {</span></span>
 <span id="L11"><span class="lineNum">      11</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
 <span id="L12"><span class="lineNum">      12</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/allsets_nodupes.epd&quot;, positions)) { return false; }</span></span>
 <span id="L13"><span class="lineNum">      13</span>              : </span>
@@ -82,7 +82,7 @@
 <span id="L20"><span class="lineNum">      20</span>              :       return true;</span>
 <span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC">           0 :    }</span></span>
 <span id="L22"><span class="lineNum">      22</span>              : </span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC tlaBgGNC">          20 :    if (option == &quot;TTT&quot;) {</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC tlaBgGNC">          21 :    if (option == &quot;TTT&quot;) {</span></span>
 <span id="L24"><span class="lineNum">      24</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
 <span id="L25"><span class="lineNum">      25</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/TTT1.epd&quot;, positions)) { return false; }</span></span>
 <span id="L26"><span class="lineNum">      26</span>              : </span>
@@ -94,7 +94,7 @@
 <span id="L32"><span class="lineNum">      32</span>              :       return true;</span>
 <span id="L33"><span class="lineNum">      33</span> <span class="tlaUNC">           0 :    }</span></span>
 <span id="L34"><span class="lineNum">      34</span>              : </span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC tlaBgGNC">          20 :    if (option == &quot;opening200&quot;) {</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC tlaBgGNC">          21 :    if (option == &quot;opening200&quot;) {</span></span>
 <span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
 <span id="L37"><span class="lineNum">      37</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/Openings200.epd&quot;, positions)) { return false; }</span></span>
 <span id="L38"><span class="lineNum">      38</span>              : </span>
@@ -106,7 +106,7 @@
 <span id="L44"><span class="lineNum">      44</span>              :       return true;</span>
 <span id="L45"><span class="lineNum">      45</span> <span class="tlaUNC">           0 :    }</span></span>
 <span id="L46"><span class="lineNum">      46</span>              : </span>
-<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC tlaBgGNC">          20 :    if (option == &quot;opening1000&quot;) {</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC tlaBgGNC">          21 :    if (option == &quot;opening1000&quot;) {</span></span>
 <span id="L48"><span class="lineNum">      48</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
 <span id="L49"><span class="lineNum">      49</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/Openings1000.epd&quot;, positions)) { return false; }</span></span>
 <span id="L50"><span class="lineNum">      50</span>              : </span>
@@ -118,7 +118,7 @@
 <span id="L56"><span class="lineNum">      56</span>              :       return true;</span>
 <span id="L57"><span class="lineNum">      57</span> <span class="tlaUNC">           0 :    }</span></span>
 <span id="L58"><span class="lineNum">      58</span>              : </span>
-<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC tlaBgGNC">          20 :    if (option == &quot;middle200&quot;) {</span></span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC tlaBgGNC">          21 :    if (option == &quot;middle200&quot;) {</span></span>
 <span id="L60"><span class="lineNum">      60</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
 <span id="L61"><span class="lineNum">      61</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/Midgames250.epd&quot;, positions)) { return false; }</span></span>
 <span id="L62"><span class="lineNum">      62</span>              : </span>
@@ -130,7 +130,7 @@
 <span id="L68"><span class="lineNum">      68</span>              :       return true;</span>
 <span id="L69"><span class="lineNum">      69</span> <span class="tlaUNC">           0 :    }</span></span>
 <span id="L70"><span class="lineNum">      70</span>              : </span>
-<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC tlaBgGNC">          20 :    if (option == &quot;middle1000&quot;) {</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC tlaBgGNC">          21 :    if (option == &quot;middle1000&quot;) {</span></span>
 <span id="L72"><span class="lineNum">      72</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
 <span id="L73"><span class="lineNum">      73</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/Midgames1000.epd&quot;, positions)) { return false; }</span></span>
 <span id="L74"><span class="lineNum">      74</span>              : </span>
@@ -142,7 +142,7 @@
 <span id="L80"><span class="lineNum">      80</span>              :       return true;</span>
 <span id="L81"><span class="lineNum">      81</span> <span class="tlaUNC">           0 :    }</span></span>
 <span id="L82"><span class="lineNum">      82</span>              : </span>
-<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC tlaBgGNC">          20 :    if (option == &quot;hard2020&quot;) {</span></span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC tlaBgGNC">          21 :    if (option == &quot;hard2020&quot;) {</span></span>
 <span id="L84"><span class="lineNum">      84</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
 <span id="L85"><span class="lineNum">      85</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/hard2020.epd&quot;, positions)) { return false; }</span></span>
 <span id="L86"><span class="lineNum">      86</span>              : </span>
@@ -154,7 +154,7 @@
 <span id="L92"><span class="lineNum">      92</span>              :       return true;</span>
 <span id="L93"><span class="lineNum">      93</span> <span class="tlaUNC">           0 :    }</span></span>
 <span id="L94"><span class="lineNum">      94</span>              : </span>
-<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC tlaBgGNC">          20 :    if (option == &quot;BT2630&quot;) {</span></span>
+<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC tlaBgGNC">          21 :    if (option == &quot;BT2630&quot;) {</span></span>
 <span id="L96"><span class="lineNum">      96</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
 <span id="L97"><span class="lineNum">      97</span>              : </span>
 <span id="L98"><span class="lineNum">      98</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/bt2630.epd&quot;, positions)) { return false; }</span></span>
@@ -167,7 +167,7 @@
 <span id="L105"><span class="lineNum">     105</span>              :       return true;</span>
 <span id="L106"><span class="lineNum">     106</span> <span class="tlaUNC">           0 :    }</span></span>
 <span id="L107"><span class="lineNum">     107</span>              : </span>
-<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC tlaBgGNC">          20 :    if (option == &quot;WAC&quot;) {</span></span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC tlaBgGNC">          21 :    if (option == &quot;WAC&quot;) {</span></span>
 <span id="L109"><span class="lineNum">     109</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
 <span id="L110"><span class="lineNum">     110</span>              : </span>
 <span id="L111"><span class="lineNum">     111</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/WinAtChess.epd&quot;, positions)) { return false; }</span></span>
@@ -180,7 +180,7 @@
 <span id="L118"><span class="lineNum">     118</span>              :       return true;</span>
 <span id="L119"><span class="lineNum">     119</span> <span class="tlaUNC">           0 :    }</span></span>
 <span id="L120"><span class="lineNum">     120</span>              : </span>
-<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC tlaBgGNC">          20 :    if (option == &quot;arasan&quot;) {</span></span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC tlaBgGNC">          21 :    if (option == &quot;arasan&quot;) {</span></span>
 <span id="L122"><span class="lineNum">     122</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
 <span id="L123"><span class="lineNum">     123</span>              : </span>
 <span id="L124"><span class="lineNum">     124</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/arasan19a.epd&quot;, positions)) { return false; }</span></span>
@@ -193,16 +193,16 @@
 <span id="L131"><span class="lineNum">     131</span>              :       return true;</span>
 <span id="L132"><span class="lineNum">     132</span> <span class="tlaUNC">           0 :    }</span></span>
 <span id="L133"><span class="lineNum">     133</span>              : </span>
-<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC tlaBgGNC">          20 :    if (option == &quot;arasan_sym&quot;) {</span></span>
-<span id="L135"><span class="lineNum">     135</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC tlaBgGNC">          21 :    if (option == &quot;arasan_sym&quot;) {</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">           1 :       std::vector&lt;std::string&gt; positions;</span></span>
 <span id="L136"><span class="lineNum">     136</span>              : </span>
-<span id="L137"><span class="lineNum">     137</span> <span class="tlaUNC">           0 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/arasan_sym_eval.epd&quot;, positions)) { return false; }</span></span>
+<span id="L137"><span class="lineNum">     137</span> <span class="tlaGNC">           2 :       if (!readEPDFile(&quot;Book_and_Test/TestSuite/arasan_sym_eval.epd&quot;, positions)) { return false; }</span></span>
 <span id="L138"><span class="lineNum">     138</span>              : </span>
-<span id="L139"><span class="lineNum">     139</span> <span class="tlaUNC">           0 :       ExtendedPosition::testStatic(positions);</span></span>
+<span id="L139"><span class="lineNum">     139</span> <span class="tlaUNC tlaBgUNC">           0 :       ExtendedPosition::testStatic(positions);</span></span>
 <span id="L140"><span class="lineNum">     140</span>              :       return true;</span>
-<span id="L141"><span class="lineNum">     141</span> <span class="tlaUNC">           0 :    }</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC tlaBgGNC">           1 :    }</span></span>
 <span id="L142"><span class="lineNum">     142</span>              : </span>
-<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC tlaBgGNC">          20 :    if (option == &quot;CCROHT&quot;) {</span></span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">          20 :    if (option == &quot;CCROHT&quot;) {</span></span>
 <span id="L144"><span class="lineNum">     144</span> <span class="tlaUNC tlaBgUNC">           0 :       std::vector&lt;std::string&gt; positions;</span></span>
 <span id="L145"><span class="lineNum">     145</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn1qkb1r/pp2pppp/5n2/3p1b2/3P4/2N1P3/PP3PPP/R1BQKBNR w KQkq - 0 1 id \&quot;CCR01\&quot;; bm Qb3;&quot;);</span></span>
 <span id="L146"><span class="lineNum">     146</span> <span class="tlaUNC">           0 :       positions.emplace_back(&quot;rn1qkb1r/pp2pppp/5n2/3p1b2/3P4/1QN1P3/PP3PPP/R1B1KBNR b KQkq - 1 1 id \&quot;CCR02\&quot;;bm Bc8;&quot;);</span></span>

@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-24 20:08:09</td>
+            <td class="headerValue">2026-02-26 19:16:57</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -65,19 +65,19 @@
 <span id="L3"><span class="lineNum">       3</span>              : #include &quot;logging.hpp&quot;</span>
 <span id="L4"><span class="lineNum">       4</span>              : #include &quot;searcher.hpp&quot;</span>
 <span id="L5"><span class="lineNum">       5</span>              : </span>
-<span id="L6"><span class="lineNum">       6</span> <span class="tlaGNC tlaBgGNC">         236 : void KillerT::initKillers() {</span></span>
-<span id="L7"><span class="lineNum">       7</span> <span class="tlaGNC">         236 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Init killers&quot;;</span></span>
-<span id="L8"><span class="lineNum">       8</span> <span class="tlaGNC">         236 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of killer table &quot; &lt;&lt; sizeof(killers) &lt;&lt; &quot;b&quot;;</span></span>
-<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC">       30208 :    for (int k = 0; k &lt; MAX_DEPTH; ++k)</span></span>
-<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC">       89916 :       for (int i = 0; i &lt; 2; ++i) killers[k][i] = INVALIDMOVE;</span></span>
-<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC">         236 : }</span></span>
+<span id="L6"><span class="lineNum">       6</span> <span class="tlaGNC tlaBgGNC">         241 : void KillerT::initKillers() {</span></span>
+<span id="L7"><span class="lineNum">       7</span> <span class="tlaGNC">         241 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Init killers&quot;;</span></span>
+<span id="L8"><span class="lineNum">       8</span> <span class="tlaGNC">         241 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of killer table &quot; &lt;&lt; sizeof(killers) &lt;&lt; &quot;b&quot;;</span></span>
+<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC">       30848 :    for (int k = 0; k &lt; MAX_DEPTH; ++k)</span></span>
+<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC">       91821 :       for (int i = 0; i &lt; 2; ++i) killers[k][i] = INVALIDMOVE;</span></span>
+<span id="L11"><span class="lineNum">      11</span> <span class="tlaGNC">         241 : }</span></span>
 <span id="L12"><span class="lineNum">      12</span>              : </span>
-<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">     6014216 : bool KillerT::isKiller(const Move m, const DepthType height) { </span></span>
-<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">     6014216 :    assert(height &gt;= 0);</span></span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">     6014216 :    assert(height &lt; MAX_DEPTH);</span></span>
-<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">     6014216 :    const bool isKiller = sameMove(m, killers[height][0]) || sameMove(m, killers[height][1]);</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">     6014037 : bool KillerT::isKiller(const Move m, const DepthType height) { </span></span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">     6014037 :    assert(height &gt;= 0);</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">     6014037 :    assert(height &lt; MAX_DEPTH);</span></span>
+<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">     6014037 :    const bool isKiller = sameMove(m, killers[height][0]) || sameMove(m, killers[height][1]);</span></span>
 <span id="L17"><span class="lineNum">      17</span>              :    //const bool isFormerKiller = height &gt; 1 &amp;&amp; sameMove(m, killers[height - 2][0]);// || sameMove(m, killers[height - 2][1]));</span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">     6014216 :    return isKiller /*|| isFormerKiller*/;</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">     6014037 :    return isKiller /*|| isFormerKiller*/;</span></span>
 <span id="L19"><span class="lineNum">      19</span>              : }</span>
 <span id="L20"><span class="lineNum">      20</span>              : </span>
 <span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">      268545 : void KillerT::update(Move m, DepthType height) {</span></span>
@@ -89,37 +89,37 @@
 <span id="L27"><span class="lineNum">      27</span>              :    }</span>
 <span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">      268545 : }</span></span>
 <span id="L29"><span class="lineNum">      29</span>              : </span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">          48 : void HistoryT::initHistory() {</span></span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">          48 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Init history&quot;;</span></span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">          48 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of history table &quot; &lt;&lt; sizeof(history) / 1024 &lt;&lt; &quot;Kb&quot;;</span></span>
-<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">          48 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of history piece table &quot; &lt;&lt; sizeof(historyP) &lt;&lt; &quot;b&quot;;</span></span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">          48 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of history capture table &quot; &lt;&lt; sizeof(historyCap) / 1024 &lt;&lt; &quot;Kb&quot;;</span></span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">          48 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of history counter table &quot; &lt;&lt; sizeof(counter_history) / 1024 &lt;&lt; &quot;Kb&quot;;</span></span>
-<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">        3120 :    for (int i = 0; i &lt; NbSquare; ++i)</span></span>
-<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">      199680 :       for (int k = 0; k &lt; NbSquare; ++k)</span></span>
-<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">      196608 :          history[0][i][k] = history[1][i][k] = 0;</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">          56 : void HistoryT::initHistory() {</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">          56 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Init history&quot;;</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">          56 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of history table &quot; &lt;&lt; sizeof(history) / 1024 &lt;&lt; &quot;Kb&quot;;</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">          56 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of history piece table &quot; &lt;&lt; sizeof(historyP) &lt;&lt; &quot;b&quot;;</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">          56 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of history capture table &quot; &lt;&lt; sizeof(historyCap) / 1024 &lt;&lt; &quot;Kb&quot;;</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">          56 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of history counter table &quot; &lt;&lt; sizeof(counter_history) / 1024 &lt;&lt; &quot;Kb&quot;;</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">        3640 :    for (int i = 0; i &lt; NbSquare; ++i)</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">      232960 :       for (int k = 0; k &lt; NbSquare; ++k)</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">      229376 :          history[0][i][k] = history[1][i][k] = 0;</span></span>
 <span id="L39"><span class="lineNum">      39</span>              : </span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">         672 :    for (int i = 0; i &lt; NbPiece; ++i)</span></span>
-<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">       40560 :       for (int k = 0; k &lt; NbSquare; ++k)</span></span>
-<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">       39936 :          historyP[i][k] = 0;</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">         784 :    for (int i = 0; i &lt; NbPiece; ++i)</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">       47320 :       for (int k = 0; k &lt; NbSquare; ++k)</span></span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">       46592 :          historyP[i][k] = 0;</span></span>
 <span id="L43"><span class="lineNum">      43</span>              : </span>
-<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">         672 :    for (int i = 0; i &lt; NbPiece; ++i)</span></span>
-<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">       40560 :       for (int j = 0; j &lt; NbSquare; ++j)</span></span>
-<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">      279552 :          for (int k = 0; k &lt; 6; ++k)</span></span>
-<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">      239616 :             historyCap[i][j][k] = 0;</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">         784 :    for (int i = 0; i &lt; NbPiece; ++i)</span></span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">       47320 :       for (int j = 0; j &lt; NbSquare; ++j)</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">      326144 :          for (int k = 0; k &lt; 6; ++k)</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">      279552 :             historyCap[i][j][k] = 0;</span></span>
 <span id="L48"><span class="lineNum">      48</span>              : </span>
-<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">         672 :    for (int i = 0; i &lt; NbPiece; ++i)</span></span>
-<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">       40560 :       for (int j = 0; j &lt; NbSquare; ++j)</span></span>
-<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">    33266688 :          for (int k = 0; k &lt; NbPiece * NbSquare; ++k)</span></span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">    33226752 :             counter_history[i][j][k] = -1;</span></span>
-<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">          48 : }</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">         784 :    for (int i = 0; i &lt; NbPiece; ++i)</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">       47320 :       for (int j = 0; j &lt; NbSquare; ++j)</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">    38811136 :          for (int k = 0; k &lt; NbPiece * NbSquare; ++k)</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">    38764544 :             counter_history[i][j][k] = -1;</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">          56 : }</span></span>
 <span id="L54"><span class="lineNum">      54</span>              : </span>
-<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">         236 : void CounterT::initCounter() {</span></span>
-<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">         236 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Init counter&quot;;</span></span>
-<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">         236 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of counter table &quot; &lt;&lt; sizeof(counter) / 1024 &lt;&lt; &quot;Kb&quot;;</span></span>
-<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">       15340 :    for (int i = 0; i &lt; NbSquare; ++i)</span></span>
-<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">      981760 :       for (int k = 0; k &lt; NbSquare; ++k) counter[i][k] = 0;</span></span>
-<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">         236 : }</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">         241 : void CounterT::initCounter() {</span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">         241 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Init counter&quot;;</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">         241 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Size of counter table &quot; &lt;&lt; sizeof(counter) / 1024 &lt;&lt; &quot;Kb&quot;;</span></span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">       15665 :    for (int i = 0; i &lt; NbSquare; ++i)</span></span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">     1002560 :       for (int k = 0; k &lt; NbSquare; ++k) counter[i][k] = 0;</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">         241 : }</span></span>
 <span id="L61"><span class="lineNum">      61</span>              : </span>
 <span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">      268545 : void CounterT::update(Move m, const Position&amp; p) {</span></span>
 <span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">      509910 :    if (isValidMove(p.lastMove)) counter[Move2From(p.lastMove)][correctedMove2ToKingDest(p.lastMove)] = Move2MiniMove(m);</span></span>

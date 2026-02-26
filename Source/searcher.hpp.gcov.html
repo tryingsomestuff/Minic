@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-24 20:08:09</td>
+            <td class="headerValue">2026-02-26 19:16:57</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -80,7 +80,7 @@
 <span id="L18"><span class="lineNum">      18</span>              : struct Searcher {</span>
 <span id="L19"><span class="lineNum">      19</span>              :    bool stopFlag = true;</span>
 <span id="L20"><span class="lineNum">      20</span>              : </span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC tlaBgGNC">      147644 :    struct StackData {</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC tlaBgGNC">      168121 :    struct StackData {</span></span>
 <span id="L22"><span class="lineNum">      22</span>              :       Position  p;</span>
 <span id="L23"><span class="lineNum">      23</span>              :       Hash      h      = nullHash;</span>
 <span id="L24"><span class="lineNum">      24</span>              :       //EvalData  data;</span>
@@ -172,9 +172,9 @@
 <span id="L110"><span class="lineNum">     110</span>              :    FORCE_FINLINE void updatePV(PVList&amp; pv, const Move&amp; m, const PVList&amp; childPV) {</span>
 <span id="L111"><span class="lineNum">     111</span>              :       stats.incr(Stats::sid_PVupdate);</span>
 <span id="L112"><span class="lineNum">     112</span>              :       pv.clear();</span>
-<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">       11327 :       pv.emplace_back(m);</span></span>
-<span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">       11327 :       std::ranges::copy(childPV, std::back_inserter(pv));</span></span>
-<span id="L115"><span class="lineNum">     115</span> <span class="tlaGNC">       11327 :    }</span></span>
+<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">       11312 :       pv.emplace_back(m);</span></span>
+<span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">       11312 :       std::ranges::copy(childPV, std::back_inserter(pv));</span></span>
+<span id="L115"><span class="lineNum">     115</span> <span class="tlaGNC">       11312 :    }</span></span>
 <span id="L116"><span class="lineNum">     116</span>              : </span>
 <span id="L117"><span class="lineNum">     117</span>              :    void displayStats() const {</span>
 <span id="L118"><span class="lineNum">     118</span>              :       for (size_t k = 0; k &lt; Stats::sid_maxid; ++k) {</span>
@@ -307,7 +307,7 @@
 <span id="L245"><span class="lineNum">     245</span>              :    </span>
 <span id="L246"><span class="lineNum">     246</span>              :    void clearSearch(bool forceHistoryClear = false);</span>
 <span id="L247"><span class="lineNum">     247</span>              : </span>
-<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC">     2752512 :    struct PawnEntry {</span></span>
+<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC">     3014656 :    struct PawnEntry {</span></span>
 <span id="L249"><span class="lineNum">     249</span>              :       colored&lt;BitBoard&gt;  pawnTargets   = {emptyBitBoard, emptyBitBoard};</span>
 <span id="L250"><span class="lineNum">     250</span>              :       colored&lt;BitBoard&gt;  holes         = {emptyBitBoard, emptyBitBoard};</span>
 <span id="L251"><span class="lineNum">     251</span>              :       colored&lt;BitBoard&gt;  semiOpenFiles = {emptyBitBoard, emptyBitBoard};</span>
@@ -318,9 +318,9 @@
 <span id="L256"><span class="lineNum">     256</span>              :       colored&lt;ScoreType&gt; danger        = {0, 0};</span>
 <span id="L257"><span class="lineNum">     257</span>              : </span>
 <span id="L258"><span class="lineNum">     258</span>              :       FORCE_FINLINE void reset() {</span>
-<span id="L259"><span class="lineNum">     259</span> <span class="tlaGNC">       68553 :          score            = {0, 0};</span></span>
-<span id="L260"><span class="lineNum">     260</span> <span class="tlaGNC">       68553 :          danger[Co_White] = 0;</span></span>
-<span id="L261"><span class="lineNum">     261</span> <span class="tlaGNC">       68553 :          danger[Co_Black] = 0;</span></span>
+<span id="L259"><span class="lineNum">     259</span> <span class="tlaGNC">       68550 :          score            = {0, 0};</span></span>
+<span id="L260"><span class="lineNum">     260</span> <span class="tlaGNC">       68550 :          danger[Co_White] = 0;</span></span>
+<span id="L261"><span class="lineNum">     261</span> <span class="tlaGNC">       68550 :          danger[Co_Black] = 0;</span></span>
 <span id="L262"><span class="lineNum">     262</span>              :       }</span>
 <span id="L263"><span class="lineNum">     263</span>              :    };</span>
 <span id="L264"><span class="lineNum">     264</span>              : </span>

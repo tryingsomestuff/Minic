@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-24 20:08:09</td>
+            <td class="headerValue">2026-02-26 19:16:57</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -84,31 +84,31 @@
 <span id="L22"><span class="lineNum">      22</span>              :    alignas(NNUEALIGNMENT) BT b[nbB];</span>
 <span id="L23"><span class="lineNum">      23</span>              : </span>
 <span id="L24"><span class="lineNum">      24</span>              :    template&lt;typename T&gt; </span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC tlaBgGNC">     1177507 :    CONSTEXPR StackVector&lt;BT, dim1, Q&gt; forward(const StackVector&lt;T, dim0, Q&gt;&amp; x) const {</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC tlaBgGNC">     1177458 :    CONSTEXPR StackVector&lt;BT, dim1, Q&gt; forward(const StackVector&lt;T, dim0, Q&gt;&amp; x) const {</span></span>
 <span id="L26"><span class="lineNum">      26</span>              :       StackVector&lt;BT, dim1, Q&gt; result;</span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">     1177507 :       result.from(b);</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">     1177458 :       result.from(b);</span></span>
 <span id="L28"><span class="lineNum">      28</span>              : #ifdef USE_SIMD_INTRIN</span>
 <span id="L29"><span class="lineNum">      29</span>              : #pragma omp simd</span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">    11775070 :       for (size_t i = 0; i &lt; dim1; ++i) { result.data[i] += x.dot_(W + i * dim0); }</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">    11774580 :       for (size_t i = 0; i &lt; dim1; ++i) { result.data[i] += x.dot_(W + i * dim0); }</span></span>
 <span id="L31"><span class="lineNum">      31</span>              : #else</span>
 <span id="L32"><span class="lineNum">      32</span>              : #pragma omp simd</span>
 <span id="L33"><span class="lineNum">      33</span>              :       for (size_t i = 0; i &lt; dim0; ++i) { result.fma_(x.data[i], W + i * dim1); }</span>
 <span id="L34"><span class="lineNum">      34</span>              : #endif // USE_SIMD_INTRIN</span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">     1177507 :       return result; // RVO</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">     1177458 :       return result; // RVO</span></span>
 <span id="L36"><span class="lineNum">      36</span>              :    }</span>
 <span id="L37"><span class="lineNum">      37</span>              : </span>
 <span id="L38"><span class="lineNum">      38</span>              : #ifdef USE_SIMD_INTRIN</span>
 <span id="L39"><span class="lineNum">      39</span>              :    template&lt;typename T&gt;</span>
 <span id="L40"><span class="lineNum">      40</span>              :    FORCE_FINLINE void forwardTo(const StackVector&lt;T, dim0, Q&gt;&amp; x, BT* RESTRICT dst) const {</span>
-<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">    21195126 :       for (size_t i = 0; i &lt; dim1; ++i) { dst[i] = b[i]; }</span></span>
-<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">    21195126 :       for (size_t i = 0; i &lt; dim1; ++i) { dst[i] += x.dot_(W + i * dim0); }</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">    21194244 :       for (size_t i = 0; i &lt; dim1; ++i) { dst[i] = b[i]; }</span></span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">    21194244 :       for (size_t i = 0; i &lt; dim1; ++i) { dst[i] += x.dot_(W + i * dim0); }</span></span>
 <span id="L43"><span class="lineNum">      43</span>              :    }</span>
 <span id="L44"><span class="lineNum">      44</span>              : #endif</span>
 <span id="L45"><span class="lineNum">      45</span>              : </span>
-<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">         160 :    Layer&lt;NT, dim0, dim1, Q&gt;&amp; load_(WeightsReader&lt;NT&gt;&amp; ws) {</span></span>
-<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">         160 :       ws.template streamW&lt;WT&gt;(W, nbW, dim0, dim1)</span></span>
-<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">         160 :         .template streamB&lt;BT&gt;(b, nbB);</span></span>
-<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">         160 :       return *this;</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">         176 :    Layer&lt;NT, dim0, dim1, Q&gt;&amp; load_(WeightsReader&lt;NT&gt;&amp; ws) {</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">         176 :       ws.template streamW&lt;WT&gt;(W, nbW, dim0, dim1)</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">         176 :         .template streamB&lt;BT&gt;(b, nbB);</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">         176 :       return *this;</span></span>
 <span id="L50"><span class="lineNum">      50</span>              :    }</span>
 <span id="L51"><span class="lineNum">      51</span>              : </span>
 <span id="L52"><span class="lineNum">      52</span>              :    // non copyable</span>

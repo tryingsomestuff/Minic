@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-24 20:08:09</td>
+            <td class="headerValue">2026-02-26 19:16:57</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -81,17 +81,17 @@
 <span id="L19"><span class="lineNum">      19</span>              : enum WidgetType : uint8_t { w_check = 0, w_string, w_spin, w_combo, w_button, w_max };</span>
 <span id="L20"><span class="lineNum">      20</span>              : struct KeyBase {</span>
 <span id="L21"><span class="lineNum">      21</span>              :    template&lt;typename T&gt;</span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC tlaBgGNC">          60 :    KeyBase(</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC tlaBgGNC">          66 :    KeyBase(</span></span>
 <span id="L23"><span class="lineNum">      23</span>              :        KeyType            t,</span>
 <span id="L24"><span class="lineNum">      24</span>              :        WidgetType         w,</span>
 <span id="L25"><span class="lineNum">      25</span>              :        const std::string&amp; k,</span>
 <span id="L26"><span class="lineNum">      26</span>              :        T*                 v,</span>
 <span id="L27"><span class="lineNum">      27</span>              :        const std::function&lt;void(void)&gt;&amp; cb = [] {}):</span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">          60 :        type(t), wtype(w), key(k), value(static_cast&lt;void*&gt;(v)) {</span></span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">          60 :       callBack = cb;</span></span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">          60 :    }</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">          66 :        type(t), wtype(w), key(k), value(static_cast&lt;void*&gt;(v)) {</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">          66 :       callBack = cb;</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">          66 :    }</span></span>
 <span id="L31"><span class="lineNum">      31</span>              :    template&lt;typename T&gt;</span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">         763 :    KeyBase(</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">         839 :    KeyBase(</span></span>
 <span id="L33"><span class="lineNum">      33</span>              :        KeyType             t,</span>
 <span id="L34"><span class="lineNum">      34</span>              :        WidgetType          w,</span>
 <span id="L35"><span class="lineNum">      35</span>              :        const std::string&amp;  k,</span>
@@ -99,20 +99,20 @@
 <span id="L37"><span class="lineNum">      37</span>              :        const T&amp;            _vmin,</span>
 <span id="L38"><span class="lineNum">      38</span>              :        const T&amp;            _vmax,</span>
 <span id="L39"><span class="lineNum">      39</span>              :        const std::function&lt;void(void)&gt;&amp; cb = [] {}):</span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">         763 :        type(t), wtype(w), key(k), value(static_cast&lt;void*&gt;(v)), vmin(_vmin), vmax(_vmax) {</span></span>
-<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">         763 :       callBack = cb;</span></span>
-<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">         763 :    }</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">         839 :        type(t), wtype(w), key(k), value(static_cast&lt;void*&gt;(v)), vmin(_vmin), vmax(_vmax) {</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaGNC">         839 :       callBack = cb;</span></span>
+<span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">         839 :    }</span></span>
 <span id="L43"><span class="lineNum">      43</span>              :    template&lt;typename T&gt;</span>
-<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">          20 :    KeyBase(</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">          22 :    KeyBase(</span></span>
 <span id="L45"><span class="lineNum">      45</span>              :        KeyType            t,</span>
 <span id="L46"><span class="lineNum">      46</span>              :        WidgetType         w,</span>
 <span id="L47"><span class="lineNum">      47</span>              :        const std::string&amp; k,</span>
 <span id="L48"><span class="lineNum">      48</span>              :        T*                 v,</span>
 <span id="L49"><span class="lineNum">      49</span>              :        std::vector&lt;std::string&gt; vals,</span>
 <span id="L50"><span class="lineNum">      50</span>              :        const std::function&lt;void(void)&gt;&amp; cb = [] {}):</span>
-<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">          20 :        type(t), wtype(w), key(k), value(static_cast&lt;void*&gt;(v)), values(vals) {</span></span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">          20 :       callBack = cb;</span></span>
-<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">          20 :    }</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">          22 :        type(t), wtype(w), key(k), value(static_cast&lt;void*&gt;(v)), values(vals) {</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">          22 :       callBack = cb;</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">          22 :    }</span></span>
 <span id="L54"><span class="lineNum">      54</span>              :    KeyType     type;</span>
 <span id="L55"><span class="lineNum">      55</span>              :    WidgetType  wtype;</span>
 <span id="L56"><span class="lineNum">      56</span>              :    std::string key;</span>
@@ -332,7 +332,7 @@
 <span id="L270"><span class="lineNum">     270</span>              :    }</span>
 <span id="L271"><span class="lineNum">     271</span>              : }</span>
 <span id="L272"><span class="lineNum">     272</span>              : </span>
-<span id="L273"><span class="lineNum">     273</span> <span class="tlaGNC">          20 : void registerCOMOptions() { // options exposed to GUI</span></span>
+<span id="L273"><span class="lineNum">     273</span> <span class="tlaGNC">          22 : void registerCOMOptions() { // options exposed to GUI</span></span>
 <span id="L274"><span class="lineNum">     274</span>              : </span>
 <span id="L275"><span class="lineNum">     275</span>              : #ifdef WITH_SEARCH_TUNING</span>
 <span id="L276"><span class="lineNum">     276</span>              :    addOptions(SearchConfig::staticNullMoveCoeff);</span>
@@ -344,61 +344,61 @@
 <span id="L282"><span class="lineNum">     282</span>              :    addOptions(SearchConfig::failHighReductionCoeff);</span>
 <span id="L283"><span class="lineNum">     283</span>              : #endif</span>
 <span id="L284"><span class="lineNum">     284</span>              : </span>
-<span id="L285"><span class="lineNum">     285</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;Level&quot;                       , &amp;DynamicConfig::level                          , (unsigned int)0  , (unsigned int)100);</span></span>
-<span id="L286"><span class="lineNum">     286</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_bool,  w_check, &quot;nodesBasedLevel&quot;             , &amp;DynamicConfig::nodesBasedLevel                , false            , true);</span></span>
-<span id="L287"><span class="lineNum">     287</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_bool,  w_check, &quot;UCI_LimitStrength&quot;           , &amp;DynamicConfig::limitStrength                  , false            , true);</span></span>
-<span id="L288"><span class="lineNum">     288</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;UCI_Elo&quot;                     , &amp;DynamicConfig::strength                       , (int)500         , (int)2800);</span></span>
-<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;Hash&quot;                        , &amp;DynamicConfig::ttSizeMb                       , (unsigned int)1  , (unsigned int)256000                , &amp;TT::initTable);</span></span>
-<span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;PawnHash&quot;                    , &amp;DynamicConfig::ttPawnSizeMb                   , (unsigned int)1  , (unsigned int)4096                  , &amp;ThreadPool::initPawnTables);</span></span>
-<span id="L291"><span class="lineNum">     291</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;Threads&quot;                     , &amp;DynamicConfig::threads                        , (unsigned int)1  , (unsigned int)(MAX_THREADS-1)       , std::bind(&amp;ThreadPool::setup, &amp;ThreadPool::instance()));</span></span>
-<span id="L292"><span class="lineNum">     292</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_bool,  w_check, &quot;UCI_Chess960&quot;                , &amp;DynamicConfig::FRC                            , false            , true);</span></span>
-<span id="L293"><span class="lineNum">     293</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_bool,  w_check, &quot;Ponder&quot;                      , &amp;DynamicConfig::UCIPonder                      , false            , true);</span></span>
-<span id="L294"><span class="lineNum">     294</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_bool,  w_check, &quot;MateFinder&quot;                  , &amp;DynamicConfig::mateFinder                     , false            , true);</span></span>
-<span id="L295"><span class="lineNum">     295</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;MultiPV&quot;                     , &amp;DynamicConfig::multiPV                        , (unsigned int)1  , (unsigned int)4);</span></span>
-<span id="L296"><span class="lineNum">     296</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;RandomOpen&quot;                  , &amp;DynamicConfig::randomOpen                     , (unsigned int)0  , (unsigned int)100);</span></span>
-<span id="L297"><span class="lineNum">     297</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;MinMoveOverHead&quot;             , &amp;DynamicConfig::moveOverHead                   , (unsigned int)10 , (unsigned int)1000);</span></span>
-<span id="L298"><span class="lineNum">     298</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_score, w_spin,  &quot;Contempt&quot;                    , &amp;DynamicConfig::contempt                       , (ScoreType)-50   , (ScoreType)50);</span></span>
-<span id="L299"><span class="lineNum">     299</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_score, w_spin,  &quot;ContemptMG&quot;                  , &amp;DynamicConfig::contemptMG                     , (ScoreType)-50   , (ScoreType)50);</span></span>
-<span id="L300"><span class="lineNum">     300</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_bool,  w_check, &quot;Armageddon&quot;                  , &amp;DynamicConfig::armageddon                     , false            , true);</span></span>
-<span id="L301"><span class="lineNum">     301</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_bool,  w_check, &quot;AntiChess&quot;                   , &amp;DynamicConfig::antichess                      , false            , true);</span></span>
-<span id="L302"><span class="lineNum">     302</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_bool,  w_check, &quot;WDL_display&quot;                 , &amp;DynamicConfig::withWDL                        , false            , true);</span></span>
-<span id="L303"><span class="lineNum">     303</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_bool,  w_check, &quot;bongCloud&quot;                   , &amp;DynamicConfig::bongCloud                      , false            , true);</span></span>
-<span id="L304"><span class="lineNum">     304</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_bool,  w_check, &quot;anarchy&quot;                     , &amp;DynamicConfig::anarchy                        , false            , true);</span></span>
-<span id="L305"><span class="lineNum">     305</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_score, w_spin,  &quot;badCapLimit&quot;                 , &amp;DynamicConfig::badCapLimit                    , (ScoreType)-1500 , (ScoreType)1500);</span></span>
+<span id="L285"><span class="lineNum">     285</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;Level&quot;                       , &amp;DynamicConfig::level                          , (unsigned int)0  , (unsigned int)100);</span></span>
+<span id="L286"><span class="lineNum">     286</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_bool,  w_check, &quot;nodesBasedLevel&quot;             , &amp;DynamicConfig::nodesBasedLevel                , false            , true);</span></span>
+<span id="L287"><span class="lineNum">     287</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_bool,  w_check, &quot;UCI_LimitStrength&quot;           , &amp;DynamicConfig::limitStrength                  , false            , true);</span></span>
+<span id="L288"><span class="lineNum">     288</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;UCI_Elo&quot;                     , &amp;DynamicConfig::strength                       , (int)500         , (int)2800);</span></span>
+<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;Hash&quot;                        , &amp;DynamicConfig::ttSizeMb                       , (unsigned int)1  , (unsigned int)256000                , &amp;TT::initTable);</span></span>
+<span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;PawnHash&quot;                    , &amp;DynamicConfig::ttPawnSizeMb                   , (unsigned int)1  , (unsigned int)4096                  , &amp;ThreadPool::initPawnTables);</span></span>
+<span id="L291"><span class="lineNum">     291</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;Threads&quot;                     , &amp;DynamicConfig::threads                        , (unsigned int)1  , (unsigned int)(MAX_THREADS-1)       , std::bind(&amp;ThreadPool::setup, &amp;ThreadPool::instance()));</span></span>
+<span id="L292"><span class="lineNum">     292</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_bool,  w_check, &quot;UCI_Chess960&quot;                , &amp;DynamicConfig::FRC                            , false            , true);</span></span>
+<span id="L293"><span class="lineNum">     293</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_bool,  w_check, &quot;Ponder&quot;                      , &amp;DynamicConfig::UCIPonder                      , false            , true);</span></span>
+<span id="L294"><span class="lineNum">     294</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_bool,  w_check, &quot;MateFinder&quot;                  , &amp;DynamicConfig::mateFinder                     , false            , true);</span></span>
+<span id="L295"><span class="lineNum">     295</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;MultiPV&quot;                     , &amp;DynamicConfig::multiPV                        , (unsigned int)1  , (unsigned int)4);</span></span>
+<span id="L296"><span class="lineNum">     296</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;RandomOpen&quot;                  , &amp;DynamicConfig::randomOpen                     , (unsigned int)0  , (unsigned int)100);</span></span>
+<span id="L297"><span class="lineNum">     297</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;MinMoveOverHead&quot;             , &amp;DynamicConfig::moveOverHead                   , (unsigned int)10 , (unsigned int)1000);</span></span>
+<span id="L298"><span class="lineNum">     298</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_score, w_spin,  &quot;Contempt&quot;                    , &amp;DynamicConfig::contempt                       , (ScoreType)-50   , (ScoreType)50);</span></span>
+<span id="L299"><span class="lineNum">     299</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_score, w_spin,  &quot;ContemptMG&quot;                  , &amp;DynamicConfig::contemptMG                     , (ScoreType)-50   , (ScoreType)50);</span></span>
+<span id="L300"><span class="lineNum">     300</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_bool,  w_check, &quot;Armageddon&quot;                  , &amp;DynamicConfig::armageddon                     , false            , true);</span></span>
+<span id="L301"><span class="lineNum">     301</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_bool,  w_check, &quot;AntiChess&quot;                   , &amp;DynamicConfig::antichess                      , false            , true);</span></span>
+<span id="L302"><span class="lineNum">     302</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_bool,  w_check, &quot;WDL_display&quot;                 , &amp;DynamicConfig::withWDL                        , false            , true);</span></span>
+<span id="L303"><span class="lineNum">     303</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_bool,  w_check, &quot;bongCloud&quot;                   , &amp;DynamicConfig::bongCloud                      , false            , true);</span></span>
+<span id="L304"><span class="lineNum">     304</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_bool,  w_check, &quot;anarchy&quot;                     , &amp;DynamicConfig::anarchy                        , false            , true);</span></span>
+<span id="L305"><span class="lineNum">     305</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_score, w_spin,  &quot;badCapLimit&quot;                 , &amp;DynamicConfig::badCapLimit                    , (ScoreType)-1500 , (ScoreType)1500);</span></span>
 <span id="L306"><span class="lineNum">     306</span>              : </span>
 <span id="L307"><span class="lineNum">     307</span>              : #ifdef WITH_SYZYGY</span>
-<span id="L308"><span class="lineNum">     308</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_string,w_string,&quot;SyzygyPath&quot;                  , &amp;DynamicConfig::syzygyPath                                                                              , &amp;SyzygyTb::initTB);</span></span>
+<span id="L308"><span class="lineNum">     308</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_string,w_string,&quot;SyzygyPath&quot;                  , &amp;DynamicConfig::syzygyPath                                                                              , &amp;SyzygyTb::initTB);</span></span>
 <span id="L309"><span class="lineNum">     309</span>              : #endif</span>
 <span id="L310"><span class="lineNum">     310</span>              : </span>
 <span id="L311"><span class="lineNum">     311</span>              : #ifdef WITH_NNUE</span>
-<span id="L312"><span class="lineNum">     312</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_string,w_string,&quot;NNUEFile&quot;                    , &amp;DynamicConfig::NNUEFile                                                                                , &amp;NNUEWrapper::init);</span></span>
-<span id="L313"><span class="lineNum">     313</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_bool,  w_check, &quot;forceNNUE&quot;                   , &amp;DynamicConfig::forceNNUE                      , false            , true);</span></span>
-<span id="L314"><span class="lineNum">     314</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;NNUEScaling&quot;                 , &amp;DynamicConfig::NNUEScaling                    , (int)32          , (int)256);</span></span>
-<span id="L315"><span class="lineNum">     315</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;NNUEThreshold&quot;               , &amp;DynamicConfig::NNUEThreshold                  , (int)0           , (int)1500);</span></span>
-<span id="L316"><span class="lineNum">     316</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;NNUEThreshold2&quot;              , &amp;DynamicConfig::NNUEThreshold2                 , (int)0           , (int)1500);</span></span>
+<span id="L312"><span class="lineNum">     312</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_string,w_string,&quot;NNUEFile&quot;                    , &amp;DynamicConfig::NNUEFile                                                                                , &amp;NNUEWrapper::init);</span></span>
+<span id="L313"><span class="lineNum">     313</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_bool,  w_check, &quot;forceNNUE&quot;                   , &amp;DynamicConfig::forceNNUE                      , false            , true);</span></span>
+<span id="L314"><span class="lineNum">     314</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;NNUEScaling&quot;                 , &amp;DynamicConfig::NNUEScaling                    , (int)32          , (int)256);</span></span>
+<span id="L315"><span class="lineNum">     315</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;NNUEThreshold&quot;               , &amp;DynamicConfig::NNUEThreshold                  , (int)0           , (int)1500);</span></span>
+<span id="L316"><span class="lineNum">     316</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;NNUEThreshold2&quot;              , &amp;DynamicConfig::NNUEThreshold2                 , (int)0           , (int)1500);</span></span>
 <span id="L317"><span class="lineNum">     317</span>              : #endif</span>
 <span id="L318"><span class="lineNum">     318</span>              : </span>
 <span id="L319"><span class="lineNum">     319</span>              : #ifdef WITH_GENFILE</span>
-<span id="L320"><span class="lineNum">     320</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_bool,  w_check, &quot;GenFen&quot;                      , &amp;DynamicConfig::genFen                         , false            , true);</span></span>
-<span id="L321"><span class="lineNum">     321</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_bool,  w_check, &quot;PgnOut&quot;                      , &amp;DynamicConfig::pgnOut                         , false            , true);</span></span>
-<span id="L322"><span class="lineNum">     322</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;GenFenDepth&quot;                 , &amp;DynamicConfig::genFenDepth                    , (unsigned int)2  , (unsigned int)40);</span></span>
-<span id="L323"><span class="lineNum">     323</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;GenFenDepthEG&quot;               , &amp;DynamicConfig::genFenDepthEG                  , (unsigned int)2  , (unsigned int)40);</span></span>
-<span id="L324"><span class="lineNum">     324</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;RandomPly&quot;                   , &amp;DynamicConfig::randomPly                      , (unsigned int)0  , (unsigned int)40);</span></span>
+<span id="L320"><span class="lineNum">     320</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_bool,  w_check, &quot;GenFen&quot;                      , &amp;DynamicConfig::genFen                         , false            , true);</span></span>
+<span id="L321"><span class="lineNum">     321</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_bool,  w_check, &quot;PgnOut&quot;                      , &amp;DynamicConfig::pgnOut                         , false            , true);</span></span>
+<span id="L322"><span class="lineNum">     322</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;GenFenDepth&quot;                 , &amp;DynamicConfig::genFenDepth                    , (unsigned int)2  , (unsigned int)40);</span></span>
+<span id="L323"><span class="lineNum">     323</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;GenFenDepthEG&quot;               , &amp;DynamicConfig::genFenDepthEG                  , (unsigned int)2  , (unsigned int)40);</span></span>
+<span id="L324"><span class="lineNum">     324</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;RandomPly&quot;                   , &amp;DynamicConfig::randomPly                      , (unsigned int)0  , (unsigned int)40);</span></span>
 <span id="L325"><span class="lineNum">     325</span>              :    //_keys.emplace_back(k_ull,   w_spin,  &quot;MaxNodes&quot;                    , &amp;TimeMan::maxNodes                             , (uint64_t)0      , (uint64_t)100000000);</span>
 <span id="L326"><span class="lineNum">     326</span>              : #endif</span>
 <span id="L327"><span class="lineNum">     327</span>              : </span>
-<span id="L328"><span class="lineNum">     328</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;StyleAttack&quot;                 , &amp;DynamicConfig::styleAttack                    , (int)0   , (int)100                                    , &amp;EvalFeatures::callBack);</span></span>
-<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;StyleComplexity&quot;             , &amp;DynamicConfig::styleComplexity                , (int)0   , (int)100                                    , &amp;EvalFeatures::callBack);</span></span>
-<span id="L330"><span class="lineNum">     330</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;StyleDevelopment&quot;            , &amp;DynamicConfig::styleDevelopment               , (int)0   , (int)100                                    , &amp;EvalFeatures::callBack);</span></span>
-<span id="L331"><span class="lineNum">     331</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;StyleMaterial&quot;               , &amp;DynamicConfig::styleMaterial                  , (int)0   , (int)100                                    , &amp;EvalFeatures::callBack);</span></span>
-<span id="L332"><span class="lineNum">     332</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;StyleMobility&quot;               , &amp;DynamicConfig::styleMobility                  , (int)0   , (int)100                                    , &amp;EvalFeatures::callBack);</span></span>
-<span id="L333"><span class="lineNum">     333</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;StylePositional&quot;             , &amp;DynamicConfig::stylePositional                , (int)0   , (int)100                                    , &amp;EvalFeatures::callBack);</span></span>
-<span id="L334"><span class="lineNum">     334</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,   w_spin,  &quot;StyleForwardness&quot;            , &amp;DynamicConfig::styleForwardness               , (int)0   , (int)100                                    , &amp;EvalFeatures::callBack);</span></span>
+<span id="L328"><span class="lineNum">     328</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;StyleAttack&quot;                 , &amp;DynamicConfig::styleAttack                    , (int)0   , (int)100                                    , &amp;EvalFeatures::callBack);</span></span>
+<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;StyleComplexity&quot;             , &amp;DynamicConfig::styleComplexity                , (int)0   , (int)100                                    , &amp;EvalFeatures::callBack);</span></span>
+<span id="L330"><span class="lineNum">     330</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;StyleDevelopment&quot;            , &amp;DynamicConfig::styleDevelopment               , (int)0   , (int)100                                    , &amp;EvalFeatures::callBack);</span></span>
+<span id="L331"><span class="lineNum">     331</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;StyleMaterial&quot;               , &amp;DynamicConfig::styleMaterial                  , (int)0   , (int)100                                    , &amp;EvalFeatures::callBack);</span></span>
+<span id="L332"><span class="lineNum">     332</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;StyleMobility&quot;               , &amp;DynamicConfig::styleMobility                  , (int)0   , (int)100                                    , &amp;EvalFeatures::callBack);</span></span>
+<span id="L333"><span class="lineNum">     333</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;StylePositional&quot;             , &amp;DynamicConfig::stylePositional                , (int)0   , (int)100                                    , &amp;EvalFeatures::callBack);</span></span>
+<span id="L334"><span class="lineNum">     334</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,   w_spin,  &quot;StyleForwardness&quot;            , &amp;DynamicConfig::styleForwardness               , (int)0   , (int)100                                    , &amp;EvalFeatures::callBack);</span></span>
 <span id="L335"><span class="lineNum">     335</span>              : </span>
-<span id="L336"><span class="lineNum">     336</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_string, w_string,&quot;UCI_Opponent&quot;               , &amp;DynamicConfig::opponent                                                                                /*, &amp;Opponent::init*/);</span></span>
-<span id="L337"><span class="lineNum">     337</span> <span class="tlaGNC">          20 :    _keys.emplace_back(k_int,    w_spin,  &quot;UCI_RatingAdv&quot;              , &amp;DynamicConfig::ratingAdv                      , (int)-10000, (int)10000                                , &amp;Opponent::ratingReceived);</span></span>
+<span id="L336"><span class="lineNum">     336</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_string, w_string,&quot;UCI_Opponent&quot;               , &amp;DynamicConfig::opponent                                                                                /*, &amp;Opponent::init*/);</span></span>
+<span id="L337"><span class="lineNum">     337</span> <span class="tlaGNC">          22 :    _keys.emplace_back(k_int,    w_spin,  &quot;UCI_RatingAdv&quot;              , &amp;DynamicConfig::ratingAdv                      , (int)-10000, (int)10000                                , &amp;Opponent::ratingReceived);</span></span>
 <span id="L338"><span class="lineNum">     338</span>              : </span>
-<span id="L339"><span class="lineNum">     339</span> <span class="tlaGNC">         100 :    _keys.emplace_back(k_string, w_combo, &quot;UCI_Variant&quot;                , &amp;DynamicConfig::chessvariant                   , std::vector&lt;std::string&gt;{ &quot;chess&quot;, &quot;antichess&quot;, &quot;armageddon&quot;, &quot;fischerandom&quot;}  , &amp;UCI::handleVariant);</span></span>
+<span id="L339"><span class="lineNum">     339</span> <span class="tlaGNC">         110 :    _keys.emplace_back(k_string, w_combo, &quot;UCI_Variant&quot;                , &amp;DynamicConfig::chessvariant                   , std::vector&lt;std::string&gt;{ &quot;chess&quot;, &quot;antichess&quot;, &quot;armageddon&quot;, &quot;fischerandom&quot;}  , &amp;UCI::handleVariant);</span></span>
 <span id="L340"><span class="lineNum">     340</span>              : </span>
 <span id="L341"><span class="lineNum">     341</span>              : #ifdef WITH_SEARCH_TUNING</span>
 <span id="L342"><span class="lineNum">     342</span>              : </span>
@@ -514,69 +514,69 @@
 <span id="L452"><span class="lineNum">     452</span>              :    _keys.emplace_back(k_score, w_spin, &quot;QueenValueSEE&quot; , &amp;ValuesSEE[P_wq+PieceShift] , ScoreType(0)    , ScoreType(2000)     ,  [](){SymetrizeValue(); MaterialHash::InitMaterialScore(false);}));</span>
 <span id="L453"><span class="lineNum">     453</span>              : #endif</span>
 <span id="L454"><span class="lineNum">     454</span>              : </span>
-<span id="L455"><span class="lineNum">     455</span> <span class="tlaGNC">          40 : }</span></span>
+<span id="L455"><span class="lineNum">     455</span> <span class="tlaGNC">          44 : }</span></span>
 <span id="L456"><span class="lineNum">     456</span>              : </span>
 <span id="L457"><span class="lineNum">     457</span>              : // load command line args in memory</span>
-<span id="L458"><span class="lineNum">     458</span> <span class="tlaGNC">          20 : void readOptions(int argc, char** argv) {</span></span>
-<span id="L459"><span class="lineNum">     459</span> <span class="tlaGNC">         108 :    for (int i = 1; i &lt; argc; ++i) args.push_back(argv[i]);</span></span>
-<span id="L460"><span class="lineNum">     460</span> <span class="tlaGNC">          20 : }</span></span>
+<span id="L458"><span class="lineNum">     458</span> <span class="tlaGNC">          22 : void readOptions(int argc, char** argv) {</span></span>
+<span id="L459"><span class="lineNum">     459</span> <span class="tlaGNC">         114 :    for (int i = 1; i &lt; argc; ++i) args.push_back(argv[i]);</span></span>
+<span id="L460"><span class="lineNum">     460</span> <span class="tlaGNC">          22 : }</span></span>
 <span id="L461"><span class="lineNum">     461</span>              : </span>
 <span id="L462"><span class="lineNum">     462</span>              : // get option from command line</span>
-<span id="L463"><span class="lineNum">     463</span> <span class="tlaGNC">          20 : void initOptions(int argc, char** argv) {</span></span>
+<span id="L463"><span class="lineNum">     463</span> <span class="tlaGNC">          22 : void initOptions(int argc, char** argv) {</span></span>
 <span id="L464"><span class="lineNum">     464</span>              : #define GETOPT(name, type)              Options::getOption&lt;type&gt;(DynamicConfig::name, #name);</span>
 <span id="L465"><span class="lineNum">     465</span>              : #define GETOPTVAR(name, variable, type) Options::getOption&lt;type&gt;(DynamicConfig::variable, #name);</span>
 <span id="L466"><span class="lineNum">     466</span>              : </span>
-<span id="L467"><span class="lineNum">     467</span> <span class="tlaGNC">          20 :    registerCOMOptions();</span></span>
-<span id="L468"><span class="lineNum">     468</span> <span class="tlaGNC">          20 :    readOptions(argc, argv);</span></span>
+<span id="L467"><span class="lineNum">     467</span> <span class="tlaGNC">          22 :    registerCOMOptions();</span></span>
+<span id="L468"><span class="lineNum">     468</span> <span class="tlaGNC">          22 :    readOptions(argc, argv);</span></span>
 <span id="L469"><span class="lineNum">     469</span>              : </span>
-<span id="L470"><span class="lineNum">     470</span> <span class="tlaGNC">          20 :    GETOPT(minOutputLevel, int) // first to be read !</span></span>
-<span id="L471"><span class="lineNum">     471</span> <span class="tlaGNC">          20 :    GETOPT(debugMode, bool)</span></span>
-<span id="L472"><span class="lineNum">     472</span> <span class="tlaGNC">          20 :    GETOPT(disableTT, bool)</span></span>
-<span id="L473"><span class="lineNum">     473</span> <span class="tlaGNC">          20 :    GETOPT(debugFile, std::string)</span></span>
-<span id="L474"><span class="lineNum">     474</span> <span class="tlaGNC">          20 :    GETOPT(ttSizeMb, unsigned int)</span></span>
-<span id="L475"><span class="lineNum">     475</span> <span class="tlaGNC">          20 :    GETOPT(ttPawnSizeMb, unsigned int)</span></span>
-<span id="L476"><span class="lineNum">     476</span> <span class="tlaGNC">          20 :    GETOPT(contempt, ScoreType)</span></span>
-<span id="L477"><span class="lineNum">     477</span> <span class="tlaGNC">          20 :    GETOPT(FRC, bool)</span></span>
-<span id="L478"><span class="lineNum">     478</span> <span class="tlaGNC">          20 :    GETOPT(DFRC, bool)</span></span>
-<span id="L479"><span class="lineNum">     479</span> <span class="tlaGNC">          20 :    GETOPT(threads, unsigned int)</span></span>
-<span id="L480"><span class="lineNum">     480</span> <span class="tlaGNC">          20 :    GETOPT(mateFinder, bool)</span></span>
-<span id="L481"><span class="lineNum">     481</span> <span class="tlaGNC">          20 :    GETOPT(fullXboardOutput, bool)</span></span>
-<span id="L482"><span class="lineNum">     482</span> <span class="tlaGNC">          20 :    GETOPT(level, unsigned int)</span></span>
-<span id="L483"><span class="lineNum">     483</span> <span class="tlaGNC">          20 :    GETOPT(multiPV, unsigned int)</span></span>
-<span id="L484"><span class="lineNum">     484</span> <span class="tlaGNC">          20 :    GETOPT(randomOpen, unsigned int)</span></span>
-<span id="L485"><span class="lineNum">     485</span> <span class="tlaGNC">          20 :    GETOPT(limitStrength, bool)</span></span>
-<span id="L486"><span class="lineNum">     486</span> <span class="tlaGNC">          20 :    GETOPT(nodesBasedLevel, bool)</span></span>
-<span id="L487"><span class="lineNum">     487</span> <span class="tlaGNC">          20 :    GETOPT(strength, int)</span></span>
-<span id="L488"><span class="lineNum">     488</span> <span class="tlaGNC">          20 :    GETOPT(moveOverHead, unsigned int)</span></span>
-<span id="L489"><span class="lineNum">     489</span> <span class="tlaGNC">          20 :    GETOPT(armageddon, bool)</span></span>
-<span id="L490"><span class="lineNum">     490</span> <span class="tlaGNC">          20 :    GETOPT(antichess, bool)</span></span>
-<span id="L491"><span class="lineNum">     491</span> <span class="tlaGNC">          20 :    GETOPT(withWDL, bool)</span></span>
-<span id="L492"><span class="lineNum">     492</span> <span class="tlaGNC">          20 :    GETOPT(bongCloud, bool)</span></span>
-<span id="L493"><span class="lineNum">     493</span> <span class="tlaGNC">          20 :    GETOPT(anarchy, bool)</span></span>
-<span id="L494"><span class="lineNum">     494</span> <span class="tlaGNC">          20 :    Options::getOption&lt;uint64_t&gt;(TimeMan::maxNodes, &quot;maxNodes&quot;);</span></span>
+<span id="L470"><span class="lineNum">     470</span> <span class="tlaGNC">          22 :    GETOPT(minOutputLevel, int) // first to be read !</span></span>
+<span id="L471"><span class="lineNum">     471</span> <span class="tlaGNC">          22 :    GETOPT(debugMode, bool)</span></span>
+<span id="L472"><span class="lineNum">     472</span> <span class="tlaGNC">          22 :    GETOPT(disableTT, bool)</span></span>
+<span id="L473"><span class="lineNum">     473</span> <span class="tlaGNC">          22 :    GETOPT(debugFile, std::string)</span></span>
+<span id="L474"><span class="lineNum">     474</span> <span class="tlaGNC">          22 :    GETOPT(ttSizeMb, unsigned int)</span></span>
+<span id="L475"><span class="lineNum">     475</span> <span class="tlaGNC">          22 :    GETOPT(ttPawnSizeMb, unsigned int)</span></span>
+<span id="L476"><span class="lineNum">     476</span> <span class="tlaGNC">          22 :    GETOPT(contempt, ScoreType)</span></span>
+<span id="L477"><span class="lineNum">     477</span> <span class="tlaGNC">          22 :    GETOPT(FRC, bool)</span></span>
+<span id="L478"><span class="lineNum">     478</span> <span class="tlaGNC">          22 :    GETOPT(DFRC, bool)</span></span>
+<span id="L479"><span class="lineNum">     479</span> <span class="tlaGNC">          22 :    GETOPT(threads, unsigned int)</span></span>
+<span id="L480"><span class="lineNum">     480</span> <span class="tlaGNC">          22 :    GETOPT(mateFinder, bool)</span></span>
+<span id="L481"><span class="lineNum">     481</span> <span class="tlaGNC">          22 :    GETOPT(fullXboardOutput, bool)</span></span>
+<span id="L482"><span class="lineNum">     482</span> <span class="tlaGNC">          22 :    GETOPT(level, unsigned int)</span></span>
+<span id="L483"><span class="lineNum">     483</span> <span class="tlaGNC">          22 :    GETOPT(multiPV, unsigned int)</span></span>
+<span id="L484"><span class="lineNum">     484</span> <span class="tlaGNC">          22 :    GETOPT(randomOpen, unsigned int)</span></span>
+<span id="L485"><span class="lineNum">     485</span> <span class="tlaGNC">          22 :    GETOPT(limitStrength, bool)</span></span>
+<span id="L486"><span class="lineNum">     486</span> <span class="tlaGNC">          22 :    GETOPT(nodesBasedLevel, bool)</span></span>
+<span id="L487"><span class="lineNum">     487</span> <span class="tlaGNC">          22 :    GETOPT(strength, int)</span></span>
+<span id="L488"><span class="lineNum">     488</span> <span class="tlaGNC">          22 :    GETOPT(moveOverHead, unsigned int)</span></span>
+<span id="L489"><span class="lineNum">     489</span> <span class="tlaGNC">          22 :    GETOPT(armageddon, bool)</span></span>
+<span id="L490"><span class="lineNum">     490</span> <span class="tlaGNC">          22 :    GETOPT(antichess, bool)</span></span>
+<span id="L491"><span class="lineNum">     491</span> <span class="tlaGNC">          22 :    GETOPT(withWDL, bool)</span></span>
+<span id="L492"><span class="lineNum">     492</span> <span class="tlaGNC">          22 :    GETOPT(bongCloud, bool)</span></span>
+<span id="L493"><span class="lineNum">     493</span> <span class="tlaGNC">          22 :    GETOPT(anarchy, bool)</span></span>
+<span id="L494"><span class="lineNum">     494</span> <span class="tlaGNC">          22 :    Options::getOption&lt;uint64_t&gt;(TimeMan::maxNodes, &quot;maxNodes&quot;);</span></span>
 <span id="L495"><span class="lineNum">     495</span>              : </span>
 <span id="L496"><span class="lineNum">     496</span>              : #ifdef WITH_SYZYGY</span>
-<span id="L497"><span class="lineNum">     497</span> <span class="tlaGNC">          20 :    GETOPT(syzygyPath, std::string)</span></span>
+<span id="L497"><span class="lineNum">     497</span> <span class="tlaGNC">          22 :    GETOPT(syzygyPath, std::string)</span></span>
 <span id="L498"><span class="lineNum">     498</span>              : #endif</span>
 <span id="L499"><span class="lineNum">     499</span>              : </span>
 <span id="L500"><span class="lineNum">     500</span>              : #ifdef WITH_NNUE</span>
-<span id="L501"><span class="lineNum">     501</span> <span class="tlaGNC">          20 :    GETOPT(NNUEFile, std::string)</span></span>
-<span id="L502"><span class="lineNum">     502</span> <span class="tlaGNC">          20 :    GETOPT(forceNNUE, bool)</span></span>
-<span id="L503"><span class="lineNum">     503</span> <span class="tlaGNC">          20 :    GETOPT(NNUEScaling, int)</span></span>
-<span id="L504"><span class="lineNum">     504</span> <span class="tlaGNC">          20 :    GETOPT(NNUEThreshold, int)</span></span>
-<span id="L505"><span class="lineNum">     505</span> <span class="tlaGNC">          20 :    GETOPT(NNUEThreshold2, int)</span></span>
+<span id="L501"><span class="lineNum">     501</span> <span class="tlaGNC">          22 :    GETOPT(NNUEFile, std::string)</span></span>
+<span id="L502"><span class="lineNum">     502</span> <span class="tlaGNC">          22 :    GETOPT(forceNNUE, bool)</span></span>
+<span id="L503"><span class="lineNum">     503</span> <span class="tlaGNC">          22 :    GETOPT(NNUEScaling, int)</span></span>
+<span id="L504"><span class="lineNum">     504</span> <span class="tlaGNC">          22 :    GETOPT(NNUEThreshold, int)</span></span>
+<span id="L505"><span class="lineNum">     505</span> <span class="tlaGNC">          22 :    GETOPT(NNUEThreshold2, int)</span></span>
 <span id="L506"><span class="lineNum">     506</span>              : #endif</span>
 <span id="L507"><span class="lineNum">     507</span>              : </span>
 <span id="L508"><span class="lineNum">     508</span>              : #ifdef WITH_GENFILE</span>
-<span id="L509"><span class="lineNum">     509</span> <span class="tlaGNC">          20 :    GETOPT(genFen, bool)</span></span>
-<span id="L510"><span class="lineNum">     510</span> <span class="tlaGNC">          20 :    GETOPT(pgnOut, bool)</span></span>
-<span id="L511"><span class="lineNum">     511</span> <span class="tlaGNC">          20 :    GETOPT(genFenDepth, unsigned int)</span></span>
-<span id="L512"><span class="lineNum">     512</span> <span class="tlaGNC">          20 :    GETOPT(genFenDepthEG, unsigned int)</span></span>
-<span id="L513"><span class="lineNum">     513</span> <span class="tlaGNC">          20 :    GETOPT(randomPly, unsigned int)</span></span>
+<span id="L509"><span class="lineNum">     509</span> <span class="tlaGNC">          22 :    GETOPT(genFen, bool)</span></span>
+<span id="L510"><span class="lineNum">     510</span> <span class="tlaGNC">          22 :    GETOPT(pgnOut, bool)</span></span>
+<span id="L511"><span class="lineNum">     511</span> <span class="tlaGNC">          22 :    GETOPT(genFenDepth, unsigned int)</span></span>
+<span id="L512"><span class="lineNum">     512</span> <span class="tlaGNC">          22 :    GETOPT(genFenDepthEG, unsigned int)</span></span>
+<span id="L513"><span class="lineNum">     513</span> <span class="tlaGNC">          22 :    GETOPT(randomPly, unsigned int)</span></span>
 <span id="L514"><span class="lineNum">     514</span>              : #endif</span>
 <span id="L515"><span class="lineNum">     515</span>              : </span>
-<span id="L516"><span class="lineNum">     516</span> <span class="tlaGNC">          20 :    if (DynamicConfig::DFRC) DynamicConfig::FRC = true;</span></span>
-<span id="L517"><span class="lineNum">     517</span> <span class="tlaGNC">          20 : }</span></span>
+<span id="L516"><span class="lineNum">     516</span> <span class="tlaGNC">          22 :    if (DynamicConfig::DFRC) DynamicConfig::FRC = true;</span></span>
+<span id="L517"><span class="lineNum">     517</span> <span class="tlaGNC">          22 : }</span></span>
 <span id="L518"><span class="lineNum">     518</span>              : </span>
 <span id="L519"><span class="lineNum">     519</span>              : } // namespace Options</span>
         </pre>
