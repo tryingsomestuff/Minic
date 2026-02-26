@@ -1,11 +1,12 @@
 #!/bin/bash
 ulimit -s unlimited
+set -u
 
 export CXX=g++
 export CC=gcc
 
-if [ -n "$EVALFILE" ];then
-   export EMBEDDEDNNUEPATH=$EVALFILE
+if [ -n "${EVALFILE:-}" ]; then
+   export EMBEDDEDNNUEPATH="$EVALFILE"
 else
    export EMBEDDEDNNUENAME=nyctophobic_narwhal.bin
 fi
@@ -44,26 +45,59 @@ $CXX $STANDARDSOURCE -ISource -ISource/nnue $OPT -lpthread -DDEBUG_TOOL -o cover
 
 cd coverage-dir
 
-./minic.cov -analyze "shirov" 25 -minOutputLevel 0
-./minic.cov -analyze "fine70" 25 -minOutputLevel 0 -syzygyPath /mnt/BK1/tablebase.sesse.net/syzygy/6/
-./minic.cov -perft "start" 6 -minOutputLevel 0
+COV_PROFILE=${COV_PROFILE:-quick}
+COV_FAIL_ON_ERROR=${COV_FAIL_ON_ERROR:-0}
+SYZYGY_PATH=${SYZYGY_PATH:-/mnt/BK2/tablebase.sesse.net/syzygy/6/}
+
+coverage_errors=0
+
+run_cov() {
+   local label="$1"
+   shift
+   echo "[coverage] $label"
+   if ! "$@"; then
+      echo "[coverage] command failed: $label"
+      coverage_errors=$((coverage_errors + 1))
+   fi
+}
+
+run_cov_stdin() {
+   local label="$1"
+   local input="$2"
+   shift 2
+   echo "[coverage] $label"
+   if ! printf "%s\n" "$input" | "$@"; then
+      echo "[coverage] command failed: $label"
+      coverage_errors=$((coverage_errors + 1))
+   fi
+}
+
+run_cov "analyze shirov" ./minic.cov -analyze "shirov" 25 -minOutputLevel 0
+if [ -d "$SYZYGY_PATH" ]; then
+   run_cov "analyze fine70 with syzygy" ./minic.cov -analyze "fine70" 25 -minOutputLevel 0 -syzygyPath "$SYZYGY_PATH"
+   run_cov "probe syzygy" ./minic.cov -probe "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1" -minOutputLevel 0 -syzygyPath "$SYZYGY_PATH"
+else
+   run_cov "analyze fine70" ./minic.cov -analyze "fine70" 25 -minOutputLevel 0
+fi
+run_cov "perft start" ./minic.cov -perft "start" 6 -minOutputLevel 0
 #./minic.cov -evalSpeed Book_and_Test/Tuning/lichess-new-labeled.epd
-./minic.cov bench 10 -minOutputLevel 0
-./minic.cov -selfplay 5 1 -minOutputLevel 0
-./minic.cov -perft_test -minOutputLevel 0
-./minic.cov -see_test -minOutputLevel 0
-./minic.cov -spsa -minOutputLevel 0
-./minic.cov -timeTest 1000 0 20 0 -minOutputLevel 0
-./minic.cov -qsearch "start" -minOutputLevel 0
-./minic.cov -eval "start" -minOutputLevel 0
-./minic.cov -evalHCE "start" -minOutputLevel 0
-./minic.cov -gen "start" -minOutputLevel 0
-./minic.cov -testmove "start" -minOutputLevel 0
-./minic.cov -see "start" e2e4 0 -minOutputLevel 0
-./minic.cov -attacked "start" 28 -minOutputLevel 0
-./minic.cov -cov "start" 12 -minOutputLevel 0
-./minic.cov -kpk "8/8/8/8/8/8/4k1P1/6K1 w - - 0 1" -minOutputLevel 0
-./minic.cov -uci -minOutputLevel 0 <<EOF
+run_cov "bench" ./minic.cov bench 10 -minOutputLevel 0
+run_cov "selfplay" ./minic.cov -selfplay 5 1 -minOutputLevel 0
+run_cov "perft_test" ./minic.cov -perft_test -minOutputLevel 0
+run_cov "see_test" ./minic.cov -see_test -minOutputLevel 0
+run_cov "spsa" ./minic.cov -spsa -minOutputLevel 0
+run_cov "timeTest" ./minic.cov -timeTest 1000 0 20 0 -minOutputLevel 0
+run_cov "qsearch" ./minic.cov -qsearch "start" -minOutputLevel 0
+run_cov "eval NNUE" ./minic.cov -eval "start" -minOutputLevel 0
+run_cov "eval HCE" ./minic.cov -evalHCE "start" -minOutputLevel 0
+run_cov "gen" ./minic.cov -gen "start" -minOutputLevel 0
+run_cov "testmove" ./minic.cov -testmove "start" -minOutputLevel 0
+run_cov "see" ./minic.cov -see "start" e2e4 0 -minOutputLevel 0
+run_cov "attacked" ./minic.cov -attacked "start" 28 -minOutputLevel 0
+run_cov "cov" ./minic.cov -cov "start" 12 -minOutputLevel 0
+run_cov "kpk" ./minic.cov -kpk "8/8/8/8/8/8/4k1P1/6K1 w - - 0 1" -minOutputLevel 0
+
+uci_script=$(cat <<'EOF'
 uci
 ucinewgame
 isready
@@ -110,8 +144,10 @@ wait
 isready
 quit
 EOF
+)
+run_cov_stdin "uci protocol" "$uci_script" ./minic.cov -uci -minOutputLevel 0
 
-./minic.cov -xboard -minOutputLevel 0 <<EOF
+xboard_script=$(cat <<'EOF'
 xboard
 protover 2
 post
@@ -139,21 +175,40 @@ go
 wait
 quit
 EOF
+)
+run_cov_stdin "xboard protocol" "$xboard_script" ./minic.cov -xboard -minOutputLevel 0
+
+if ./minic.cov --help_test -minOutputLevel 0 >/dev/null 2>&1; then
+   run_cov "testsuite arasan_sym" ./minic.cov arasan_sym -minOutputLevel 0
+fi
+
+if [ "$COV_PROFILE" = "full" ]; then
+   run_cov "benchBig" ./minic.cov benchBig 8 -minOutputLevel 0
+   run_cov "perft_test_long" ./minic.cov -perft_test_long -minOutputLevel 0
+   run_cov "perft_test_long_fischer" ./minic.cov -perft_test_long_fischer -minOutputLevel 0
+fi
 
 for file in *.gcno; do
-   gcov -p $file
+   run_cov "gcov $file" gcov -p $file
 done
 
 echo "Checking protocol coverage artifacts ..."
 ls -1 minic.cov-uci.gcda minic.cov-xboard.gcda
 
-lcov -d "$(pwd)" -b "$(readlink -f ../)" -c -o rapport.info --no-external --ignore-errors negative
-genhtml -o rapport -t "coverage" rapport.info
-lcov -l rapport.info
+run_cov "lcov capture" lcov -d "$(pwd)" -b "$(readlink -f ../)" -c -o rapport.info --no-external --ignore-errors negative
+run_cov "genhtml" genhtml -o rapport -t "coverage" rapport.info
+run_cov "lcov list" lcov -l rapport.info
 
 #rm -f *.gcno
 #rm -f *.gcda
 
 ls
+
+if [ "$coverage_errors" -ne 0 ]; then
+   echo "Coverage run completed with $coverage_errors failing command(s)."
+   if [ "$COV_FAIL_ON_ERROR" = "1" ]; then
+      exit 1
+   fi
+fi
 
 cd ..
