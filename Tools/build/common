@@ -1,6 +1,6 @@
 ulimit -s unlimited
 
-if [ -n "${COMMON_BUILD}" ]; then
+if [ -n "${COMMON_BUILD:-}" ]; then
    echo "Common tools already loaded"
 
 else
@@ -56,7 +56,7 @@ else
    fi
    n="-fopenmp-simd"
    d="-DDEBUG_TOOL"
-   if [ -n "$EMBEDDEDNNUEPATH" ]; then
+   if [ -n "${EMBEDDEDNNUEPATH:-}" ]; then
       if [ "$EMBEDDEDNNUEPATH" != "none" ]; then
          echo "With forced embedded net $EMBEDDEDNNUEPATH"
          d="$d -DEMBEDDEDNNUEPATH=$EMBEDDEDNNUEPATH -DFORCEEMBEDDEDNNUE"
@@ -68,27 +68,27 @@ else
       d="$d -DEMBEDDEDNNUEPATH=$dir/Tourney/nn.bin -DFORCEEMBEDDEDNNUE"
    fi
 
-   if [ -n "$1" ]; then
+   if [ -n "${1:-}" ]; then
       e=$1
       shift
    fi
 
-   if [ -n "$1" ] ; then
+   if [ -n "${1:-}" ] ; then
       v=$1
       shift
    fi
 
-   if [ -n "$1" ] ; then
+   if [ -n "${1:-}" ] ; then
       t=$1
       shift
    fi
 
-   if [ -n "$1" ] ; then
+   if [ -n "${1:-}" ] ; then
       n=$1
       shift
    fi
 
-   if [ -n "$1" ] ; then
+   if [ -n "${1:-}" ] ; then
       d=$1
       shift
    fi
@@ -97,6 +97,8 @@ else
    export v
    export t
    export d
+   CXX=${CXX:-g++}
+   CC=${CC:-gcc}
    export CXX
    export CC
 
