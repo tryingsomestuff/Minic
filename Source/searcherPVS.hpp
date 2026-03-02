@@ -56,252 +56,241 @@ Searcher::depthPolicy( [[maybe_unused]] const Position & p,
                        [[maybe_unused]] DepthType extensions,
                        [[maybe_unused]] bool isReductible) const{
 
-   // ####################
-   // Extensions
-   // ####################
-   DepthType extension = 0;
+   // Extension toggles.
+   constexpr bool enableCheckQuietExtension  = false;
+   constexpr bool enableInCheckExtension     = false;
+   constexpr bool enableBMExtension          = false;
+   constexpr bool enableMateThreatExtension  = false;
+   constexpr bool enableQueenThreatExtension = false;
+   constexpr bool enableCastlingExtension    = false;
+   constexpr bool enableRecaptureExtension   = false;
+   constexpr bool enableGoodHistoryExtension = false;
+   constexpr bool enableCMHExtension         = false;
 
-   // Possible extension will be cap by this
-   [[maybe_unused]] const auto extendMore = [&](){ return !extension /*&& extensions < std::max(10,height/3)*/;};
+   int extension = 0;
 
-   // correspond to first move (not being the TT one) or quiet with very good score (like killers)
-   [[maybe_unused]] const bool weakEarlyMove = pvsData.earlyMove || (pvsData.isQuiet && Move2Score(m) >= HISTORY_MAX);
+   const auto tryExtension = [&](const bool condition, const Stats::StatId statId){
+      if (extension == 0 && condition) {
+         stats.incr(statId);
+         ++extension;
+      }
+   };
 
-   // we will extend only if IIR triggered (thus when depth was already reduced)
-   // on positions with valid TT move we will just reduce (and the TT move can trigger singular extension)
    if (!pvsData.validTTmove){
-
-      // -----------------------
-      // win seeking (I think there might be something good here if I look a little further.)
-      // -----------------------
-
-      // "good" quiet move that gives check are extented
-      /*
-      if (extendMore() && weakEarlyMove && pvsData.isCheck){
-         stats.incr(Stats::sid_checkExtension2);
-         ++extension;
+      if constexpr (enableCheckQuietExtension) {
+         // correspond to first move (not being the TT one) or quiet with very good score (like killers)
+         const bool weakEarlyMove = pvsData.earlyMove || (pvsData.isQuiet && Move2Score(m) >= HISTORY_MAX);
+         tryExtension(weakEarlyMove && pvsData.isCheck, Stats::sid_checkExtension2);
       }
-      */
-
-      // -----------------------
-      // loss seeking (I think I'm in trouble.)
-      // -----------------------
-      // is in check extension
-      /*
-      if (extendMore() && pvsData.earlyMove && pvsData.isInCheck){
-         stats.incr(Stats::sid_checkExtension);
-         ++extension;
+      if constexpr (enableInCheckExtension) {
+         tryExtension(pvsData.earlyMove && pvsData.isInCheck, Stats::sid_checkExtension);
       }
-      */
-
-      // Botvinnik-Markoff Extension
-      // always extend on persistant threat if IIR triggered
-      /*
-      if (extendMore() && pvsData.BMextension){
-         stats.incr(Stats::sid_BMExtension);
-         ++extension;
+      if constexpr (enableBMExtension) {
+         tryExtension(pvsData.BMextension, Stats::sid_BMExtension);
       }
-      */
-
-      // mate threat extension (from null move)
-      /*
-      if (extendMore() && pvsData.earlyMove && pvsData.mateThreat){
-         stats.incr(Stats::sid_mateThreatExtension);
-         ++extension;
+      if constexpr (enableMateThreatExtension) {
+         tryExtension(pvsData.earlyMove && pvsData.mateThreat, Stats::sid_mateThreatExtension);
       }
-      */
-
-      // threat on queen extension (we do a quiet move to remove our queen from an attack)
-      /*
-      if (extendMore() && pvsData.earlyMove &&
-                          p.pieces_const<P_wq>(p.c) && 
-                          pvsData.isQuiet && PieceTools::getPieceType(p, Move2From(m)) == P_wq && 
-                          isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c)) ) &&
-                          SEE_GE(p, m, -80) ){
-         stats.incr(Stats::sid_queenThreatExtension);
-         ++extension;
+      if constexpr (enableQueenThreatExtension) {
+         tryExtension(pvsData.earlyMove &&
+                      p.pieces_const<P_wq>(p.c) &&
+                      pvsData.isQuiet && PieceTools::getPieceType(p, Move2From(m)) == P_wq &&
+                      isAttacked(p, BBTools::SquareFromBitBoard(p.pieces_const<P_wq>(p.c))) &&
+                      SEE_GE(p, m, -80),
+                      Stats::sid_queenThreatExtension);
       }
-      */
-
-      // -----------------------
-      // horizon (This is a forcing sequence, and if I stop searching now I won't know how it ends.)
-      // -----------------------
-
-      // castling extension
-      /*
-      if (extendMore() && isCastling(m)){
-         stats.incr(Stats::sid_castlingExtension);
-         ++extension;
+      if constexpr (enableCastlingExtension) {
+         tryExtension(isCastling(m), Stats::sid_castlingExtension);
       }
-      */
-
-      // simple recapture extension
-      /*
-      if (extendMore() && isValidMove(p.lastMove) && 
-                          Move2Type(p.lastMove) == T_capture && 
-                          !isBadCap(m) && 
-                          correctedMove2ToKingDest(m) == correctedMove2ToKingDest(p.lastMove)){
-         stats.incr(Stats::sid_recaptureExtension);
-         ++extension;
+      if constexpr (enableRecaptureExtension) {
+         tryExtension(isValidMove(p.lastMove) &&
+                      Move2Type(p.lastMove) == T_capture &&
+                      !isBadCap(m) &&
+                      correctedMove2ToKingDest(m) == correctedMove2ToKingDest(p.lastMove),
+                      Stats::sid_recaptureExtension);
       }
-      */
-      
-      // advanced pawn push extension
-      /*
-      if (extendMore() && pvsData.isAdvancedPawnPush ) {
-            const colored<BitBoard> pawns = { p2.pieces_const<P_wp>(Co_White), p2.pieces_const<P_wp>(Co_Black) };
-            const colored<BitBoard> passed = { BBTools::pawnPassed<Co_White>(pawns[Co_White], pawns[Co_Black]), BBTools::pawnPassed<Co_Black>(pawns[Co_Black], pawns[Co_White]) };
-            if ( SquareToBitboard(correctedMove2ToKingDest(m)) & passed[p.c] ) stats.incr(Stats::sid_pawnPushExtension), ++extension;
+      if constexpr (enableGoodHistoryExtension) {
+         tryExtension(pvsData.isQuiet &&
+                      Move2Score(m) <= HISTORY_MAX &&
+                      Move2Score(m) > SearchConfig::historyExtensionThreshold,
+                      Stats::sid_goodHistoryExtension);
       }
-      */
-      
-      // move that lead to endgame
-      /*
-      if ( extendMore() && lessZugzwangRisk && (p2.mat[p.c][M_t]+p2.mat[~p.c][M_t] == 0)){
-         ++extension;
-         stats.incr(Stats::sid_endGameExtension);
+      if constexpr (enableCMHExtension) {
+         tryExtension(pvsData.isQuiet &&
+                      isCMHGood(p, Move2From(m), correctedMove2ToKingDest(m), pvsData.cmhPtr, 3 * HISTORY_MAX / 4),
+                      Stats::sid_CMHExtension);
       }
-      */
-
-      // -----------------------
-      // stuff about move history ...
-      // -----------------------
-
-      // extend if quiet with good history
-      /*
-      if ( extendMore() && pvsData.isQuiet 
-                        && Move2Score(m) <= HISTORY_MAX 
-                        && Move2Score(m) > SearchConfig::historyExtensionThreshold){
-         ++extension;
-         stats.incr(Stats::sid_goodHistoryExtension);
-      }
-      */
-
-      // CMH extension
-      /*
-      if (extendMore() && pvsData.isQuiet) {
-            if (isCMHGood(p, Move2From(m), correctedMove2ToKingDest(m), pvsData.cmhPtr, 3 * HISTORY_MAX / 4)){
-               stats.incr(Stats::sid_CMHExtension);
-               ++extension;
-            }
-      }
-      */
-
    }
 
-   // ####################
-   // Now reductions
-   // ####################
-   DepthType reduction = 0;
+   // Reduction toggles
+   constexpr bool enableThreadBaseReduction              = false;
+   constexpr bool enableAggressiveRandomReduction        = false;
+   constexpr bool enableMobilityBasedReduction           = false;
+   constexpr bool enableReduceLessWhenInCheck            = false;
+   constexpr bool enableReduceLessWhenGivingCheck        = false;
+   constexpr bool enableReduceLessAtPVNode               = false;
+   constexpr bool enableReduceLessAfterAlphaUpdateAll    = false;
+   constexpr bool enableReduceLessOnSingularTT           = false;
+   constexpr bool enableReduceLessOnTheirTurn            = false;
+   constexpr bool enableReduceLessOnEmergencyDefence     = false;
+   constexpr bool enableReduceLessOnAdvancedPawnPush     = false;
+
+   constexpr bool enableCaptureBadCapExtraReduction      = true;
+   constexpr bool enableCaptureReduceLessIfTTMoveIsCap   = false;
+   constexpr bool enableCaptureReduceLessOnFormerPV      = false;
+   constexpr bool enableCaptureReduceLessOnAdvancedPawn  = false;
+
+   constexpr bool enableStdBaseLMRReduction              = true;
+   constexpr bool enableStdNotImprovingReduction         = true;
+   constexpr bool enableStdTTMoveIsCaptureReduction      = true;
+   constexpr bool enableStdFailHighReduction             = true;
+   constexpr bool enableStdHistoryReduction              = true;
+   constexpr bool enableStdFormerPVPrudence              = true;
+   constexpr bool enableStdKnownEndgamePrudence          = true;
+
+   constexpr bool enableCapBaseLMRReduction              = true;
+   constexpr bool enableCapHistoryReduction              = true;
+   constexpr bool enableCapPVNodePrudence                = true;
+   constexpr bool enableCapImprovingPrudence             = true;
+
+   int reduction = 0;
 
    if (isReductible) {
+      const int depthIdx = std::min(static_cast<int>(depth), MAX_DEPTH - 1);
 
       if (Move2Type(m) == T_std){
          stats.incr(Stats::sid_lmr);
 
-         // little threading randomness ///@todo test that !
-         const int threadReductionIdx = 0; //static_cast<int>(id()) / std::max(1,static_cast<int>(ThreadPool::instance().size()/8));
-         // -----------------------
-         // Late move reduction
-         // -----------------------
-         reduction += SearchConfig::lmrReduction[std::min(static_cast<int>(depth), MAX_DEPTH - 1)][std::min(pvsData.validMoveCount + threadReductionIdx, MAX_MOVE - 1)];
+         const int threadReductionIdx = 0;
+         const int moveIdx = std::min(pvsData.validMoveCount + threadReductionIdx, MAX_MOVE - 1);
 
-         // -----------------------
-         // more reductions
-         // -----------------------
-         // we are not improving (static score not better)
-         // ! be carefull !pvsData.improving includes being in check !
-         reduction += /*!pvsData.pvnode && height > 1 &&*/ (!pvsData.improving /*&& !pvsData.isInCheck*/);
-         // the TT move is a capture, probably a quiet move won't help much more
-         reduction += pvsData.ttMoveIsCapture;
-         // we are at an expected cutnode with a quite high static evaluation. We will probably beta cut.
-         reduction += pvsData.cutNode && evalScore - SearchConfig::failHighReductionCoeff.threshold(pvsData.marginDepth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving) > pvsData.beta;
-         //reduction += pvsData.cutNode || evalScore - SearchConfig::failHighReductionCoeff.threshold(pvsData.marginDepth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving) > pvsData.beta;
-
-         // thread base reduction (another one ...)
-         //reduction += (id()%2);
-
-         // aggressive random reduction (again a threading try...)
-         /*
-         const ScoreType randomShot = (stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes]) % 128;
-         if ( randomShot > 128 + SearchConfig::lmpLimit[pvsData.improving][depth + depthCorrection] - SearchConfig::randomAggressiveReductionFactor * validQuietMoveCount) {
-            stats.incr(Stats::sid_lmrAR);
-            ++reduction;
+         if constexpr (enableStdBaseLMRReduction) {
+            reduction += SearchConfig::lmrReduction[depthIdx][moveIdx];
          }
-         */
-
-         // -----------------------
-         // history reduction/extension
-         // -----------------------
-         
-         // beware killers and counter are scored above history max
-         const int hScore = HISTORY_DIV(2 * Move2Score(m));
-         reduction -= std::min(3, hScore);
-
-         // -----------------------
-         // less reduction
-         // -----------------------
-         /*
-         // Mobility based reduction
-         if (!pvsData.isInCheck){
-            const int16_t mobilityBalance = evalData.mobility[~p.c]-evalData.mobility[p.c];
-            //reduction -= (mobilityBalance/16 > 0);
-            reduction += (mobilityBalance/16 < 0);
+         if constexpr (enableStdNotImprovingReduction) {
+            reduction += static_cast<int>(!pvsData.improving);
          }
-         */
+         if constexpr (enableStdTTMoveIsCaptureReduction) {
+            reduction += static_cast<int>(pvsData.ttMoveIsCapture);
+         }
 
-         // being in check is forcing move
-         //reduction -= pvsData.isInCheck;
-         //reduction -= pvsData.isCheck;
-         // be more prudent at pvnode or if move was in pv before
-         reduction -= pvsData.formerPV || pvsData.ttPV;
-         //reduction -= pvsData.pvnode;
-         // at an allnode and some previous move (maybe a capture), already updated alpha
-         //reduction -= !pvsData.cutNode && pvsData.alphaUpdated;
-         //reduction -= pvsData.ttMoveSingularExt;
-         //reduction -= pvsData.theirTurn; ///@todo use in capture also ?
-         //reduction -= isDangerRed || pvsData.isEmergencyDefence;
-         reduction -= pvsData.isKnownEndGame;
-         //reduction -= 2*pvsData.isAdvancedPawnPush;
+         if constexpr (enableStdFailHighReduction) {
+            const bool likelyFailHigh = pvsData.cutNode &&
+               evalScore - SearchConfig::failHighReductionCoeff.threshold(
+                  pvsData.marginDepth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving) > pvsData.beta;
+            reduction += static_cast<int>(likelyFailHigh);
+         }
+
+         if constexpr (enableStdHistoryReduction) {
+            const int hScore = HISTORY_DIV(2 * Move2Score(m));
+            reduction -= std::min(3, hScore);
+         }
+
+         if constexpr (enableThreadBaseReduction) {
+            reduction += static_cast<int>(id() % 2);
+         }
+
+         if constexpr (enableAggressiveRandomReduction) {
+            constexpr int randomAggressiveReductionFactor = 0;
+            const ScoreType randomShot = (stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes]) % 128;
+            if (randomShot > 128 -
+                             randomAggressiveReductionFactor * pvsData.validQuietMoveCount) {
+               stats.incr(Stats::sid_lmrAR);
+               ++reduction;
+            }
+         }
+
+         if constexpr (enableMobilityBasedReduction) {
+            if (!pvsData.isInCheck) {
+               const int16_t mobilityBalance = evalData.mobility[~p.c] - evalData.mobility[p.c];
+               reduction += static_cast<int>(mobilityBalance / 16 < 0);
+            }
+         }
+
+         if constexpr (enableReduceLessWhenInCheck) {
+            reduction -= static_cast<int>(pvsData.isInCheck);
+         }
+         if constexpr (enableReduceLessWhenGivingCheck) {
+            reduction -= static_cast<int>(pvsData.isCheck);
+         }
+
+         if constexpr (enableStdFormerPVPrudence) {
+            reduction -= static_cast<int>(pvsData.formerPV || pvsData.ttPV);
+         }
+
+         if constexpr (enableReduceLessAtPVNode) {
+            reduction -= static_cast<int>(pvsData.pvnode);
+         }
+         if constexpr (enableReduceLessAfterAlphaUpdateAll) {
+            reduction -= static_cast<int>(!pvsData.cutNode && pvsData.alphaUpdated);
+         }
+         if constexpr (enableReduceLessOnSingularTT) {
+            reduction -= static_cast<int>(pvsData.ttMoveSingularExt);
+         }
+         if constexpr (enableReduceLessOnTheirTurn) {
+            reduction -= static_cast<int>(pvsData.theirTurn);
+         }
+         if constexpr (enableReduceLessOnEmergencyDefence) {
+            reduction -= static_cast<int>(pvsData.isEmergencyDefence);
+         }
+
+         if constexpr (enableStdKnownEndgamePrudence) {
+            reduction -= static_cast<int>(pvsData.isKnownEndGame);
+         }
+
+         if constexpr (enableReduceLessOnAdvancedPawnPush) {
+            reduction -= static_cast<int>(2 * pvsData.isAdvancedPawnPush);
+         }
       }
       else if (Move2Type(m) == T_capture){
          stats.incr(Stats::sid_lmrcap);
 
-         // -----------------------
-         // Late move reduction
-         // -----------------------
-         reduction += SearchConfig::lmrReduction[std::min(static_cast<int>(depth), MAX_DEPTH - 1)][std::min(static_cast<int>(pvsData.validMoveCount), MAX_MOVE - 1)];
+         if constexpr (enableCapBaseLMRReduction) {
+            const int moveIdx = std::min(static_cast<int>(pvsData.validMoveCount), MAX_MOVE - 1);
+            reduction += SearchConfig::lmrReduction[depthIdx][moveIdx];
+         }
 
-         // -----------------------
-         // more reduction
-         // -----------------------
-         //reduction += isBadCap(m);
+         if constexpr (enableCapHistoryReduction) {
+            const Square to = Move2To(m); // ok this is a std capture (no ep)
+            const int hScore = HISTORY_DIV(SearchConfig::lmrCapHistoryFactor *
+               historyT.historyCap[PieceIdx(p.board_const(Move2From(m)))][to][Abs(p.board_const(to)) - 1]);
+            reduction -= std::max(-2, std::min(2, hScore));
+         }
 
-         // capture history reduction
-         const Square to = Move2To(m); // ok this is a std capture (no ep)
-         const int hScore = HISTORY_DIV(SearchConfig::lmrCapHistoryFactor * historyT.historyCap[PieceIdx(p.board_const(Move2From(m)))][to][Abs(p.board_const(to))-1]);
-         reduction -= std::max(-2,std::min(2, hScore));
-         // -----------------------
-         // less reduction
-         // -----------------------
-         reduction -= pvsData.pvnode; 
-         //reduction -= pvsData.ttMoveIsCapture;
-         //reduction -= pvsData.formerPV || pvsData.ttPV;
-         reduction -= pvsData.improving;
-         //reduction -= 2*pvsData.isAdvancedPawnPush;
+         if constexpr (enableCaptureBadCapExtraReduction) {
+            reduction += static_cast<int>(isBadCap(m) && reduction > 1);
+         }
+
+         if constexpr (enableCapPVNodePrudence) {
+            reduction -= static_cast<int>(pvsData.pvnode);
+         }
+
+         if constexpr (enableCaptureReduceLessIfTTMoveIsCap) {
+            reduction -= static_cast<int>(pvsData.ttMoveIsCapture);
+         }
+         if constexpr (enableCaptureReduceLessOnFormerPV) {
+            reduction -= static_cast<int>(pvsData.formerPV || pvsData.ttPV);
+         }
+
+         if constexpr (enableCapImprovingPrudence) {
+            reduction -= static_cast<int>(pvsData.improving);
+         }
+
+         if constexpr (enableCaptureReduceLessOnAdvancedPawn) {
+            reduction -= static_cast<int>(2 * pvsData.isAdvancedPawnPush);
+         }
       }
 
       // never extend more than reduce (to avoid search explosion)
       // except for first move when no TT hit where a +1 extension is possible
       if (extension - reduction > 0) reduction = extension;
       // clamp to depth = 0
-      if (depth - 1 + extension - reduction <= 0 ) reduction = depth - 1 + extension;
-
+      if (static_cast<int>(depth) - 1 + extension - reduction <= 0) reduction = static_cast<int>(depth) - 1 + extension;
    }
 
-   const DepthType nextDepth = depth - 1 + extension - reduction;
+   const DepthType nextDepth = static_cast<DepthType>(static_cast<int>(depth) - 1 + extension - reduction);
 
-   return {nextDepth, extension, reduction};
+   return {nextDepth, static_cast<DepthType>(extension), static_cast<DepthType>(reduction)};
 }
 
 #pragma GCC diagnostic push
