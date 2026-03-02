@@ -31,18 +31,18 @@
             <td class="headerValue">coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryMed">88.7&nbsp;%</td>
+            <td class="headerCovTableEntryHi">92.2&nbsp;%</td>
             <td class="headerCovTableEntry">282</td>
-            <td class="headerCovTableEntry">250</td>
+            <td class="headerCovTableEntry">260</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-26 19:16:57</td>
+            <td class="headerValue">2026-03-02 16:42:41</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryLo">64.7&nbsp;%</td>
+            <td class="headerCovTableEntryMed">76.5&nbsp;%</td>
             <td class="headerCovTableEntry">17</td>
-            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">13</td>
           </tr>
                   <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -84,21 +84,21 @@
 <span id="L22"><span class="lineNum">      22</span>              : }</span>
 <span id="L23"><span class="lineNum">      23</span>              : [[nodiscard]] Hash getMaterialHash2(const Position::Material &amp;mat) {</span>
 <span id="L24"><span class="lineNum">      24</span>              : #else</span>
-<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC tlaBgGNC">     3228065 : [[nodiscard]] Hash getMaterialHash(const Position::Material &amp;mat) {</span></span>
+<span id="L25"><span class="lineNum">      25</span> <span class="tlaGNC tlaBgGNC">     5013568 : [[nodiscard]] Hash getMaterialHash(const Position::Material &amp;mat) {</span></span>
 <span id="L26"><span class="lineNum">      26</span>              : #endif</span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">     3228065 :    if (mat[Co_White][M_q] &gt; 2  || mat[Co_Black][M_q] &gt; 2</span></span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">     3228065 :     || mat[Co_White][M_r] &gt; 2  || mat[Co_Black][M_r] &gt; 2</span></span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">     3227797 :     || mat[Co_White][M_bl] &gt; 2 || mat[Co_Black][M_bl] &gt; 2</span></span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">     3227797 :     || mat[Co_White][M_bd] &gt; 2 || mat[Co_Black][M_bd] &gt; 2</span></span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">     3227797 :     || mat[Co_White][M_n] &gt; 2  || mat[Co_Black][M_n] &gt; 2</span></span>
-<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">     6455862 :     || mat[Co_White][M_p] &gt; 8  || mat[Co_Black][M_p] &gt; 8) return nullHash;</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">     5013568 :    if (mat[Co_White][M_q] &gt; 2  || mat[Co_Black][M_q] &gt; 2</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">     5013568 :     || mat[Co_White][M_r] &gt; 2  || mat[Co_Black][M_r] &gt; 2</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">     5012604 :     || mat[Co_White][M_bl] &gt; 2 || mat[Co_Black][M_bl] &gt; 2</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">     5012604 :     || mat[Co_White][M_bd] &gt; 2 || mat[Co_Black][M_bd] &gt; 2</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">     5012604 :     || mat[Co_White][M_n] &gt; 2  || mat[Co_Black][M_n] &gt; 2</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaGNC">    10026172 :     || mat[Co_White][M_p] &gt; 8  || mat[Co_Black][M_p] &gt; 8) return nullHash;</span></span>
 <span id="L33"><span class="lineNum">      33</span>              : </span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">     3227797 :    return mat[Co_White][M_p]  * MatWP + mat[Co_Black][M_p]  * MatBP</span></span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">     3227797 :         + mat[Co_White][M_n]  * MatWN + mat[Co_Black][M_n]  * MatBN</span></span>
-<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">     3227797 :         + mat[Co_White][M_bl] * MatWL + mat[Co_Black][M_bl] * MatBL</span></span>
-<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">     3227797 :         + mat[Co_White][M_bd] * MatWD + mat[Co_Black][M_bd] * MatBD</span></span>
-<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">     3227797 :         + mat[Co_White][M_r]  * MatWR + mat[Co_Black][M_r]  * MatBR</span></span>
-<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">     3227797 :         + mat[Co_White][M_q]  * MatWQ + mat[Co_Black][M_q]  * MatBQ;</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">     5012604 :    return mat[Co_White][M_p]  * MatWP + mat[Co_Black][M_p]  * MatBP</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">     5012604 :         + mat[Co_White][M_n]  * MatWN + mat[Co_Black][M_n]  * MatBN</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">     5012604 :         + mat[Co_White][M_bl] * MatWL + mat[Co_Black][M_bl] * MatBL</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">     5012604 :         + mat[Co_White][M_bd] * MatWD + mat[Co_Black][M_bd] * MatBD</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">     5012604 :         + mat[Co_White][M_r]  * MatWR + mat[Co_Black][M_r]  * MatBR</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">     5012604 :         + mat[Co_White][M_q]  * MatWQ + mat[Co_Black][M_q]  * MatBQ;</span></span>
 <span id="L40"><span class="lineNum">      40</span>              : }</span>
 <span id="L41"><span class="lineNum">      41</span>              : </span>
 <span id="L42"><span class="lineNum">      42</span> <span class="tlaGNC">   105225318 : [[nodiscard]] Position::Material indexToMat(int index) {</span></span>
@@ -219,17 +219,17 @@
 <span id="L157"><span class="lineNum">     157</span>              : const array1d&lt;ScoreType,8&gt; pushClose = {0, 0, 100, 80, 60, 40, 20, 10};</span>
 <span id="L158"><span class="lineNum">     158</span>              : //const array1d&lt;ScoreType,8&gt; pushAway = { 0, 5, 20, 40, 60, 80, 90, 100 };</span>
 <span id="L159"><span class="lineNum">     159</span>              : </span>
-<span id="L160"><span class="lineNum">     160</span> <span class="tlaUNC">           0 : ScoreType helperKXK(const Position &amp;p, Color winningSide, ScoreType s, DepthType height) {</span></span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC tlaBgGNC">          20 : ScoreType helperKXK(const Position &amp;p, Color winningSide, ScoreType s, DepthType height) {</span></span>
 <span id="L161"><span class="lineNum">     161</span>              :    if (p.c != winningSide) {</span>
 <span id="L162"><span class="lineNum">     162</span>              :      ///@todo stale mate detection for losing side</span>
 <span id="L163"><span class="lineNum">     163</span>              :    }</span>
-<span id="L164"><span class="lineNum">     164</span> <span class="tlaUNC">           0 :    const Square    winningK = p.king[winningSide];</span></span>
-<span id="L165"><span class="lineNum">     165</span> <span class="tlaUNC">           0 :    const Square    losingK  = p.king[~winningSide];</span></span>
-<span id="L166"><span class="lineNum">     166</span> <span class="tlaUNC">           0 :    const ScoreType sc       = 12 * pushToEdges[losingK] + pushClose[chebyshevDistance(winningK, losingK)];</span></span>
-<span id="L167"><span class="lineNum">     167</span> <span class="tlaUNC">           0 :    return clampScore(s + ((winningSide == Co_White) ? (sc + WIN - height + 1) : (-sc - WIN + height)));</span></span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">          20 :    const Square    winningK = p.king[winningSide];</span></span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaGNC">          20 :    const Square    losingK  = p.king[~winningSide];</span></span>
+<span id="L166"><span class="lineNum">     166</span> <span class="tlaGNC">          20 :    const ScoreType sc       = 12 * pushToEdges[losingK] + pushClose[chebyshevDistance(winningK, losingK)];</span></span>
+<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">          20 :    return clampScore(s + ((winningSide == Co_White) ? (sc + WIN - height + 1) : (-sc - WIN + height)));</span></span>
 <span id="L168"><span class="lineNum">     168</span>              : }</span>
 <span id="L169"><span class="lineNum">     169</span>              : </span>
-<span id="L170"><span class="lineNum">     170</span> <span class="tlaUNC">           0 : ScoreType helperKmmK(const Position &amp;p, Color winningSide, ScoreType s, DepthType height) {</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaUNC tlaBgUNC">           0 : ScoreType helperKmmK(const Position &amp;p, Color winningSide, ScoreType s, DepthType height) {</span></span>
 <span id="L171"><span class="lineNum">     171</span> <span class="tlaUNC">           0 :    Square winningK = p.king[winningSide];</span></span>
 <span id="L172"><span class="lineNum">     172</span> <span class="tlaUNC">           0 :    Square losingK  = p.king[~winningSide];</span></span>
 <span id="L173"><span class="lineNum">     173</span> <span class="tlaUNC">           0 :    if ((p.allBishop() &amp; BB::whiteSquare) != 0) {</span></span>
@@ -243,18 +243,18 @@
 <span id="L181"><span class="lineNum">     181</span> <span class="tlaUNC">           0 : ScoreType helperDummy(const Position &amp;, Color, ScoreType, DepthType) { return 0; } ///@todo not 0 for debug purpose ??</span></span>
 <span id="L182"><span class="lineNum">     182</span>              : </span>
 <span id="L183"><span class="lineNum">     183</span>              : #if !defined(WITH_SMALL_MEMORY)</span>
-<span id="L184"><span class="lineNum">     184</span> <span class="tlaGNC tlaBgGNC">           2 : ScoreType helperKPK(const Position &amp;p, Color winningSide, [[maybe_unused]] ScoreType s, DepthType height) {</span></span>
-<span id="L185"><span class="lineNum">     185</span> <span class="tlaGNC">           2 :    const Square psq  = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const&lt;P_wp&gt;(winningSide))); // we know there is at least one pawn</span></span>
-<span id="L186"><span class="lineNum">     186</span> <span class="tlaGNC">           2 :    const Square wksq = KPK::normalizeSquare(p, winningSide, p.king[winningSide]);</span></span>
-<span id="L187"><span class="lineNum">     187</span> <span class="tlaGNC">           2 :    const Square lksq = KPK::normalizeSquare(p, winningSide, p.king[~winningSide]);</span></span>
-<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">           2 :    if (!KPK::probe(wksq, psq, lksq, winningSide == p.c ? Co_White : Co_Black)) {</span></span>
-<span id="L189"><span class="lineNum">     189</span> <span class="tlaUNC tlaBgUNC">           0 :       if (DynamicConfig::armageddon) {</span></span>
-<span id="L190"><span class="lineNum">     190</span> <span class="tlaUNC">           0 :          if (p.c == Co_White) return matedScore(height);</span></span>
+<span id="L184"><span class="lineNum">     184</span> <span class="tlaGNC tlaBgGNC">          11 : ScoreType helperKPK(const Position &amp;p, Color winningSide, [[maybe_unused]] ScoreType s, DepthType height) {</span></span>
+<span id="L185"><span class="lineNum">     185</span> <span class="tlaGNC">          11 :    const Square psq  = KPK::normalizeSquare(p, winningSide, BBTools::SquareFromBitBoard(p.pieces_const&lt;P_wp&gt;(winningSide))); // we know there is at least one pawn</span></span>
+<span id="L186"><span class="lineNum">     186</span> <span class="tlaGNC">          11 :    const Square wksq = KPK::normalizeSquare(p, winningSide, p.king[winningSide]);</span></span>
+<span id="L187"><span class="lineNum">     187</span> <span class="tlaGNC">          11 :    const Square lksq = KPK::normalizeSquare(p, winningSide, p.king[~winningSide]);</span></span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">          11 :    if (!KPK::probe(wksq, psq, lksq, winningSide == p.c ? Co_White : Co_Black)) {</span></span>
+<span id="L189"><span class="lineNum">     189</span> <span class="tlaGNC">           8 :       if (DynamicConfig::armageddon) {</span></span>
+<span id="L190"><span class="lineNum">     190</span> <span class="tlaUNC tlaBgUNC">           0 :          if (p.c == Co_White) return matedScore(height);</span></span>
 <span id="L191"><span class="lineNum">     191</span> <span class="tlaUNC">           0 :          else return matingScore(height-1);</span></span>
 <span id="L192"><span class="lineNum">     192</span>              :       }</span>
 <span id="L193"><span class="lineNum">     193</span>              :       return 0; // shall be drawScore but we don't care, this is not 3rep</span>
 <span id="L194"><span class="lineNum">     194</span>              :    }</span>
-<span id="L195"><span class="lineNum">     195</span> <span class="tlaGNC tlaBgGNC">           4 :    return clampScore(((winningSide == Co_White) ? +1 : -1) * (WIN + valueEG(P_wp) + 10 * SQRANK(psq)));</span></span>
+<span id="L195"><span class="lineNum">     195</span> <span class="tlaGNC tlaBgGNC">           6 :    return clampScore(((winningSide == Co_White) ? +1 : -1) * (WIN + valueEG(P_wp) + 10 * SQRANK(psq)));</span></span>
 <span id="L196"><span class="lineNum">     196</span>              : }</span>
 <span id="L197"><span class="lineNum">     197</span>              : #endif</span>
 <span id="L198"><span class="lineNum">     198</span>              : </span>
@@ -499,40 +499,40 @@
 <span id="L437"><span class="lineNum">     437</span>              : #endif</span>
 <span id="L438"><span class="lineNum">     438</span> <span class="tlaGNC">          22 : }</span></span>
 <span id="L439"><span class="lineNum">     439</span>              : </span>
-<span id="L440"><span class="lineNum">     440</span> <span class="tlaUNC tlaBgUNC">           0 : Terminaison probeMaterialHashTable(const Position::Material &amp;mat) {</span></span>
-<span id="L441"><span class="lineNum">     441</span> <span class="tlaUNC">           0 :    const Hash h = getMaterialHash(mat);</span></span>
-<span id="L442"><span class="lineNum">     442</span> <span class="tlaUNC">           0 :    if (h == nullHash) return Ter_Unknown;</span></span>
-<span id="L443"><span class="lineNum">     443</span> <span class="tlaUNC">           0 :    return materialHashTable[h].t;</span></span>
+<span id="L440"><span class="lineNum">     440</span> <span class="tlaGNC">       22218 : Terminaison probeMaterialHashTable(const Position::Material &amp;mat) {</span></span>
+<span id="L441"><span class="lineNum">     441</span> <span class="tlaGNC">       22218 :    const Hash h = getMaterialHash(mat);</span></span>
+<span id="L442"><span class="lineNum">     442</span> <span class="tlaGNC">       22218 :    if (h == nullHash) return Ter_Unknown;</span></span>
+<span id="L443"><span class="lineNum">     443</span> <span class="tlaGNC">       22218 :    return materialHashTable[h].t;</span></span>
 <span id="L444"><span class="lineNum">     444</span>              : }</span>
 <span id="L445"><span class="lineNum">     445</span>              : </span>
-<span id="L446"><span class="lineNum">     446</span> <span class="tlaGNC tlaBgGNC">     9298996 : void updateMaterialOther(Position &amp;p) {</span></span>
-<span id="L447"><span class="lineNum">     447</span> <span class="tlaGNC">     9298996 :    p.mat[Co_White][M_M]  = p.mat[Co_White][M_q] + p.mat[Co_White][M_r];</span></span>
-<span id="L448"><span class="lineNum">     448</span> <span class="tlaGNC">     9298996 :    p.mat[Co_White][M_m]  = p.mat[Co_White][M_b] + p.mat[Co_White][M_n];</span></span>
-<span id="L449"><span class="lineNum">     449</span> <span class="tlaGNC">     9298996 :    p.mat[Co_White][M_t]  = p.mat[Co_White][M_M] + p.mat[Co_White][M_m];</span></span>
+<span id="L446"><span class="lineNum">     446</span> <span class="tlaGNC">    10853906 : void updateMaterialOther(Position &amp;p) {</span></span>
+<span id="L447"><span class="lineNum">     447</span> <span class="tlaGNC">    10853906 :    p.mat[Co_White][M_M]  = p.mat[Co_White][M_q] + p.mat[Co_White][M_r];</span></span>
+<span id="L448"><span class="lineNum">     448</span> <span class="tlaGNC">    10853906 :    p.mat[Co_White][M_m]  = p.mat[Co_White][M_b] + p.mat[Co_White][M_n];</span></span>
+<span id="L449"><span class="lineNum">     449</span> <span class="tlaGNC">    10853906 :    p.mat[Co_White][M_t]  = p.mat[Co_White][M_M] + p.mat[Co_White][M_m];</span></span>
 <span id="L450"><span class="lineNum">     450</span>              :    const BitBoard wb     = p.whiteBishop();</span>
-<span id="L451"><span class="lineNum">     451</span> <span class="tlaGNC">     9298996 :    p.mat[Co_White][M_bl] = (uint8_t)BB::countBit(wb &amp; BB::whiteSquare);</span></span>
-<span id="L452"><span class="lineNum">     452</span> <span class="tlaGNC">     9298996 :    p.mat[Co_White][M_bd] = (uint8_t)BB::countBit(wb &amp; BB::blackSquare);</span></span>
+<span id="L451"><span class="lineNum">     451</span> <span class="tlaGNC">    10853906 :    p.mat[Co_White][M_bl] = (uint8_t)BB::countBit(wb &amp; BB::whiteSquare);</span></span>
+<span id="L452"><span class="lineNum">     452</span> <span class="tlaGNC">    10853906 :    p.mat[Co_White][M_bd] = (uint8_t)BB::countBit(wb &amp; BB::blackSquare);</span></span>
 <span id="L453"><span class="lineNum">     453</span>              : </span>
-<span id="L454"><span class="lineNum">     454</span> <span class="tlaGNC">     9298996 :    p.mat[Co_Black][M_M]  = p.mat[Co_Black][M_q] + p.mat[Co_Black][M_r];</span></span>
-<span id="L455"><span class="lineNum">     455</span> <span class="tlaGNC">     9298996 :    p.mat[Co_Black][M_m]  = p.mat[Co_Black][M_b] + p.mat[Co_Black][M_n];</span></span>
-<span id="L456"><span class="lineNum">     456</span> <span class="tlaGNC">     9298996 :    p.mat[Co_Black][M_t]  = p.mat[Co_Black][M_M] + p.mat[Co_Black][M_m];</span></span>
+<span id="L454"><span class="lineNum">     454</span> <span class="tlaGNC">    10853906 :    p.mat[Co_Black][M_M]  = p.mat[Co_Black][M_q] + p.mat[Co_Black][M_r];</span></span>
+<span id="L455"><span class="lineNum">     455</span> <span class="tlaGNC">    10853906 :    p.mat[Co_Black][M_m]  = p.mat[Co_Black][M_b] + p.mat[Co_Black][M_n];</span></span>
+<span id="L456"><span class="lineNum">     456</span> <span class="tlaGNC">    10853906 :    p.mat[Co_Black][M_t]  = p.mat[Co_Black][M_M] + p.mat[Co_Black][M_m];</span></span>
 <span id="L457"><span class="lineNum">     457</span>              :    const BitBoard bb     = p.blackBishop();</span>
-<span id="L458"><span class="lineNum">     458</span> <span class="tlaGNC">     9298996 :    p.mat[Co_Black][M_bl] = (uint8_t)BB::countBit(bb &amp; BB::whiteSquare);</span></span>
-<span id="L459"><span class="lineNum">     459</span> <span class="tlaGNC">     9298996 :    p.mat[Co_Black][M_bd] = (uint8_t)BB::countBit(bb &amp; BB::blackSquare);</span></span>
-<span id="L460"><span class="lineNum">     460</span> <span class="tlaGNC">     9298996 : }</span></span>
+<span id="L458"><span class="lineNum">     458</span> <span class="tlaGNC">    10853906 :    p.mat[Co_Black][M_bl] = (uint8_t)BB::countBit(bb &amp; BB::whiteSquare);</span></span>
+<span id="L459"><span class="lineNum">     459</span> <span class="tlaGNC">    10853906 :    p.mat[Co_Black][M_bd] = (uint8_t)BB::countBit(bb &amp; BB::blackSquare);</span></span>
+<span id="L460"><span class="lineNum">     460</span> <span class="tlaGNC">    10853906 : }</span></span>
 <span id="L461"><span class="lineNum">     461</span>              : </span>
-<span id="L462"><span class="lineNum">     462</span> <span class="tlaGNC">         271 : void initMaterial(Position &amp;p) { // M_p .. M_k is the same as P_wp .. P_wk</span></span>
-<span id="L463"><span class="lineNum">     463</span> <span class="tlaGNC">         813 :    for (Color c = Co_White; c &lt; Co_End; ++c)</span></span>
-<span id="L464"><span class="lineNum">     464</span> <span class="tlaGNC">        3794 :       for (Piece pp = P_wp; pp &lt;= P_wk; ++pp) </span></span>
-<span id="L465"><span class="lineNum">     465</span> <span class="tlaGNC">        3252 :          p.mat[c][pp] = static_cast&lt;uint8_t&gt;(BB::countBit(p.pieces_const(c, pp)));</span></span>
-<span id="L466"><span class="lineNum">     466</span> <span class="tlaGNC">         271 :    updateMaterialOther(p);</span></span>
-<span id="L467"><span class="lineNum">     467</span> <span class="tlaGNC">         271 : }</span></span>
+<span id="L462"><span class="lineNum">     462</span> <span class="tlaGNC">         308 : void initMaterial(Position &amp;p) { // M_p .. M_k is the same as P_wp .. P_wk</span></span>
+<span id="L463"><span class="lineNum">     463</span> <span class="tlaGNC">         924 :    for (Color c = Co_White; c &lt; Co_End; ++c)</span></span>
+<span id="L464"><span class="lineNum">     464</span> <span class="tlaGNC">        4312 :       for (Piece pp = P_wp; pp &lt;= P_wk; ++pp) </span></span>
+<span id="L465"><span class="lineNum">     465</span> <span class="tlaGNC">        3696 :          p.mat[c][pp] = static_cast&lt;uint8_t&gt;(BB::countBit(p.pieces_const(c, pp)));</span></span>
+<span id="L466"><span class="lineNum">     466</span> <span class="tlaGNC">         308 :    updateMaterialOther(p);</span></span>
+<span id="L467"><span class="lineNum">     467</span> <span class="tlaGNC">         308 : }</span></span>
 <span id="L468"><span class="lineNum">     468</span>              : </span>
-<span id="L469"><span class="lineNum">     469</span> <span class="tlaGNC">      415955 : void updateMaterialProm(Position &amp;p, const Square toBeCaptured, const MType mt) {</span></span>
-<span id="L470"><span class="lineNum">     470</span> <span class="tlaGNC">      415955 :    --p.mat[~p.c][PieceTools::getPieceType(p, toBeCaptured)]; // capture if to square is not empty</span></span>
-<span id="L471"><span class="lineNum">     471</span> <span class="tlaGNC">      415955 :    --p.mat[p.c][M_p];                                        // pawn</span></span>
-<span id="L472"><span class="lineNum">     472</span> <span class="tlaGNC">      415955 :    ++p.mat[p.c][promShift(mt)];                              // prom piece</span></span>
-<span id="L473"><span class="lineNum">     473</span> <span class="tlaGNC">      415955 : }</span></span>
+<span id="L469"><span class="lineNum">     469</span> <span class="tlaGNC">      422894 : void updateMaterialProm(Position &amp;p, const Square toBeCaptured, const MType mt) {</span></span>
+<span id="L470"><span class="lineNum">     470</span> <span class="tlaGNC">      422894 :    --p.mat[~p.c][PieceTools::getPieceType(p, toBeCaptured)]; // capture if to square is not empty</span></span>
+<span id="L471"><span class="lineNum">     471</span> <span class="tlaGNC">      422894 :    --p.mat[p.c][M_p];                                        // pawn</span></span>
+<span id="L472"><span class="lineNum">     472</span> <span class="tlaGNC">      422894 :    ++p.mat[p.c][promShift(mt)];                              // prom piece</span></span>
+<span id="L473"><span class="lineNum">     473</span> <span class="tlaGNC">      422894 : }</span></span>
 <span id="L474"><span class="lineNum">     474</span>              : </span>
 <span id="L475"><span class="lineNum">     475</span>              : } // namespace MaterialHash</span>
         </pre>
