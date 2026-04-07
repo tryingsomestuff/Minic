@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-03-02 16:42:41</td>
+            <td class="headerValue">2026-04-07 09:53:30</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -353,14 +353,14 @@
 <span id="L291"><span class="lineNum">     291</span>              :          i += vstep * 4;</span>
 <span id="L292"><span class="lineNum">     292</span>              :       }</span>
 <span id="L293"><span class="lineNum">     293</span>              :    }</span>
-<span id="L294"><span class="lineNum">     294</span> <span class="tlaGNC tlaBgGNC">    19147203 :    while (i &lt; unrollx) {</span></span>
-<span id="L295"><span class="lineNum">     295</span> <span class="tlaGNC">    12764802 :          simdClippedReLU128Helper&lt;Q&gt;(x + i, zero, un);</span></span>
-<span id="L296"><span class="lineNum">     296</span> <span class="tlaGNC">    12764802 :       i += vstep;</span></span>
+<span id="L294"><span class="lineNum">     294</span> <span class="tlaGNC tlaBgGNC">    19147221 :    while (i &lt; unrollx) {</span></span>
+<span id="L295"><span class="lineNum">     295</span> <span class="tlaGNC">    12764814 :          simdClippedReLU128Helper&lt;Q&gt;(x + i, zero, un);</span></span>
+<span id="L296"><span class="lineNum">     296</span> <span class="tlaGNC">    12764814 :       i += vstep;</span></span>
 <span id="L297"><span class="lineNum">     297</span>              :    }</span>
 <span id="L298"><span class="lineNum">     298</span>              : }</span>
 <span id="L299"><span class="lineNum">     299</span>              : </span>
 <span id="L300"><span class="lineNum">     300</span>              : template&lt;size_t N, bool Q&gt; </span>
-<span id="L301"><span class="lineNum">     301</span> <span class="tlaGNC">    36166939 : [[nodiscard]] float simdDotProduct128(const float* RESTRICT x, const float* RESTRICT y) {</span></span>
+<span id="L301"><span class="lineNum">     301</span> <span class="tlaGNC">    36166973 : [[nodiscard]] float simdDotProduct128(const float* RESTRICT x, const float* RESTRICT y) {</span></span>
 <span id="L302"><span class="lineNum">     302</span>              :    constexpr int vstep    = v_nlanes_f32_128;</span>
 <span id="L303"><span class="lineNum">     303</span>              :    constexpr int unrollx4 = N &amp; (-vstep * 4);</span>
 <span id="L304"><span class="lineNum">     304</span>              :    constexpr int unrollx  = N &amp; -vstep;</span>
@@ -370,20 +370,20 @@
 <span id="L308"><span class="lineNum">     308</span>              :       v_f32_128 vsum1 = v_zero_f32_128();</span>
 <span id="L309"><span class="lineNum">     309</span>              :       v_f32_128 vsum2 = v_zero_f32_128();</span>
 <span id="L310"><span class="lineNum">     310</span>              :       v_f32_128 vsum3 = v_zero_f32_128();</span>
-<span id="L311"><span class="lineNum">     311</span> <span class="tlaGNC">   872261470 :       while (i &lt; unrollx4) {</span></span>
-<span id="L312"><span class="lineNum">     312</span> <span class="tlaGNC">   836094531 :          vsum0 = v_muladd_f32_128(v_load_f32_128(x + i            ), v_load_f32_128(y + i            ), vsum0);</span></span>
-<span id="L313"><span class="lineNum">     313</span> <span class="tlaGNC">   836094531 :          vsum1 = v_muladd_f32_128(v_load_f32_128(x + i + vstep    ), v_load_f32_128(y + i + vstep    ), vsum1);</span></span>
-<span id="L314"><span class="lineNum">     314</span> <span class="tlaGNC">   836094531 :          vsum2 = v_muladd_f32_128(v_load_f32_128(x + i + vstep * 2), v_load_f32_128(y + i + vstep * 2), vsum2);</span></span>
-<span id="L315"><span class="lineNum">     315</span> <span class="tlaGNC">   836094531 :          vsum3 = v_muladd_f32_128(v_load_f32_128(x + i + vstep * 3), v_load_f32_128(y + i + vstep * 3), vsum3);</span></span>
-<span id="L316"><span class="lineNum">     316</span> <span class="tlaGNC">   816947328 :          i += vstep * 4;</span></span>
+<span id="L311"><span class="lineNum">     311</span> <span class="tlaGNC">   872262290 :       while (i &lt; unrollx4) {</span></span>
+<span id="L312"><span class="lineNum">     312</span> <span class="tlaGNC">   836095317 :          vsum0 = v_muladd_f32_128(v_load_f32_128(x + i            ), v_load_f32_128(y + i            ), vsum0);</span></span>
+<span id="L313"><span class="lineNum">     313</span> <span class="tlaGNC">   836095317 :          vsum1 = v_muladd_f32_128(v_load_f32_128(x + i + vstep    ), v_load_f32_128(y + i + vstep    ), vsum1);</span></span>
+<span id="L314"><span class="lineNum">     314</span> <span class="tlaGNC">   836095317 :          vsum2 = v_muladd_f32_128(v_load_f32_128(x + i + vstep * 2), v_load_f32_128(y + i + vstep * 2), vsum2);</span></span>
+<span id="L315"><span class="lineNum">     315</span> <span class="tlaGNC">   836095317 :          vsum3 = v_muladd_f32_128(v_load_f32_128(x + i + vstep * 3), v_load_f32_128(y + i + vstep * 3), vsum3);</span></span>
+<span id="L316"><span class="lineNum">     316</span> <span class="tlaGNC">   816948096 :          i += vstep * 4;</span></span>
 <span id="L317"><span class="lineNum">     317</span>              :       }</span>
 <span id="L318"><span class="lineNum">     318</span>              :       vsum0 = v_add_f32_128(v_add_f32_128(vsum0, vsum1), v_add_f32_128(vsum2, vsum3));</span>
 <span id="L319"><span class="lineNum">     319</span>              :    }</span>
-<span id="L320"><span class="lineNum">     320</span> <span class="tlaGNC">    57441609 :    while (i &lt; unrollx) {</span></span>
-<span id="L321"><span class="lineNum">     321</span> <span class="tlaGNC">    38294406 :       vsum0 = v_muladd_f32_128(v_load_f32_128(x + i), v_load_f32_128(y + i), vsum0);</span></span>
-<span id="L322"><span class="lineNum">     322</span> <span class="tlaGNC">    38294406 :       i += vstep;</span></span>
+<span id="L320"><span class="lineNum">     320</span> <span class="tlaGNC">    57441663 :    while (i &lt; unrollx) {</span></span>
+<span id="L321"><span class="lineNum">     321</span> <span class="tlaGNC">    38294442 :       vsum0 = v_muladd_f32_128(v_load_f32_128(x + i), v_load_f32_128(y + i), vsum0);</span></span>
+<span id="L322"><span class="lineNum">     322</span> <span class="tlaGNC">    38294442 :       i += vstep;</span></span>
 <span id="L323"><span class="lineNum">     323</span>              :    }</span>
-<span id="L324"><span class="lineNum">     324</span> <span class="tlaGNC">    36166939 :    return v_sum_f32_128(vsum0);</span></span>
+<span id="L324"><span class="lineNum">     324</span> <span class="tlaGNC">    36166973 :    return v_sum_f32_128(vsum0);</span></span>
 <span id="L325"><span class="lineNum">     325</span>              : }</span>
 <span id="L326"><span class="lineNum">     326</span>              : </span>
 <span id="L327"><span class="lineNum">     327</span>              : #endif</span>
@@ -435,8 +435,8 @@
 <span id="L373"><span class="lineNum">     373</span>              : #endif</span>
 <span id="L374"><span class="lineNum">     374</span>              : #if V_SIMD_128</span>
 <span id="L375"><span class="lineNum">     375</span>              :    constexpr size_t vstep128 = 8;</span>
-<span id="L376"><span class="lineNum">     376</span> <span class="tlaGNC"> 25357484614 :    while (i + vstep128 &lt;= N) {</span></span>
-<span id="L377"><span class="lineNum">     377</span> <span class="tlaGNC"> 24839984928 :       _mm_store_si128(reinterpret_cast&lt;__m128i*&gt;(dst + i), _mm_add_epi16(_mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(dst + i)), _mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(src + i))));</span></span>
+<span id="L376"><span class="lineNum">     376</span> <span class="tlaGNC"> 25357431694 :    while (i + vstep128 &lt;= N) {</span></span>
+<span id="L377"><span class="lineNum">     377</span> <span class="tlaGNC"> 24839933088 :       _mm_store_si128(reinterpret_cast&lt;__m128i*&gt;(dst + i), _mm_add_epi16(_mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(dst + i)), _mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(src + i))));</span></span>
 <span id="L378"><span class="lineNum">     378</span>              :       i += vstep128;</span>
 <span id="L379"><span class="lineNum">     379</span>              :    }</span>
 <span id="L380"><span class="lineNum">     380</span>              : #endif</span>
@@ -467,8 +467,8 @@
 <span id="L405"><span class="lineNum">     405</span>              : #endif</span>
 <span id="L406"><span class="lineNum">     406</span>              : #if V_SIMD_128</span>
 <span id="L407"><span class="lineNum">     407</span>              :    constexpr size_t vstep128 = 8;</span>
-<span id="L408"><span class="lineNum">     408</span> <span class="tlaGNC"> 16794124172 :    while (i + vstep128 &lt;= N) {</span></span>
-<span id="L409"><span class="lineNum">     409</span> <span class="tlaGNC"> 16451386944 :       _mm_store_si128(reinterpret_cast&lt;__m128i*&gt;(dst + i), _mm_sub_epi16(_mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(dst + i)), _mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(src + i))));</span></span>
+<span id="L408"><span class="lineNum">     408</span> <span class="tlaGNC"> 16794112216 :    while (i + vstep128 &lt;= N) {</span></span>
+<span id="L409"><span class="lineNum">     409</span> <span class="tlaGNC"> 16451375232 :       _mm_store_si128(reinterpret_cast&lt;__m128i*&gt;(dst + i), _mm_sub_epi16(_mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(dst + i)), _mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(src + i))));</span></span>
 <span id="L410"><span class="lineNum">     410</span>              :       i += vstep128;</span>
 <span id="L411"><span class="lineNum">     411</span>              :    }</span>
 <span id="L412"><span class="lineNum">     412</span>              : #endif</span>
@@ -488,8 +488,8 @@
 <span id="L426"><span class="lineNum">     426</span>              : #endif</span>
 <span id="L427"><span class="lineNum">     427</span>              : #if V_SIMD_128</span>
 <span id="L428"><span class="lineNum">     428</span>              :    constexpr size_t vstep128 = 8;</span>
-<span id="L429"><span class="lineNum">     429</span> <span class="tlaGNC">   423218677 :    while (i + vstep128 &lt;= N) {</span></span>
-<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC">   414582720 :       _mm_store_si128(reinterpret_cast&lt;__m128i*&gt;(dst + i), _mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(src + i)));</span></span>
+<span id="L429"><span class="lineNum">     429</span> <span class="tlaGNC">   423215405 :    while (i + vstep128 &lt;= N) {</span></span>
+<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC">   414579504 :       _mm_store_si128(reinterpret_cast&lt;__m128i*&gt;(dst + i), _mm_load_si128(reinterpret_cast&lt;const __m128i*&gt;(src + i)));</span></span>
 <span id="L431"><span class="lineNum">     431</span>              :       i += vstep128;</span>
 <span id="L432"><span class="lineNum">     432</span>              :    }</span>
 <span id="L433"><span class="lineNum">     433</span>              : #endif</span>
@@ -509,8 +509,8 @@
 <span id="L447"><span class="lineNum">     447</span>              : #endif</span>
 <span id="L448"><span class="lineNum">     448</span>              : #if V_SIMD_128</span>
 <span id="L449"><span class="lineNum">     449</span>              :    constexpr size_t vstep128 = 4;</span>
-<span id="L450"><span class="lineNum">     450</span> <span class="tlaGNC">    23402137 :    while (i + vstep128 &lt;= N) {</span></span>
-<span id="L451"><span class="lineNum">     451</span> <span class="tlaGNC">    17019736 :       _mm_store_ps(dst + i, _mm_load_ps(src + i));</span></span>
+<span id="L450"><span class="lineNum">     450</span> <span class="tlaGNC">    23402159 :    while (i + vstep128 &lt;= N) {</span></span>
+<span id="L451"><span class="lineNum">     451</span> <span class="tlaGNC">    17019752 :       _mm_store_ps(dst + i, _mm_load_ps(src + i));</span></span>
 <span id="L452"><span class="lineNum">     452</span>              :       i += vstep128;</span>
 <span id="L453"><span class="lineNum">     453</span>              :    }</span>
 <span id="L454"><span class="lineNum">     454</span>              : #endif</span>
@@ -576,11 +576,11 @@
 <span id="L514"><span class="lineNum">     514</span>              :    const __m128 vscale128 = _mm_set1_ps(scale);</span>
 <span id="L515"><span class="lineNum">     515</span>              :    const __m128 vzero128  = _mm_setzero_ps();</span>
 <span id="L516"><span class="lineNum">     516</span>              :    const __m128 vone128   = _mm_set1_ps(1.0f);</span>
-<span id="L517"><span class="lineNum">     517</span> <span class="tlaGNC">   410601131 :    while (i + vstep128 &lt;= N) {</span></span>
-<span id="L518"><span class="lineNum">     518</span> <span class="tlaGNC">   408473664 :       const __m128i src_i16 = _mm_loadl_epi64(reinterpret_cast&lt;const __m128i*&gt;(src + i));</span></span>
+<span id="L517"><span class="lineNum">     517</span> <span class="tlaGNC">   410601517 :    while (i + vstep128 &lt;= N) {</span></span>
+<span id="L518"><span class="lineNum">     518</span> <span class="tlaGNC">   408474048 :       const __m128i src_i16 = _mm_loadl_epi64(reinterpret_cast&lt;const __m128i*&gt;(src + i));</span></span>
 <span id="L519"><span class="lineNum">     519</span>              :       const __m128i src_i32 = v_cvtepi16_epi32_128(src_i16);</span>
 <span id="L520"><span class="lineNum">     520</span>              :       const __m128  deq     = _mm_mul_ps(_mm_cvtepi32_ps(src_i32), vscale128);</span>
-<span id="L521"><span class="lineNum">     521</span> <span class="tlaGNC">   408473664 :       _mm_store_ps(dst + i, _mm_max_ps(vzero128, _mm_min_ps(vone128, deq)));</span></span>
+<span id="L521"><span class="lineNum">     521</span> <span class="tlaGNC">   408474048 :       _mm_store_ps(dst + i, _mm_max_ps(vzero128, _mm_min_ps(vone128, deq)));</span></span>
 <span id="L522"><span class="lineNum">     522</span>              :       i += vstep128;</span>
 <span id="L523"><span class="lineNum">     523</span>              :    }</span>
 <span id="L524"><span class="lineNum">     524</span>              : #endif</span>
@@ -656,7 +656,7 @@
 <span id="L594"><span class="lineNum">     594</span>              : </span>
 <span id="L595"><span class="lineNum">     595</span>              : #if V_SIMD_128</span>
 <span id="L596"><span class="lineNum">     596</span>              :    if (N-i &gt;= 4){</span>
-<span id="L597"><span class="lineNum">     597</span> <span class="tlaGNC">    53186675 :       dot += simdDotProduct128&lt;N,Q&gt;(x+i,y+i);</span></span>
+<span id="L597"><span class="lineNum">     597</span> <span class="tlaGNC">    53186725 :       dot += simdDotProduct128&lt;N,Q&gt;(x+i,y+i);</span></span>
 <span id="L598"><span class="lineNum">     598</span>              :       i += ((N-i) &amp; -4);</span>
 <span id="L599"><span class="lineNum">     599</span>              :    }</span>
 <span id="L600"><span class="lineNum">     600</span>              : #endif</span>

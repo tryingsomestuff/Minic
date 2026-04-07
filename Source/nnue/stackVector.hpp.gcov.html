@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-03-02 16:42:41</td>
+            <td class="headerValue">2026-04-07 09:53:30</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -71,31 +71,31 @@
 <span id="L9"><span class="lineNum">       9</span>              :    alignas(NNUEALIGNMENT) T data[dim];</span>
 <span id="L10"><span class="lineNum">      10</span>              : </span>
 <span id="L11"><span class="lineNum">      11</span>              :    template&lt;typename T2&gt; </span>
-<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC tlaBgGNC">   517499686 :    CONSTEXPR StackVector&lt;T, dim, Q&gt;&amp; add_(const T2* other) {</span></span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC tlaBgGNC">   517498606 :    CONSTEXPR StackVector&lt;T, dim, Q&gt;&amp; add_(const T2* other) {</span></span>
 <span id="L13"><span class="lineNum">      13</span>              : #ifdef USE_SIMD_INTRIN</span>
 <span id="L14"><span class="lineNum">      14</span>              :       if constexpr (std::is_same_v&lt;T, int16_t&gt; &amp;&amp; std::is_same_v&lt;T2, int16_t&gt;) {</span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">   517499686 :          simdAdd_i16&lt;dim&gt;(data, other);</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">   517498606 :          simdAdd_i16&lt;dim&gt;(data, other);</span></span>
 <span id="L16"><span class="lineNum">      16</span>              :       } else</span>
 <span id="L17"><span class="lineNum">      17</span>              : #endif</span>
 <span id="L18"><span class="lineNum">      18</span>              :       {</span>
 <span id="L19"><span class="lineNum">      19</span>              : #pragma omp simd</span>
 <span id="L20"><span class="lineNum">      20</span>              :          for (size_t i = 0; i &lt; dim; ++i) { data[i] += other[i]; }</span>
 <span id="L21"><span class="lineNum">      21</span>              :       }</span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">   517499686 :       return *this;</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC">   517498606 :       return *this;</span></span>
 <span id="L23"><span class="lineNum">      23</span>              :    }</span>
 <span id="L24"><span class="lineNum">      24</span>              : </span>
 <span id="L25"><span class="lineNum">      25</span>              :    template&lt;typename T2&gt; </span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">   342737228 :    CONSTEXPR StackVector&lt;T, dim, Q&gt;&amp; sub_(const T2* other) {</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">   342736984 :    CONSTEXPR StackVector&lt;T, dim, Q&gt;&amp; sub_(const T2* other) {</span></span>
 <span id="L27"><span class="lineNum">      27</span>              : #ifdef USE_SIMD_INTRIN</span>
 <span id="L28"><span class="lineNum">      28</span>              :       if constexpr (std::is_same_v&lt;T, int16_t&gt; &amp;&amp; std::is_same_v&lt;T2, int16_t&gt;) {</span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">   342737228 :          simdSub_i16&lt;dim&gt;(data, other);</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">   342736984 :          simdSub_i16&lt;dim&gt;(data, other);</span></span>
 <span id="L30"><span class="lineNum">      30</span>              :       } else</span>
 <span id="L31"><span class="lineNum">      31</span>              : #endif</span>
 <span id="L32"><span class="lineNum">      32</span>              :       {</span>
 <span id="L33"><span class="lineNum">      33</span>              : #pragma omp simd</span>
 <span id="L34"><span class="lineNum">      34</span>              :          for (size_t i = 0; i &lt; dim; ++i) { data[i] -= other[i]; }</span>
 <span id="L35"><span class="lineNum">      35</span>              :       }</span>
-<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">   342737228 :       return *this;</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">   342736984 :       return *this;</span></span>
 <span id="L37"><span class="lineNum">      37</span>              :    }</span>
 <span id="L38"><span class="lineNum">      38</span>              : </span>
 <span id="L39"><span class="lineNum">      39</span>              : #ifndef USE_SIMD_INTRIN</span>
@@ -113,7 +113,7 @@
 <span id="L51"><span class="lineNum">      51</span>              :       return *this;</span>
 <span id="L52"><span class="lineNum">      52</span>              :    }   </span>
 <span id="L53"><span class="lineNum">      53</span>              : #else</span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">    17019736 :    T dot_(const T* other) const { return simdDotProduct&lt;dim,Q&gt;(data, other); }</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">    17019752 :    T dot_(const T* other) const { return simdDotProduct&lt;dim,Q&gt;(data, other); }</span></span>
 <span id="L55"><span class="lineNum">      55</span>              :    CONSTEXPR StackVector&lt;T, dim, Q&gt;&amp; activation_() { simdActivation&lt;dim,Q&gt;(data); return *this;}</span>
 <span id="L56"><span class="lineNum">      56</span>              : #endif</span>
 <span id="L57"><span class="lineNum">      57</span>              : </span>
@@ -121,7 +121,7 @@
 <span id="L59"><span class="lineNum">      59</span>              :    FORCE_FINLINE void from(const T2* other) {</span>
 <span id="L60"><span class="lineNum">      60</span>              : #ifdef USE_SIMD_INTRIN</span>
 <span id="L61"><span class="lineNum">      61</span>              :       if constexpr (std::is_same_v&lt;T, int16_t&gt; &amp;&amp; std::is_same_v&lt;T2, int16_t&gt;) {</span>
-<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">     8637140 :          simdCopy_i16&lt;dim&gt;(data, other);</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">     8637073 :          simdCopy_i16&lt;dim&gt;(data, other);</span></span>
 <span id="L63"><span class="lineNum">      63</span>              :       } else if constexpr (std::is_same_v&lt;T, float&gt; &amp;&amp; std::is_same_v&lt;T2, float&gt;) {</span>
 <span id="L64"><span class="lineNum">      64</span>              :          simdCopy_f32&lt;dim&gt;(data, other);</span>
 <span id="L65"><span class="lineNum">      65</span>              :       } else</span>

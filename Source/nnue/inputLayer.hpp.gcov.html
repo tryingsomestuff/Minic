@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-03-02 16:42:41</td>
+            <td class="headerValue">2026-04-07 09:53:30</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -88,13 +88,13 @@
 <span id="L26"><span class="lineNum">      26</span>              :    alignas(NNUEALIGNMENT) BIT b[nbB];</span>
 <span id="L27"><span class="lineNum">      27</span>              : </span>
 <span id="L28"><span class="lineNum">      28</span>              :    FORCE_FINLINE void insertIdx(const size_t idx, StackVector&lt;BIT, nbB, Q&gt;&amp; x) const {</span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC tlaBgGNC">   324993060 :       const WIT* wPtr = W + idx * dim1;</span></span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">   517499686 :       x.add_(wPtr);</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC tlaBgGNC">   324992881 :       const WIT* wPtr = W + idx * dim1;</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">   517498606 :       x.add_(wPtr);</span></span>
 <span id="L31"><span class="lineNum">      31</span>              :    }</span>
 <span id="L32"><span class="lineNum">      32</span>              : </span>
 <span id="L33"><span class="lineNum">      33</span>              :    FORCE_FINLINE void eraseIdx(const size_t idx, StackVector&lt;BIT, nbB, Q&gt;&amp; x) const {</span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">    17744168 :       const WIT* wPtr = W + idx * dim1;</span></span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">   342737228 :       x.sub_(wPtr);</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">    17744103 :       const WIT* wPtr = W + idx * dim1;</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">   342736984 :       x.sub_(wPtr);</span></span>
 <span id="L36"><span class="lineNum">      36</span>              :    }</span>
 <span id="L37"><span class="lineNum">      37</span>              : </span>
 <span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">          44 :    InputLayer&lt;NT, dim0, dim1, Q&gt;&amp; load_(WeightsReader&lt;NT&gt;&amp; ws) {</span></span>

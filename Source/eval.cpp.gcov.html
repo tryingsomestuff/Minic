@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-03-02 16:42:41</td>
+            <td class="headerValue">2026-04-07 09:53:30</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryMed">86.2&nbsp;%</td>
@@ -132,10 +132,10 @@
 <span id="L70"><span class="lineNum">      70</span> <span class="tlaGNC">     2319427 :    return pinned;</span></span>
 <span id="L71"><span class="lineNum">      71</span>              : }</span>
 <span id="L72"><span class="lineNum">      72</span>              : </span>
-<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">     2918516 : bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures &amp;features, EvalScore &amp;score) {</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">     2918521 : bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures &amp;features, EvalScore &amp;score) {</span></span>
 <span id="L74"><span class="lineNum">      74</span>              :    //if (DynamicConfig::FRC) return false;</span>
-<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">     2918516 :    score = features.SumUp();</span></span>
-<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">     2918516 :    return Abs(score[MG] + score[EG]) / 2 &gt; lazyThreshold;</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">     2918521 :    score = features.SumUp();</span></span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">     2918521 :    return Abs(score[MG] + score[EG]) / 2 &gt; lazyThreshold;</span></span>
 <span id="L77"><span class="lineNum">      77</span>              : }</span>
 <span id="L78"><span class="lineNum">      78</span>              : </span>
 <span id="L79"><span class="lineNum">      79</span> <span class="tlaUNC tlaBgUNC">           0 : bool forbidNNUE([[maybe_unused]] const Position &amp;p){</span></span>
@@ -188,9 +188,9 @@
 <span id="L126"><span class="lineNum">     126</span>              : }</span>
 <span id="L127"><span class="lineNum">     127</span>              : </span>
 <span id="L128"><span class="lineNum">     128</span>              : #ifdef WITH_NNUE</span>
-<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC tlaBgGNC">     2127467 : ScoreType NNUEEVal(const Position &amp; p, EvalData &amp;data, Searcher &amp;context, EvalFeatures &amp;features, bool secondTime = false){</span></span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC tlaBgGNC">     2127469 : ScoreType NNUEEVal(const Position &amp; p, EvalData &amp;data, Searcher &amp;context, EvalFeatures &amp;features, bool secondTime = false){</span></span>
 <span id="L130"><span class="lineNum">     130</span>              :    START_TIMER</span>
-<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">     2127467 :    if (DynamicConfig::armageddon) features.scalingFactor = 1.f; ///@todo better</span></span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">     2127469 :    if (DynamicConfig::armageddon) features.scalingFactor = 1.f; ///@todo better</span></span>
 <span id="L132"><span class="lineNum">     132</span>              :    /*</span>
 <span id="L133"><span class="lineNum">     133</span>              :    // king bucket</span>
 <span id="L134"><span class="lineNum">     134</span>              :    constexpr int kingBucket[64] = {</span>
@@ -209,45 +209,45 @@
 <span id="L147"><span class="lineNum">     147</span>              :    //const int bucketDivisor = 32/p.evaluator().weights.nbuckets;</span>
 <span id="L148"><span class="lineNum">     148</span>              :    //const int bucket = std::max(0, std::min(p.evaluator().weights.nbuckets-1, (std::min(32,static_cast&lt;int&gt;(BB::countBit(p.occupancy()))-1) / bucketDivisor)));</span>
 <span id="L149"><span class="lineNum">     149</span>              :    int bucket = 0;</span>
-<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">     2127467 :    if (data.gp &lt; 0.45f)</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">     2127469 :    if (data.gp &lt; 0.45f)</span></span>
 <span id="L151"><span class="lineNum">     151</span>              :       bucket = 0;</span>
 <span id="L152"><span class="lineNum">     152</span>              :    else</span>
 <span id="L153"><span class="lineNum">     153</span>              :       bucket = 1;</span>
 <span id="L154"><span class="lineNum">     154</span>              :    </span>
 <span id="L155"><span class="lineNum">     155</span>              :    // call the net</span>
-<span id="L156"><span class="lineNum">     156</span> <span class="tlaGNC">     2127467 :    ScoreType nnueScore = static_cast&lt;ScoreType&gt;(p.evaluator().propagate(p.c, bucket));</span></span>
+<span id="L156"><span class="lineNum">     156</span> <span class="tlaGNC">     2127469 :    ScoreType nnueScore = static_cast&lt;ScoreType&gt;(p.evaluator().propagate(p.c, bucket));</span></span>
 <span id="L157"><span class="lineNum">     157</span>              : </span>
 <span id="L158"><span class="lineNum">     158</span>              :    // fuse MG and EG score applying the EG scaling factor ///@todo, doesn't the net already learned that ????</span>
-<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">     2127467 :    nnueScore = ScaleScore({nnueScore, nnueScore}, data.gp, features.scalingFactor);</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">     2127469 :    nnueScore = ScaleScore({nnueScore, nnueScore}, data.gp, features.scalingFactor);</span></span>
 <span id="L160"><span class="lineNum">     160</span>              :    // NNUE evaluation scaling</span>
-<span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">     2127467 :    nnueScore = static_cast&lt;ScoreType&gt;((nnueScore * DynamicConfig::NNUEScaling) / 64);</span></span>
+<span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">     2127469 :    nnueScore = static_cast&lt;ScoreType&gt;((nnueScore * DynamicConfig::NNUEScaling) / 64);</span></span>
 <span id="L162"><span class="lineNum">     162</span>              :    // take contempt into account (no tempo with NNUE, </span>
 <span id="L163"><span class="lineNum">     163</span>              :    // the HalfKA net already take it into account but this is necessary for &quot;dynamic&quot; contempt from opponent)</span>
-<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">     2127467 :    nnueScore += ScaleScore(context.contempt, data.gp);</span></span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">     2127469 :    nnueScore += ScaleScore(context.contempt, data.gp);</span></span>
 <span id="L165"><span class="lineNum">     165</span>              :    // clamp score</span>
-<span id="L166"><span class="lineNum">     166</span> <span class="tlaGNC">     2127467 :    nnueScore = clampScore(nnueScore);</span></span>
-<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">     2127467 :    if (!DynamicConfig::armageddon){</span></span>
+<span id="L166"><span class="lineNum">     166</span> <span class="tlaGNC">     2127469 :    nnueScore = clampScore(nnueScore);</span></span>
+<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">     2127469 :    if (!DynamicConfig::armageddon){</span></span>
 <span id="L168"><span class="lineNum">     168</span>              :       // apply scaling factor based on fifty move rule</span>
-<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC">     2127467 :       nnueScore = fiftyScale(nnueScore, p.fifty);</span></span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC">     2127469 :       nnueScore = fiftyScale(nnueScore, p.fifty);</span></span>
 <span id="L170"><span class="lineNum">     170</span>              :    }</span>
-<span id="L171"><span class="lineNum">     171</span> <span class="tlaGNC">     2127467 :    context.stats.incr(secondTime ? Stats::sid_evalNNUE2 : Stats::sid_evalNNUE);</span></span>
+<span id="L171"><span class="lineNum">     171</span> <span class="tlaGNC">     2127469 :    context.stats.incr(secondTime ? Stats::sid_evalNNUE2 : Stats::sid_evalNNUE);</span></span>
 <span id="L172"><span class="lineNum">     172</span>              :    // apply variants scoring if requiered</span>
 <span id="L173"><span class="lineNum">     173</span>              :    STOP_AND_SUM_TIMER(NNUE)</span>
-<span id="L174"><span class="lineNum">     174</span> <span class="tlaGNC">     2127467 :    return variantScore(nnueScore, p.halfmoves, context.height_, p.c);   </span></span>
+<span id="L174"><span class="lineNum">     174</span> <span class="tlaGNC">     2127469 :    return variantScore(nnueScore, p.halfmoves, context.height_, p.c);   </span></span>
 <span id="L175"><span class="lineNum">     175</span>              : }</span>
 <span id="L176"><span class="lineNum">     176</span>              : #endif</span>
 <span id="L177"><span class="lineNum">     177</span>              : </span>
-<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">     2919045 : ScoreType eval(const Position &amp;p, EvalData &amp;data, Searcher &amp;context, bool allowEGEvaluation, bool display) {</span></span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">     2919047 : ScoreType eval(const Position &amp;p, EvalData &amp;data, Searcher &amp;context, bool allowEGEvaluation, bool display) {</span></span>
 <span id="L179"><span class="lineNum">     179</span>              :    START_TIMER</span>
 <span id="L180"><span class="lineNum">     180</span>              : </span>
-<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">     2919045 :    if (DynamicConfig::antichess) return evalAntiChess(p, data, context, allowEGEvaluation, display);</span></span>
+<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">     2919047 :    if (DynamicConfig::antichess) return evalAntiChess(p, data, context, allowEGEvaluation, display);</span></span>
 <span id="L182"><span class="lineNum">     182</span>              :    ///@todo other variants</span>
 <span id="L183"><span class="lineNum">     183</span>              : </span>
 <span id="L184"><span class="lineNum">     184</span>              :    // in some variant (like antichess) king is not mandatory</span>
 <span id="L185"><span class="lineNum">     185</span>              :    const bool kingIsMandatory = DynamicConfig::isKingMandatory();</span>
 <span id="L186"><span class="lineNum">     186</span>              : </span>
 <span id="L187"><span class="lineNum">     187</span>              :    // if no more pieces except maybe kings, end of game as draw in most standard variants</span>
-<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">     2919045 :    if ( (p.occupancy() &amp; ~p.allKing()) == emptyBitBoard ){</span></span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">     2919047 :    if ( (p.occupancy() &amp; ~p.allKing()) == emptyBitBoard ){</span></span>
 <span id="L189"><span class="lineNum">     189</span>              :       if (kingIsMandatory ){ </span>
 <span id="L190"><span class="lineNum">     190</span>              :          // drawScore take some variants into account like armageddon</span>
 <span id="L191"><span class="lineNum">     191</span> <span class="tlaUNC tlaBgUNC">           0 :          return context.drawScore(p, context.height_);</span></span>
@@ -258,7 +258,7 @@
 <span id="L196"><span class="lineNum">     196</span>              :    }</span>
 <span id="L197"><span class="lineNum">     197</span>              : </span>
 <span id="L198"><span class="lineNum">     198</span>              :    // is it player with the white pieces turn ?</span>
-<span id="L199"><span class="lineNum">     199</span> <span class="tlaGNC tlaBgGNC">     2919045 :    const bool white2Play = p.c == Co_White;</span></span>
+<span id="L199"><span class="lineNum">     199</span> <span class="tlaGNC tlaBgGNC">     2919047 :    const bool white2Play = p.c == Co_White;</span></span>
 <span id="L200"><span class="lineNum">     200</span>              : </span>
 <span id="L201"><span class="lineNum">     201</span>              : #ifdef DEBUG_KING_CAP</span>
 <span id="L202"><span class="lineNum">     202</span>              :    if (kingIsMandatory) {</span>
@@ -281,32 +281,32 @@
 <span id="L219"><span class="lineNum">     219</span>              :    EvalFeatures features;</span>
 <span id="L220"><span class="lineNum">     220</span>              : </span>
 <span id="L221"><span class="lineNum">     221</span>              :    // Material evaluation (most often from Material table)</span>
-<span id="L222"><span class="lineNum">     222</span> <span class="tlaGNC">     2919045 :    if (const Hash matHash = MaterialHash::getMaterialHash(p.mat); matHash != nullHash) {</span></span>
+<span id="L222"><span class="lineNum">     222</span> <span class="tlaGNC">     2919047 :    if (const Hash matHash = MaterialHash::getMaterialHash(p.mat); matHash != nullHash) {</span></span>
 <span id="L223"><span class="lineNum">     223</span>              :       context.stats.incr(Stats::sid_materialTableHits);</span>
 <span id="L224"><span class="lineNum">     224</span>              :       // Get material hash data</span>
 <span id="L225"><span class="lineNum">     225</span>              :       const MaterialHash::MaterialHashEntry &amp;MEntry = MaterialHash::materialHashTable[matHash];</span>
 <span id="L226"><span class="lineNum">     226</span>              :       // update EvalData and EvalFeatures</span>
-<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">     2918200 :       data.gp = MEntry.gamePhase();</span></span>
-<span id="L228"><span class="lineNum">     228</span> <span class="tlaGNC">     2918200 :       features.scores[F_material] += MEntry.score;</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">     2918202 :       data.gp = MEntry.gamePhase();</span></span>
+<span id="L228"><span class="lineNum">     228</span> <span class="tlaGNC">     2918202 :       features.scores[F_material] += MEntry.score;</span></span>
 <span id="L229"><span class="lineNum">     229</span>              : </span>
 <span id="L230"><span class="lineNum">     230</span>              :       // end game knowledge (helper or scaling), only for most standard chess variants with kings on the board</span>
-<span id="L231"><span class="lineNum">     231</span> <span class="tlaGNC">     2918200 :       if (allowEGEvaluation &amp;&amp; kingIsMandatory &amp;&amp; (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] &lt; 5) ) {</span></span>
+<span id="L231"><span class="lineNum">     231</span> <span class="tlaGNC">     2918202 :       if (allowEGEvaluation &amp;&amp; kingIsMandatory &amp;&amp; (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] &lt; 5) ) {</span></span>
 <span id="L232"><span class="lineNum">     232</span>              :          // let's verify that the is no naive capture before using end-game knowledge</span>
-<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">     1489005 :          MoveList moves;</span></span>
-<span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">     1489005 :          MoveGen::generate&lt;MoveGen::GP_cap&gt;(p, moves);</span></span>
+<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">     1488981 :          MoveList moves;</span></span>
+<span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">     1488981 :          MoveGen::generate&lt;MoveGen::GP_cap&gt;(p, moves);</span></span>
 <span id="L235"><span class="lineNum">     235</span>              :          bool hasCapture = false;</span>
-<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">     1554297 :          for (auto m : moves){</span></span>
-<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC">     1295726 :             Position p2 = p;</span></span>
-<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">     1295726 :             if (const MoveInfo moveInfo(p2, m); applyMove(p2,moveInfo, true)){</span></span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">     1554270 :          for (auto m : moves){</span></span>
+<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC">     1295701 :             Position p2 = p;</span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">     1295701 :             if (const MoveInfo moveInfo(p2, m); applyMove(p2,moveInfo, true)){</span></span>
 <span id="L239"><span class="lineNum">     239</span>              :                hasCapture = true;</span>
-<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">     1230434 :                break;</span></span>
+<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">     1230412 :                break;</span></span>
 <span id="L241"><span class="lineNum">     241</span>              :             }</span>
-<span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">     1295726 :          }</span></span>
+<span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">     1295701 :          }</span></span>
 <span id="L243"><span class="lineNum">     243</span>              :          // probe endgame knowledge only if position is quiet from stm pov</span>
 <span id="L244"><span class="lineNum">     244</span>              :          if (!hasCapture) {</span>
-<span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">      258571 :             const Color winningSideEG = features.scores[F_material][EG] &gt; 0 ? Co_White : Co_Black;</span></span>
+<span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">      258569 :             const Color winningSideEG = features.scores[F_material][EG] &gt; 0 ? Co_White : Co_Black;</span></span>
 <span id="L246"><span class="lineNum">     246</span>              :             // helpers for various endgame</span>
-<span id="L247"><span class="lineNum">     247</span> <span class="tlaGNC">      258571 :             if (MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper) {</span></span>
+<span id="L247"><span class="lineNum">     247</span> <span class="tlaGNC">      258569 :             if (MEntry.t == MaterialHash::Ter_WhiteWinWithHelper || MEntry.t == MaterialHash::Ter_BlackWinWithHelper) {</span></span>
 <span id="L248"><span class="lineNum">     248</span>              :                STOP_AND_SUM_TIMER(Eval)</span>
 <span id="L249"><span class="lineNum">     249</span>              :                context.stats.incr(Stats::sid_materialTableHelper);</span>
 <span id="L250"><span class="lineNum">     250</span>              :                const ScoreType materialTableScore =</span>
@@ -414,19 +414,19 @@
 <span id="L352"><span class="lineNum">     352</span>              : </span>
 <span id="L353"><span class="lineNum">     353</span>              : #ifdef WITH_NNUE</span>
 <span id="L354"><span class="lineNum">     354</span>              :    const bool forbiddenNNUE = forbidNNUE(p) &amp;&amp; !DynamicConfig::forceNNUE;</span>
-<span id="L355"><span class="lineNum">     355</span> <span class="tlaGNC">     2918959 :    if (DynamicConfig::useNNUE &amp;&amp; !forbiddenNNUE) {</span></span>
+<span id="L355"><span class="lineNum">     355</span> <span class="tlaGNC">     2918961 :    if (DynamicConfig::useNNUE &amp;&amp; !forbiddenNNUE) {</span></span>
 <span id="L356"><span class="lineNum">     356</span>              :       // we will stay to classic eval when the game is already decided (to gain some nps)</span>
 <span id="L357"><span class="lineNum">     357</span>              :       ///@todo use data.gp inside NNUE condition ?</span>
-<span id="L358"><span class="lineNum">     358</span> <span class="tlaGNC">     5837474 :       if (EvalScore score; DynamicConfig::forceNNUE ||</span></span>
-<span id="L359"><span class="lineNum">     359</span> <span class="tlaGNC">     2918516 :           !isLazyHigh(static_cast&lt;ScoreType&gt;(DynamicConfig::NNUEThreshold), features, score)) {</span></span>
+<span id="L358"><span class="lineNum">     358</span> <span class="tlaGNC">     5837481 :       if (EvalScore score; DynamicConfig::forceNNUE ||</span></span>
+<span id="L359"><span class="lineNum">     359</span> <span class="tlaGNC">     2918521 :           !isLazyHigh(static_cast&lt;ScoreType&gt;(DynamicConfig::NNUEThreshold), features, score)) {</span></span>
 <span id="L360"><span class="lineNum">     360</span>              :          STOP_AND_SUM_TIMER(Eval)</span>
-<span id="L361"><span class="lineNum">     361</span> <span class="tlaGNC">     2121991 :          ScoreType nnueEval = NNUEEVal(p, data, context, features);</span></span>
+<span id="L361"><span class="lineNum">     361</span> <span class="tlaGNC">     2121993 :          ScoreType nnueEval = NNUEEVal(p, data, context, features);</span></span>
 <span id="L362"><span class="lineNum">     362</span>              : </span>
 <span id="L363"><span class="lineNum">     363</span>              :          // random factor in opening if requiered</span>
-<span id="L364"><span class="lineNum">     364</span> <span class="tlaGNC">     2121991 :          if (p.halfmoves &lt; 10 &amp;&amp; DynamicConfig::randomOpen != 0){</span></span>
+<span id="L364"><span class="lineNum">     364</span> <span class="tlaGNC">     2121993 :          if (p.halfmoves &lt; 10 &amp;&amp; DynamicConfig::randomOpen != 0){</span></span>
 <span id="L365"><span class="lineNum">     365</span> <span class="tlaUNC tlaBgUNC">           0 :             nnueEval += static_cast&lt;ScoreType&gt;(randomInt&lt;int /*NO SEED USE =&gt; random device*/&gt;(-1*DynamicConfig::randomOpen, DynamicConfig::randomOpen));</span></span>
 <span id="L366"><span class="lineNum">     366</span>              :          }</span>
-<span id="L367"><span class="lineNum">     367</span> <span class="tlaGNC tlaBgGNC">     2121991 :          return nnueEval;</span></span>
+<span id="L367"><span class="lineNum">     367</span> <span class="tlaGNC tlaBgGNC">     2121993 :          return nnueEval;</span></span>
 <span id="L368"><span class="lineNum">     368</span>              :       }</span>
 <span id="L369"><span class="lineNum">     369</span>              :       // fall back to classic eval</span>
 <span id="L370"><span class="lineNum">     370</span>              :       context.stats.incr(Stats::sid_evalStd);</span>
@@ -706,10 +706,10 @@
 <span id="L644"><span class="lineNum">     644</span>              :    // pawn in front of own minor</span>
 <span id="L645"><span class="lineNum">     645</span> <span class="tlaGNC">      796968 :    const colored&lt;BitBoard&gt; minor = {knights[Co_White] | bishops[Co_White], knights[Co_Black] | bishops[Co_Black]};</span></span>
 <span id="L646"><span class="lineNum">     646</span> <span class="tlaGNC">      796968 :    applyOn(BBTools::shiftS&lt;Co_White&gt;(pawns[Co_White]) &amp; minor[Co_White], [&amp;](const Square &amp; k){ </span></span>
-<span id="L647"><span class="lineNum">     647</span> <span class="tlaGNC">        8191 :       features.scores[F_development] += EvalConfig::pawnFrontMinor[ColorRank&lt;Co_White&gt;(k)]; </span></span>
+<span id="L647"><span class="lineNum">     647</span> <span class="tlaGNC">        8189 :       features.scores[F_development] += EvalConfig::pawnFrontMinor[ColorRank&lt;Co_White&gt;(k)]; </span></span>
 <span id="L648"><span class="lineNum">     648</span>              :    });</span>
 <span id="L649"><span class="lineNum">     649</span> <span class="tlaGNC">      796968 :    applyOn(BBTools::shiftS&lt;Co_Black&gt;(pawns[Co_Black]) &amp; minor[Co_Black], [&amp;](const Square &amp; k){</span></span>
-<span id="L650"><span class="lineNum">     650</span> <span class="tlaGNC">        9560 :       features.scores[F_development] -= EvalConfig::pawnFrontMinor[ColorRank&lt;Co_Black&gt;(k)]; </span></span>
+<span id="L650"><span class="lineNum">     650</span> <span class="tlaGNC">        9559 :       features.scores[F_development] -= EvalConfig::pawnFrontMinor[ColorRank&lt;Co_Black&gt;(k)]; </span></span>
 <span id="L651"><span class="lineNum">     651</span>              :    });</span>
 <span id="L652"><span class="lineNum">     652</span>              : </span>
 <span id="L653"><span class="lineNum">     653</span>              :    // center control</span>
@@ -780,9 +780,9 @@
 <span id="L718"><span class="lineNum">     718</span>              : </span>
 <span id="L719"><span class="lineNum">     719</span>              :    // threats by queen</span>
 <span id="L720"><span class="lineNum">     720</span> <span class="tlaGNC">      796968 :    targetThreat = p.allPieces[Co_White] &amp; weakSquare[Co_White] &amp; attFromPiece[Co_Black][P_wq - 1];</span></span>
-<span id="L721"><span class="lineNum">     721</span> <span class="tlaGNC">     1105139 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
-<span id="L722"><span class="lineNum">     722</span> <span class="tlaGNC">      616342 :       features.scores[F_attack] += EvalConfig::threatByQueen[PieceTools::getPieceType(p, k) - 1];</span></span>
-<span id="L723"><span class="lineNum">     723</span> <span class="tlaGNC">      308171 :    });</span></span>
+<span id="L721"><span class="lineNum">     721</span> <span class="tlaGNC">     1105138 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
+<span id="L722"><span class="lineNum">     722</span> <span class="tlaGNC">      616340 :       features.scores[F_attack] += EvalConfig::threatByQueen[PieceTools::getPieceType(p, k) - 1];</span></span>
+<span id="L723"><span class="lineNum">     723</span> <span class="tlaGNC">      308170 :    });</span></span>
 <span id="L724"><span class="lineNum">     724</span> <span class="tlaGNC">      796968 :    targetThreat = p.allPieces[Co_Black] &amp; weakSquare[Co_Black] &amp; attFromPiece[Co_White][P_wq - 1];</span></span>
 <span id="L725"><span class="lineNum">     725</span> <span class="tlaGNC">     1131919 :    applyOn(targetThreat, [&amp;](const Square &amp; k){</span></span>
 <span id="L726"><span class="lineNum">     726</span> <span class="tlaGNC">      669902 :       features.scores[F_attack] -= EvalConfig::threatByQueen[PieceTools::getPieceType(p, k) - 1];</span></span>

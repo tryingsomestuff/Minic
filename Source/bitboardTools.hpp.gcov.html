@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-03-02 16:42:41</td>
+            <td class="headerValue">2026-04-07 09:53:30</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -75,14 +75,14 @@
 <span id="L13"><span class="lineNum">      13</span>              : </span>
 <span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC tlaBgGNC">     1744098 : [[nodiscard]] constexpr BitBoard _shiftSouth    (const BitBoard b) { return b &gt;&gt; 8; }</span></span>
 <span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">     1744098 : [[nodiscard]] constexpr BitBoard _shiftNorth    (const BitBoard b) { return b &lt;&lt; 8; }</span></span>
-<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">    34582420 : [[nodiscard]] constexpr BitBoard _shiftWest     (const BitBoard b) { return b &gt;&gt; 1 &amp; ~BB::fileH; }</span></span>
-<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">    34582420 : [[nodiscard]] constexpr BitBoard _shiftEast     (const BitBoard b) { return b &lt;&lt; 1 &amp; ~BB::fileA; }</span></span>
+<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">    34582396 : [[nodiscard]] constexpr BitBoard _shiftWest     (const BitBoard b) { return b &gt;&gt; 1 &amp; ~BB::fileH; }</span></span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">    34582396 : [[nodiscard]] constexpr BitBoard _shiftEast     (const BitBoard b) { return b &lt;&lt; 1 &amp; ~BB::fileA; }</span></span>
 <span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">     3580936 : [[nodiscard]] constexpr BitBoard _shiftNorthEast(const BitBoard b) { return b &lt;&lt; 9 &amp; ~BB::fileA; }</span></span>
 <span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">      796968 : [[nodiscard]] constexpr BitBoard _shiftNorthWest(const BitBoard b) { return b &lt;&lt; 7 &amp; ~BB::fileH; }</span></span>
 <span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">     3580936 : [[nodiscard]] constexpr BitBoard _shiftSouthEast(const BitBoard b) { return b &gt;&gt; 7 &amp; ~BB::fileA; }</span></span>
 <span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">     1742690 : [[nodiscard]] constexpr BitBoard _shiftSouthWest(const BitBoard b) { return b &gt;&gt; 9 &amp; ~BB::fileH; }</span></span>
 <span id="L22"><span class="lineNum">      22</span>              : </span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">    34134750 : [[nodiscard]] constexpr BitBoard adjacent(const BitBoard b) { return _shiftWest(b) | _shiftEast(b); }</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">    34134726 : [[nodiscard]] constexpr BitBoard adjacent(const BitBoard b) { return _shiftWest(b) | _shiftEast(b); }</span></span>
 <span id="L24"><span class="lineNum">      24</span>              : </span>
 <span id="L25"><span class="lineNum">      25</span>              : template&lt;Color C&gt; [[nodiscard]] constexpr BitBoard shiftN(const BitBoard b) {</span>
 <span id="L26"><span class="lineNum">      26</span>              :    return C == Co_White ? BBTools::_shiftNorth(b) : BBTools::_shiftSouth(b);</span>
@@ -105,15 +105,15 @@
 <span id="L43"><span class="lineNum">      43</span>              : </span>
 <span id="L44"><span class="lineNum">      44</span>              : template&lt;Color&gt; [[nodiscard]] constexpr BitBoard fillForward(BitBoard b);</span>
 <span id="L45"><span class="lineNum">      45</span>              : template&lt;&gt; [[nodiscard]] constexpr BitBoard      fillForward&lt;Co_White&gt;(BitBoard b) {</span>
-<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">    10077780 :     b |= (b &lt;&lt; 8u);</span></span>
-<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">    10077780 :     b |= (b &lt;&lt; 16u);</span></span>
-<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">     7591320 :     b |= (b &lt;&lt; 32u);</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">    10077768 :     b |= (b &lt;&lt; 8u);</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">    10077768 :     b |= (b &lt;&lt; 16u);</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">     7591308 :     b |= (b &lt;&lt; 32u);</span></span>
 <span id="L49"><span class="lineNum">      49</span>              :     return b;</span>
 <span id="L50"><span class="lineNum">      50</span>              : }</span>
 <span id="L51"><span class="lineNum">      51</span>              : template&lt;&gt; [[nodiscard]] constexpr BitBoard fillForward&lt;Co_Black&gt;(BitBoard b) {</span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">     9863923 :     b |= (b &gt;&gt; 8u);</span></span>
-<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">     9863923 :     b |= (b &gt;&gt; 16u);</span></span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">     7377463 :     b |= (b &gt;&gt; 32u);</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">     9863911 :     b |= (b &gt;&gt; 8u);</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">     9863911 :     b |= (b &gt;&gt; 16u);</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">     7377451 :     b |= (b &gt;&gt; 32u);</span></span>
 <span id="L55"><span class="lineNum">      55</span>              :     return b;</span>
 <span id="L56"><span class="lineNum">      56</span>              : }</span>
 <span id="L57"><span class="lineNum">      57</span>              : </span>
@@ -139,8 +139,8 @@
 <span id="L77"><span class="lineNum">      77</span>              : template&lt;Color C&gt; [[nodiscard]] constexpr BitBoard rearSpan(const BitBoard b) { return frontSpan&lt;~C&gt;(b); }</span>
 <span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">      148754 : template&lt;Color C&gt; [[nodiscard]] constexpr BitBoard pawnSemiOpen(const BitBoard own, const BitBoard opp) { return own &amp; ~frontSpan&lt;~C&gt;(opp); }</span></span>
 <span id="L79"><span class="lineNum">      79</span>              : </span>
-<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">     4109553 : [[nodiscard]] constexpr BitBoard fillFile(const BitBoard b) { return fillForward&lt;Co_White&gt;(b) | fillForward&lt;Co_Black&gt;(b); }</span></span>
-<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">     2515617 : [[nodiscard]] constexpr BitBoard openFiles(const BitBoard w, const BitBoard b) { return ~fillFile(w) &amp; ~fillFile(b); }</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">     4109547 : [[nodiscard]] constexpr BitBoard fillFile(const BitBoard b) { return fillForward&lt;Co_White&gt;(b) | fillForward&lt;Co_Black&gt;(b); }</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">     2515611 : [[nodiscard]] constexpr BitBoard openFiles(const BitBoard w, const BitBoard b) { return ~fillFile(w) &amp; ~fillFile(b); }</span></span>
 <span id="L82"><span class="lineNum">      82</span>              : </span>
 <span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">     2539658 : template&lt;Color C&gt; [[nodiscard]] constexpr BitBoard pawnAttacks(const BitBoard b) { return shiftNW&lt;C&gt;(b) | shiftNE&lt;C&gt;(b); }</span></span>
 <span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">      297508 : template&lt;Color C&gt; [[nodiscard]] constexpr BitBoard pawnDoubleAttacks(const BitBoard b) { return shiftNW&lt;C&gt;(b) &amp; shiftNE&lt;C&gt;(b); }</span></span>
@@ -187,12 +187,12 @@
 <span id="L125"><span class="lineNum">     125</span> <span class="tlaGNC">      558812 :    BB::_unSetBit(p._pieces(p.board_const(k)), k);</span></span>
 <span id="L126"><span class="lineNum">     126</span>              : }</span>
 <span id="L127"><span class="lineNum">     127</span>              : FORCE_FINLINE void unSetBit(Position&amp; p, const Square k, const Piece pp) {</span>
-<span id="L128"><span class="lineNum">     128</span> <span class="tlaGNC">       80230 :    assert(isValidSquare(k));</span></span>
-<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">   190223058 :    BB::_unSetBit(p._pieces(pp), k);</span></span>
+<span id="L128"><span class="lineNum">     128</span> <span class="tlaGNC">       80226 :    assert(isValidSquare(k));</span></span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">   190222855 :    BB::_unSetBit(p._pieces(pp), k);</span></span>
 <span id="L130"><span class="lineNum">     130</span>              : }</span>
 <span id="L131"><span class="lineNum">     131</span>              : FORCE_FINLINE void setBit(Position&amp; p, const Square k, const Piece pp) {</span>
-<span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC">       80230 :    assert(isValidSquare(k));</span></span>
-<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">   179498734 :    BB::_setBit(p._pieces(pp), k);</span></span>
+<span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC">       80226 :    assert(isValidSquare(k));</span></span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">   179498594 :    BB::_setBit(p._pieces(pp), k);</span></span>
 <span id="L134"><span class="lineNum">     134</span>              : }</span>
 <span id="L135"><span class="lineNum">     135</span>              : void clearBitBoards(Position&amp; p);</span>
 <span id="L136"><span class="lineNum">     136</span>              : void setBitBoards(Position&amp; p);</span>
