@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-04-07 09:53:30</td>
+            <td class="headerValue">2026-04-16 14:22:47</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -73,13 +73,13 @@
 <span id="L11"><span class="lineNum">      11</span>              :    const double b = -0.001097;</span>
 <span id="L12"><span class="lineNum">      12</span>              :    const double c = 2.79303;</span>
 <span id="L13"><span class="lineNum">      13</span>              :    const double d = -978.848;</span>
-<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC tlaBgGNC">          12 :    const int intcorrectedElo = static_cast&lt;int&gt;(a * pow(DynamicConfig::strength,3) + b * pow(DynamicConfig::strength,2) + c * DynamicConfig::strength + d);</span></span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">          24 :    return std::max(0, (intcorrectedElo - 500) / 29 - 10);</span></span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC tlaBgGNC">           8 :    const int intcorrectedElo = static_cast&lt;int&gt;(a * pow(DynamicConfig::strength,3) + b * pow(DynamicConfig::strength,2) + c * DynamicConfig::strength + d);</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">          16 :    return std::max(0, (intcorrectedElo - 500) / 29 - 10);</span></span>
 <span id="L16"><span class="lineNum">      16</span>              : } ///@todo to be tuned</span>
 <span id="L17"><span class="lineNum">      17</span> <span class="tlaUNC tlaBgUNC">           0 : [[nodiscard]] FORCE_FINLINE unsigned int convertLevel2Elo() { return 29 * (DynamicConfig::level + 10) + 500; }                 ///@todo to be tuned</span></span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC tlaBgGNC">         833 : [[nodiscard]] FORCE_FINLINE bool         enabled() { return DynamicConfig::level &gt; 0 &amp;&amp; DynamicConfig::level &lt; 100; }          // 0 is random mover !</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC tlaBgGNC">         824 : [[nodiscard]] FORCE_FINLINE bool         enabled() { return DynamicConfig::level &gt; 0 &amp;&amp; DynamicConfig::level &lt; 100; }          // 0 is random mover !</span></span>
 <span id="L19"><span class="lineNum">      19</span>              : [[nodiscard]] FORCE_FINLINE DepthType    limitedDepth() {</span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">          12 :    return DepthType(1 + 2 * std::sqrt(std::max(0, static_cast&lt;int&gt;(DynamicConfig::level - 20))));</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">           8 :    return DepthType(1 + 2 * std::sqrt(std::max(0, static_cast&lt;int&gt;(DynamicConfig::level - 20))));</span></span>
 <span id="L21"><span class="lineNum">      21</span>              : } ///@todo to be tuned</span>
 <span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC tlaBgUNC">           0 : [[nodiscard]] FORCE_FINLINE uint64_t limitedNodes() { return static_cast&lt;uint64_t&gt;(std::exp((convertLevel2Elo() + 840.) / 240.)); } ///@todo to be tuned</span></span>
 <span id="L23"><span class="lineNum">      23</span>              : [[nodiscard]] Move pick(std::vector&lt;MultiPVScores&gt;&amp; multiPVMoves);</span>

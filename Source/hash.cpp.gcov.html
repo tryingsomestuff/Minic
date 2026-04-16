@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-04-07 09:53:30</td>
+            <td class="headerValue">2026-04-16 14:22:47</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -192,12 +192,12 @@
 <span id="L130"><span class="lineNum">     130</span> <span class="tlaGNC">          22 : }</span></span>
 <span id="L131"><span class="lineNum">     131</span>              : } // namespace Zobrist</span>
 <span id="L132"><span class="lineNum">     132</span>              : </span>
-<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">    23447150 : Hash computeHash(const Position &amp;p) {</span></span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">    23446749 : Hash computeHash(const Position &amp;p) {</span></span>
 <span id="L134"><span class="lineNum">     134</span>              : #ifdef DEBUG_HASH</span>
 <span id="L135"><span class="lineNum">     135</span>              :    Hash h = p.h;</span>
 <span id="L136"><span class="lineNum">     136</span>              :    p.h    = nullHash;</span>
 <span id="L137"><span class="lineNum">     137</span>              : #endif</span>
-<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">    23447150 :    if (p.h != nullHash) return p.h;</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">    23446749 :    if (p.h != nullHash) return p.h;</span></span>
 <span id="L139"><span class="lineNum">     139</span>              :    //++ThreadPool::instance().main().stats.counters[Stats::sid_hashComputed]; // shall of course never happend !</span>
 <span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">       20020 :    for (Square k = 0; k &lt; NbSquare; ++k) { ///todo try if BB is faster here ?</span></span>
 <span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">       19712 :       const Piece pp = p.board_const(k);</span></span>
@@ -213,12 +213,12 @@
 <span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">         308 :    return p.h;</span></span>
 <span id="L152"><span class="lineNum">     152</span>              : }</span>
 <span id="L153"><span class="lineNum">     153</span>              : </span>
-<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">      946030 : Hash computePHash(const Position &amp;p) {</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">      946028 : Hash computePHash(const Position &amp;p) {</span></span>
 <span id="L155"><span class="lineNum">     155</span>              : #ifdef DEBUG_PHASH</span>
 <span id="L156"><span class="lineNum">     156</span>              :    Hash h = p.ph;</span>
 <span id="L157"><span class="lineNum">     157</span>              :    p.ph   = nullHash;</span>
 <span id="L158"><span class="lineNum">     158</span>              : #endif</span>
-<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">      946030 :    if (p.ph != nullHash) return p.ph;</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">      946028 :    if (p.ph != nullHash) return p.ph;</span></span>
 <span id="L160"><span class="lineNum">     160</span>              :    //++ThreadPool::instance().main().stats.counters[Stats::sid_hashComputed]; // shall of course never happend !</span>
 <span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">        1379 :    BB::applyOn(p.whitePawn(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_wp)]; });</span></span>
 <span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">        1313 :    BB::applyOn(p.blackPawn(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_bp)]; });</span></span>

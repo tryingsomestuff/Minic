@@ -31,13 +31,13 @@
             <td class="headerValue">coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryMed">80.3&nbsp;%</td>
+            <td class="headerCovTableEntryMed">81.2&nbsp;%</td>
             <td class="headerCovTableEntry">234</td>
-            <td class="headerCovTableEntry">188</td>
+            <td class="headerCovTableEntry">190</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-04-07 09:53:30</td>
+            <td class="headerValue">2026-04-16 14:22:47</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryMed">77.8&nbsp;%</td>
@@ -85,7 +85,7 @@
 <span id="L23"><span class="lineNum">      23</span>              : enum SideToMove : uint8_t { stm_white = 0, stm_black = 1 };</span>
 <span id="L24"><span class="lineNum">      24</span>              : SideToMove stm; ///@todo isn't this redundant with position.c ??</span>
 <span id="L25"><span class="lineNum">      25</span>              : </span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC tlaBgGNC">           2 : SideToMove opponent(SideToMove&amp; s) { return s == stm_white ? stm_black : stm_white; }</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC tlaBgGNC">           3 : SideToMove opponent(SideToMove&amp; s) { return s == stm_white ? stm_black : stm_white; }</span></span>
 <span id="L27"><span class="lineNum">      27</span>              : </span>
 <span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">           4 : bool sideToMoveFromFEN(const std::string&amp; fen) {</span></span>
 <span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">           4 :    const bool b = readFEN(fen, COM::position, false, true);</span></span>
@@ -146,14 +146,14 @@
 <span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">           2 : void moveApplied(const bool success, const Move &amp; m) {</span></span>
 <span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">           2 :    if (success) {</span></span>
 <span id="L86"><span class="lineNum">      86</span>              :       // backup game history</span>
-<span id="L87"><span class="lineNum">      87</span> <span class="tlaUNC tlaBgUNC">           0 :       COM::GetGameInfo().append({COM::position, m});      </span></span>
+<span id="L87"><span class="lineNum">      87</span> <span class="tlaGNC">           2 :       COM::GetGameInfo().append({COM::position, m});      </span></span>
 <span id="L88"><span class="lineNum">      88</span>              :       // switch stm</span>
-<span id="L89"><span class="lineNum">      89</span> <span class="tlaUNC">           0 :       stm = opponent(stm);</span></span>
+<span id="L89"><span class="lineNum">      89</span> <span class="tlaGNC">           1 :       stm = opponent(stm);</span></span>
 <span id="L90"><span class="lineNum">      90</span>              :    }</span>
 <span id="L91"><span class="lineNum">      91</span>              :    else {</span>
-<span id="L92"><span class="lineNum">      92</span> <span class="tlaGNC tlaBgGNC">           2 :       mode = m_force;</span></span>
+<span id="L92"><span class="lineNum">      92</span> <span class="tlaGNC">           1 :       mode = m_force;</span></span>
 <span id="L93"><span class="lineNum">      93</span>              :    }</span>
-<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">           2 : }</span></span>
+<span id="L94"><span class="lineNum">      94</span> <span class="tlaGNC">           3 : }</span></span>
 <span id="L95"><span class="lineNum">      95</span>              : </span>
 <span id="L96"><span class="lineNum">      96</span> <span class="tlaGNC">           2 : bool replay(size_t nbmoves) {</span></span>
 <span id="L97"><span class="lineNum">      97</span>              :    // backup moves</span>
@@ -167,21 +167,21 @@
 <span id="L105"><span class="lineNum">     105</span>              :    // reset game information</span>
 <span id="L106"><span class="lineNum">     106</span> <span class="tlaGNC">           2 :    COM::GetGameInfo().clear(COM::position);</span></span>
 <span id="L107"><span class="lineNum">     107</span>              :    // replay </span>
-<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC">           4 :    for (size_t k = 0; k &lt; nbmoves; ++k) {</span></span>
-<span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC">           4 :       if (!COM::makeMove(vm[k], false, &quot;&quot;)) { // make move</span></span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC">           5 :    for (size_t k = 0; k &lt; nbmoves; ++k) {</span></span>
+<span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC">           6 :       if (!COM::makeMove(vm[k], false, &quot;&quot;)) { // make move</span></span>
 <span id="L110"><span class="lineNum">     110</span> <span class="tlaUNC tlaBgUNC">           0 :          Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Bad move ! &quot; &lt;&lt; ToString(vm[k]);</span></span>
 <span id="L111"><span class="lineNum">     111</span> <span class="tlaUNC">           0 :          Logging::LogIt(Logging::logInfo) &lt;&lt; ToString(COM::position);</span></span>
 <span id="L112"><span class="lineNum">     112</span> <span class="tlaUNC">           0 :          mode = m_force;</span></span>
 <span id="L113"><span class="lineNum">     113</span> <span class="tlaUNC">           0 :          return false;</span></span>
 <span id="L114"><span class="lineNum">     114</span>              :       }</span>
 <span id="L115"><span class="lineNum">     115</span>              :       else {</span>
-<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC tlaBgGNC">           2 :          stm = opponent(stm);</span></span>
-<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">           4 :          COM::GetGameInfo().append({COM::position, vm[k]});</span></span>
+<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC tlaBgGNC">           3 :          stm = opponent(stm);</span></span>
+<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">           6 :          COM::GetGameInfo().append({COM::position, vm[k]});</span></span>
 <span id="L118"><span class="lineNum">     118</span>              :       }</span>
 <span id="L119"><span class="lineNum">     119</span>              :    }</span>
 <span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">           2 :    if (previousState == COM::st_analyzing) { mode = m_analyze; }</span></span>
 <span id="L121"><span class="lineNum">     121</span>              :    return true;</span>
-<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">           2 : }</span></span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">           3 : }</span></span>
 <span id="L123"><span class="lineNum">     123</span>              : </span>
 <span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">           1 : void xboard() {</span></span>
 <span id="L125"><span class="lineNum">     125</span> <span class="tlaGNC">           1 :    Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Starting XBoard main loop&quot;;</span></span>

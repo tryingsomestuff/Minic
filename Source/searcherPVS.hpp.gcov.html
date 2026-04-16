@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-04-07 09:53:30</td>
+            <td class="headerValue">2026-04-16 14:22:47</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -81,7 +81,7 @@
 <span id="L19"><span class="lineNum">      19</span>              : #define PERIODICCHECK uint64_t(1024)</span>
 <span id="L20"><span class="lineNum">      20</span>              : </span>
 <span id="L21"><span class="lineNum">      21</span>              : // be carefull isBadCap shall only be used on moves already detected as capture !</span>
-<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC tlaBgGNC">      400972 : [[nodiscard]] inline bool isBadCap(const Move m) { return badCapScore(m) &lt; DynamicConfig::badCapLimit; }</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaGNC tlaBgGNC">      400974 : [[nodiscard]] inline bool isBadCap(const Move m) { return badCapScore(m) &lt; DynamicConfig::badCapLimit; }</span></span>
 <span id="L23"><span class="lineNum">      23</span>              : </span>
 <span id="L24"><span class="lineNum">      24</span>              : FORCE_FINLINE void Searcher::updateStatBetaCut(const Position &amp; p, const Move m, const DepthType height){</span>
 <span id="L25"><span class="lineNum">      25</span>              :    const MType t = Move2Type(m);</span>
@@ -217,7 +217,7 @@
 <span id="L155"><span class="lineNum">     155</span>              : </span>
 <span id="L156"><span class="lineNum">     156</span>              :    int reduction = 0;</span>
 <span id="L157"><span class="lineNum">     157</span>              : </span>
-<span id="L158"><span class="lineNum">     158</span> <span class="tlaGNC">     3318604 :    if (isReductible) {</span></span>
+<span id="L158"><span class="lineNum">     158</span> <span class="tlaGNC">     3318462 :    if (isReductible) {</span></span>
 <span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">     2978679 :       const int depthIdx = std::min(static_cast&lt;int&gt;(depth), MAX_DEPTH - 1);</span></span>
 <span id="L160"><span class="lineNum">     160</span>              : </span>
 <span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">     2978679 :       if (Move2Type(m) == T_std){</span></span>
@@ -350,9 +350,9 @@
 <span id="L288"><span class="lineNum">     288</span> <span class="tlaGNC">     2978679 :       if (static_cast&lt;int&gt;(depth) - 1 + extension - reduction &lt;= 0) reduction = static_cast&lt;int&gt;(depth) - 1 + extension;</span></span>
 <span id="L289"><span class="lineNum">     289</span>              :    }</span>
 <span id="L290"><span class="lineNum">     290</span>              : </span>
-<span id="L291"><span class="lineNum">     291</span> <span class="tlaGNC">     4123672 :    const DepthType nextDepth = static_cast&lt;DepthType&gt;(static_cast&lt;int&gt;(depth) - 1 + extension - reduction);</span></span>
+<span id="L291"><span class="lineNum">     291</span> <span class="tlaGNC">     4123526 :    const DepthType nextDepth = static_cast&lt;DepthType&gt;(static_cast&lt;int&gt;(depth) - 1 + extension - reduction);</span></span>
 <span id="L292"><span class="lineNum">     292</span>              : </span>
-<span id="L293"><span class="lineNum">     293</span> <span class="tlaGNC">     3318604 :    return {nextDepth, static_cast&lt;DepthType&gt;(extension), static_cast&lt;DepthType&gt;(reduction)};</span></span>
+<span id="L293"><span class="lineNum">     293</span> <span class="tlaGNC">     3318462 :    return {nextDepth, static_cast&lt;DepthType&gt;(extension), static_cast&lt;DepthType&gt;(reduction)};</span></span>
 <span id="L294"><span class="lineNum">     294</span>              : }</span>
 <span id="L295"><span class="lineNum">     295</span>              : </span>
 <span id="L296"><span class="lineNum">     296</span>              : #pragma GCC diagnostic push</span>
@@ -369,60 +369,60 @@
 <span id="L307"><span class="lineNum">     307</span>              : </span>
 <span id="L308"><span class="lineNum">     308</span>              :    const bool kingIsMandatory = DynamicConfig::isKingMandatory();</span>
 <span id="L309"><span class="lineNum">     309</span>              :    const colored&lt;BitBoard&gt; pawns = {p.whitePawn(), p.blackPawn()};</span>
-<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">     2366857 :    const colored&lt;BitBoard&gt; nonPawnMat = {p.allPieces[Co_White] &amp; ~pawns[Co_White], </span></span>
-<span id="L311"><span class="lineNum">     311</span> <span class="tlaGNC">     2366857 :                                          p.allPieces[Co_Black] &amp; ~pawns[Co_Black]};</span></span>
-<span id="L312"><span class="lineNum">     312</span> <span class="tlaGNC">     2366857 :    const colored&lt;BitBoard&gt; kingZone = {isValidSquare(p.king[Co_White]) ? BBTools::mask[p.king[Co_White]].kingZone : emptyBitBoard, </span></span>
-<span id="L313"><span class="lineNum">     313</span> <span class="tlaGNC">     2366857 :                                        isValidSquare(p.king[Co_Black]) ? BBTools::mask[p.king[Co_Black]].kingZone : emptyBitBoard};</span></span>
-<span id="L314"><span class="lineNum">     314</span> <span class="tlaGNC">     2366857 :    const BitBoard occupancy = p.occupancy();</span></span>
+<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">     2366852 :    const colored&lt;BitBoard&gt; nonPawnMat = {p.allPieces[Co_White] &amp; ~pawns[Co_White], </span></span>
+<span id="L311"><span class="lineNum">     311</span> <span class="tlaGNC">     2366852 :                                          p.allPieces[Co_Black] &amp; ~pawns[Co_Black]};</span></span>
+<span id="L312"><span class="lineNum">     312</span> <span class="tlaGNC">     2366852 :    const colored&lt;BitBoard&gt; kingZone = {isValidSquare(p.king[Co_White]) ? BBTools::mask[p.king[Co_White]].kingZone : emptyBitBoard, </span></span>
+<span id="L313"><span class="lineNum">     313</span> <span class="tlaGNC">     2366852 :                                        isValidSquare(p.king[Co_Black]) ? BBTools::mask[p.king[Co_Black]].kingZone : emptyBitBoard};</span></span>
+<span id="L314"><span class="lineNum">     314</span> <span class="tlaGNC">     2366852 :    const BitBoard occupancy = p.occupancy();</span></span>
 <span id="L315"><span class="lineNum">     315</span>              : </span>
-<span id="L316"><span class="lineNum">     316</span> <span class="tlaGNC">     7100571 :    for (Color c = Co_White ; c &lt;= Co_Black ; ++c){</span></span>
-<span id="L317"><span class="lineNum">     317</span> <span class="tlaGNC">    33135998 :       for (Piece pp = P_wp ; pp &lt;= P_wk ; ++pp){</span></span>
-<span id="L318"><span class="lineNum">     318</span> <span class="tlaGNC">    56804568 :          BB::applyOn(p.pieces_const(c,pp), [&amp;](const Square &amp; k) {</span></span>
+<span id="L316"><span class="lineNum">     316</span> <span class="tlaGNC">     7100556 :    for (Color c = Co_White ; c &lt;= Co_Black ; ++c){</span></span>
+<span id="L317"><span class="lineNum">     317</span> <span class="tlaGNC">    33135928 :       for (Piece pp = P_wp ; pp &lt;= P_wk ; ++pp){</span></span>
+<span id="L318"><span class="lineNum">     318</span> <span class="tlaGNC">    56804448 :          BB::applyOn(p.pieces_const(c,pp), [&amp;](const Square &amp; k) {</span></span>
 <span id="L319"><span class="lineNum">     319</span>              :             // aligned threats removing own piece (not pawn) in occupancy</span>
-<span id="L320"><span class="lineNum">     320</span> <span class="tlaGNC">    44770409 :             const BitBoard shadowTarget = BBTools::pfCoverage[pp - 1](k, occupancy ^ nonPawnMat[c], c);</span></span>
-<span id="L321"><span class="lineNum">     321</span> <span class="tlaGNC">    44770409 :             if (shadowTarget) {</span></span>
-<span id="L322"><span class="lineNum">     322</span> <span class="tlaGNC">    44770409 :                kdanger[~c] += BB::countBit(shadowTarget &amp; kingZone[~c]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][pp - 1];</span></span>
-<span id="L323"><span class="lineNum">     323</span> <span class="tlaGNC">    44770409 :                const BitBoard target = BBTools::pfCoverage[pp - 1](k, occupancy, c); // real targets</span></span>
-<span id="L324"><span class="lineNum">     324</span> <span class="tlaGNC">    44770409 :                if (target) {</span></span>
-<span id="L325"><span class="lineNum">     325</span> <span class="tlaGNC">    44770409 :                   attFromPiece[c][pp - 1] |= target;</span></span>
-<span id="L326"><span class="lineNum">     326</span> <span class="tlaGNC">    44770409 :                   att2[c] |= att[c] &amp; target;</span></span>
-<span id="L327"><span class="lineNum">     327</span> <span class="tlaGNC">    44770409 :                   att[c] |= target;</span></span>
-<span id="L328"><span class="lineNum">     328</span> <span class="tlaGNC">    44770409 :                   if (target &amp; p.pieces_const&lt;P_wk&gt;(~c)) checkers[c][pp - 1] |= SquareToBitboard(k);</span></span>
-<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC">    44770409 :                   kdanger[c] -= BB::countBit(target &amp; kingZone[c]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][pp - 1];</span></span>
+<span id="L320"><span class="lineNum">     320</span> <span class="tlaGNC">    44770245 :             const BitBoard shadowTarget = BBTools::pfCoverage[pp - 1](k, occupancy ^ nonPawnMat[c], c);</span></span>
+<span id="L321"><span class="lineNum">     321</span> <span class="tlaGNC">    44770245 :             if (shadowTarget) {</span></span>
+<span id="L322"><span class="lineNum">     322</span> <span class="tlaGNC">    44770245 :                kdanger[~c] += BB::countBit(shadowTarget &amp; kingZone[~c]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][pp - 1];</span></span>
+<span id="L323"><span class="lineNum">     323</span> <span class="tlaGNC">    44770245 :                const BitBoard target = BBTools::pfCoverage[pp - 1](k, occupancy, c); // real targets</span></span>
+<span id="L324"><span class="lineNum">     324</span> <span class="tlaGNC">    44770245 :                if (target) {</span></span>
+<span id="L325"><span class="lineNum">     325</span> <span class="tlaGNC">    44770245 :                   attFromPiece[c][pp - 1] |= target;</span></span>
+<span id="L326"><span class="lineNum">     326</span> <span class="tlaGNC">    44770245 :                   att2[c] |= att[c] &amp; target;</span></span>
+<span id="L327"><span class="lineNum">     327</span> <span class="tlaGNC">    44770245 :                   att[c] |= target;</span></span>
+<span id="L328"><span class="lineNum">     328</span> <span class="tlaGNC">    44770245 :                   if (target &amp; p.pieces_const&lt;P_wk&gt;(~c)) checkers[c][pp - 1] |= SquareToBitboard(k);</span></span>
+<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC">    44770245 :                   kdanger[c] -= BB::countBit(target &amp; kingZone[c]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][pp - 1];</span></span>
 <span id="L330"><span class="lineNum">     330</span>              :                }</span>
 <span id="L331"><span class="lineNum">     331</span>              :             }</span>
-<span id="L332"><span class="lineNum">     332</span> <span class="tlaGNC">    44770409 :          });</span></span>
+<span id="L332"><span class="lineNum">     332</span> <span class="tlaGNC">    44770245 :          });</span></span>
 <span id="L333"><span class="lineNum">     333</span>              :       }</span>
 <span id="L334"><span class="lineNum">     334</span>              :    }</span>
 <span id="L335"><span class="lineNum">     335</span>              : </span>
-<span id="L336"><span class="lineNum">     336</span> <span class="tlaGNC">     2366857 :    if (kingIsMandatory){</span></span>
-<span id="L337"><span class="lineNum">     337</span> <span class="tlaGNC">     2366857 :      const File wkf = SQFILE(p.king[Co_White]);</span></span>
-<span id="L338"><span class="lineNum">     338</span> <span class="tlaGNC">     2366857 :      const File bkf = SQFILE(p.king[Co_Black]);</span></span>
+<span id="L336"><span class="lineNum">     336</span> <span class="tlaGNC">     2366852 :    if (kingIsMandatory){</span></span>
+<span id="L337"><span class="lineNum">     337</span> <span class="tlaGNC">     2366852 :      const File wkf = SQFILE(p.king[Co_White]);</span></span>
+<span id="L338"><span class="lineNum">     338</span> <span class="tlaGNC">     2366852 :      const File bkf = SQFILE(p.king[Co_Black]);</span></span>
 <span id="L339"><span class="lineNum">     339</span>              :  </span>
-<span id="L340"><span class="lineNum">     340</span> <span class="tlaGNC">     2366857 :      const colored&lt;BitBoard&gt; semiOpenFiles = {BBTools::fillFile(pawns[Co_White]) &amp; ~BBTools::fillFile(pawns[Co_Black]),</span></span>
-<span id="L341"><span class="lineNum">     341</span> <span class="tlaGNC">     2366857 :                                                BBTools::fillFile(pawns[Co_Black]) &amp; ~BBTools::fillFile(pawns[Co_White])};</span></span>
-<span id="L342"><span class="lineNum">     342</span> <span class="tlaGNC">     2366857 :      const BitBoard openFiles = BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);</span></span>
+<span id="L340"><span class="lineNum">     340</span> <span class="tlaGNC">     2366852 :      const colored&lt;BitBoard&gt; semiOpenFiles = {BBTools::fillFile(pawns[Co_White]) &amp; ~BBTools::fillFile(pawns[Co_Black]),</span></span>
+<span id="L341"><span class="lineNum">     341</span> <span class="tlaGNC">     2366852 :                                                BBTools::fillFile(pawns[Co_Black]) &amp; ~BBTools::fillFile(pawns[Co_White])};</span></span>
+<span id="L342"><span class="lineNum">     342</span> <span class="tlaGNC">     2366852 :      const BitBoard openFiles = BBTools::openFiles(pawns[Co_White], pawns[Co_Black]);</span></span>
 <span id="L343"><span class="lineNum">     343</span>              :  </span>
-<span id="L344"><span class="lineNum">     344</span> <span class="tlaGNC">     2366857 :      kdanger[Co_White] += EvalConfig::kingAttOpenfile * BB::countBit(BB::kingFlank[wkf] &amp; openFiles) / 8;</span></span>
-<span id="L345"><span class="lineNum">     345</span> <span class="tlaGNC">     2366857 :      kdanger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * BB::countBit(BB::kingFlank[wkf] &amp; semiOpenFiles[Co_White]) / 8;</span></span>
-<span id="L346"><span class="lineNum">     346</span> <span class="tlaGNC">     2366857 :      kdanger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * BB::countBit(BB::kingFlank[wkf] &amp; semiOpenFiles[Co_Black]) / 8;</span></span>
-<span id="L347"><span class="lineNum">     347</span> <span class="tlaGNC">     2366857 :      kdanger[Co_Black] += EvalConfig::kingAttOpenfile * BB::countBit(BB::kingFlank[bkf] &amp; openFiles) / 8;</span></span>
-<span id="L348"><span class="lineNum">     348</span> <span class="tlaGNC">     2366857 :      kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * BB::countBit(BB::kingFlank[bkf] &amp; semiOpenFiles[Co_Black]) / 8;</span></span>
-<span id="L349"><span class="lineNum">     349</span> <span class="tlaGNC">     2366857 :      kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * BB::countBit(BB::kingFlank[bkf] &amp; semiOpenFiles[Co_White]) / 8;</span></span>
+<span id="L344"><span class="lineNum">     344</span> <span class="tlaGNC">     2366852 :      kdanger[Co_White] += EvalConfig::kingAttOpenfile * BB::countBit(BB::kingFlank[wkf] &amp; openFiles) / 8;</span></span>
+<span id="L345"><span class="lineNum">     345</span> <span class="tlaGNC">     2366852 :      kdanger[Co_White] += EvalConfig::kingAttSemiOpenfileOpp * BB::countBit(BB::kingFlank[wkf] &amp; semiOpenFiles[Co_White]) / 8;</span></span>
+<span id="L346"><span class="lineNum">     346</span> <span class="tlaGNC">     2366852 :      kdanger[Co_White] += EvalConfig::kingAttSemiOpenfileOur * BB::countBit(BB::kingFlank[wkf] &amp; semiOpenFiles[Co_Black]) / 8;</span></span>
+<span id="L347"><span class="lineNum">     347</span> <span class="tlaGNC">     2366852 :      kdanger[Co_Black] += EvalConfig::kingAttOpenfile * BB::countBit(BB::kingFlank[bkf] &amp; openFiles) / 8;</span></span>
+<span id="L348"><span class="lineNum">     348</span> <span class="tlaGNC">     2366852 :      kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOpp * BB::countBit(BB::kingFlank[bkf] &amp; semiOpenFiles[Co_Black]) / 8;</span></span>
+<span id="L349"><span class="lineNum">     349</span> <span class="tlaGNC">     2366852 :      kdanger[Co_Black] += EvalConfig::kingAttSemiOpenfileOur * BB::countBit(BB::kingFlank[bkf] &amp; semiOpenFiles[Co_White]) / 8;</span></span>
 <span id="L350"><span class="lineNum">     350</span>              :    }</span>
 <span id="L351"><span class="lineNum">     351</span>              : </span>
-<span id="L352"><span class="lineNum">     352</span> <span class="tlaGNC">     2366857 :    const colored&lt;BitBoard&gt; weakSquare = { att[Co_Black] &amp; ~att2[Co_White] &amp; (~att[Co_White] | attFromPiece[Co_White][P_wk - 1] | attFromPiece[Co_White][P_wq - 1]),</span></span>
-<span id="L353"><span class="lineNum">     353</span> <span class="tlaGNC">     2366857 :                                           att[Co_White] &amp; ~att2[Co_Black] &amp; (~att[Co_Black] | attFromPiece[Co_Black][P_wk - 1] | attFromPiece[Co_Black][P_wq - 1])};</span></span>
+<span id="L352"><span class="lineNum">     352</span> <span class="tlaGNC">     2366852 :    const colored&lt;BitBoard&gt; weakSquare = { att[Co_Black] &amp; ~att2[Co_White] &amp; (~att[Co_White] | attFromPiece[Co_White][P_wk - 1] | attFromPiece[Co_White][P_wq - 1]),</span></span>
+<span id="L353"><span class="lineNum">     353</span> <span class="tlaGNC">     2366852 :                                           att[Co_White] &amp; ~att2[Co_Black] &amp; (~att[Co_Black] | attFromPiece[Co_Black][P_wk - 1] | attFromPiece[Co_Black][P_wq - 1])};</span></span>
 <span id="L354"><span class="lineNum">     354</span>              : </span>
-<span id="L355"><span class="lineNum">     355</span> <span class="tlaGNC">     2366857 :    const colored&lt;BitBoard&gt; safeSquare = { ~att[Co_Black] | (weakSquare[Co_Black] &amp; att2[Co_White]),</span></span>
-<span id="L356"><span class="lineNum">     356</span> <span class="tlaGNC">     2366857 :                                           ~att[Co_White] | (weakSquare[Co_White] &amp; att2[Co_Black])};</span></span>
+<span id="L355"><span class="lineNum">     355</span> <span class="tlaGNC">     2366852 :    const colored&lt;BitBoard&gt; safeSquare = { ~att[Co_Black] | (weakSquare[Co_Black] &amp; att2[Co_White]),</span></span>
+<span id="L356"><span class="lineNum">     356</span> <span class="tlaGNC">     2366852 :                                           ~att[Co_White] | (weakSquare[Co_White] &amp; att2[Co_Black])};</span></span>
 <span id="L357"><span class="lineNum">     357</span>              : </span>
 <span id="L358"><span class="lineNum">     358</span>              :    // reward safe checks</span>
-<span id="L359"><span class="lineNum">     359</span> <span class="tlaGNC">     2366857 :    kdanger[Co_White] += EvalConfig::kingAttSafeCheck[0] * BB::countBit(checkers[Co_Black][0] &amp; att[Co_Black]);</span></span>
-<span id="L360"><span class="lineNum">     360</span> <span class="tlaGNC">     2366857 :    kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[0] * BB::countBit(checkers[Co_White][0] &amp; att[Co_White]);</span></span>
-<span id="L361"><span class="lineNum">     361</span> <span class="tlaGNC">    11834285 :    for (Piece pp = P_wn; pp &lt; P_wk; ++pp) {</span></span>
-<span id="L362"><span class="lineNum">     362</span> <span class="tlaGNC">     9467428 :       kdanger[Co_White] += EvalConfig::kingAttSafeCheck[pp - 1] * BB::countBit(checkers[Co_Black][pp - 1] &amp; safeSquare[Co_Black]);</span></span>
-<span id="L363"><span class="lineNum">     363</span> <span class="tlaGNC">     9467428 :       kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[pp - 1] * BB::countBit(checkers[Co_White][pp - 1] &amp; safeSquare[Co_White]);</span></span>
+<span id="L359"><span class="lineNum">     359</span> <span class="tlaGNC">     2366852 :    kdanger[Co_White] += EvalConfig::kingAttSafeCheck[0] * BB::countBit(checkers[Co_Black][0] &amp; att[Co_Black]);</span></span>
+<span id="L360"><span class="lineNum">     360</span> <span class="tlaGNC">     2366852 :    kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[0] * BB::countBit(checkers[Co_White][0] &amp; att[Co_White]);</span></span>
+<span id="L361"><span class="lineNum">     361</span> <span class="tlaGNC">    11834260 :    for (Piece pp = P_wn; pp &lt; P_wk; ++pp) {</span></span>
+<span id="L362"><span class="lineNum">     362</span> <span class="tlaGNC">     9467408 :       kdanger[Co_White] += EvalConfig::kingAttSafeCheck[pp - 1] * BB::countBit(checkers[Co_Black][pp - 1] &amp; safeSquare[Co_Black]);</span></span>
+<span id="L363"><span class="lineNum">     363</span> <span class="tlaGNC">     9467408 :       kdanger[Co_Black] += EvalConfig::kingAttSafeCheck[pp - 1] * BB::countBit(checkers[Co_White][pp - 1] &amp; safeSquare[Co_White]);</span></span>
 <span id="L364"><span class="lineNum">     364</span>              :    }</span>
 <span id="L365"><span class="lineNum">     365</span>              : </span>
 <span id="L366"><span class="lineNum">     366</span>              :    // pieces mobility (second attack loop needed, knowing safeSquare ...)</span>
@@ -432,16 +432,16 @@
 <span id="L370"><span class="lineNum">     370</span>              :    const colored&lt;BitBoard&gt; queens  = {p.whiteQueen(), p.blackQueen()};</span>
 <span id="L371"><span class="lineNum">     371</span>              :    const colored&lt;BitBoard&gt; kings   = {p.whiteKing(), p.blackKing()};</span>
 <span id="L372"><span class="lineNum">     372</span>              : </span>
-<span id="L373"><span class="lineNum">     373</span> <span class="tlaGNC">     2366857 :    evalMob&lt;P_wn, Co_White&gt;(p, knights[Co_White], mobilityScore, safeSquare[Co_White], occupancy, mobility[Co_White]);</span></span>
-<span id="L374"><span class="lineNum">     374</span> <span class="tlaGNC">     2366857 :    evalMob&lt;P_wb, Co_White&gt;(p, bishops[Co_White], mobilityScore, safeSquare[Co_White], occupancy, mobility[Co_White]);</span></span>
-<span id="L375"><span class="lineNum">     375</span> <span class="tlaGNC">     2366857 :    evalMob&lt;P_wr, Co_White&gt;(p, rooks  [Co_White], mobilityScore, safeSquare[Co_White], occupancy, mobility[Co_White]);</span></span>
-<span id="L376"><span class="lineNum">     376</span> <span class="tlaGNC">     2366857 :    evalMobQ&lt;     Co_White&gt;(p, queens [Co_White], mobilityScore, safeSquare[Co_White], occupancy, mobility[Co_White]);</span></span>
-<span id="L377"><span class="lineNum">     377</span> <span class="tlaGNC">     2366857 :    evalMobK&lt;     Co_White&gt;(p, kings  [Co_White], mobilityScore, ~att[Co_Black]      , occupancy, mobility[Co_White]);</span></span>
-<span id="L378"><span class="lineNum">     378</span> <span class="tlaGNC">     2366857 :    evalMob&lt;P_wn, Co_Black&gt;(p, knights[Co_Black], mobilityScore, safeSquare[Co_Black], occupancy, mobility[Co_Black]);</span></span>
-<span id="L379"><span class="lineNum">     379</span> <span class="tlaGNC">     2366857 :    evalMob&lt;P_wb, Co_Black&gt;(p, bishops[Co_Black], mobilityScore, safeSquare[Co_Black], occupancy, mobility[Co_Black]);</span></span>
-<span id="L380"><span class="lineNum">     380</span> <span class="tlaGNC">     2366857 :    evalMob&lt;P_wr, Co_Black&gt;(p, rooks  [Co_Black], mobilityScore, safeSquare[Co_Black], occupancy, mobility[Co_Black]);</span></span>
-<span id="L381"><span class="lineNum">     381</span> <span class="tlaGNC">     2366857 :    evalMobQ&lt;     Co_Black&gt;(p, queens [Co_Black], mobilityScore, safeSquare[Co_Black], occupancy, mobility[Co_Black]);</span></span>
-<span id="L382"><span class="lineNum">     382</span> <span class="tlaGNC">     2366857 :    evalMobK&lt;     Co_Black&gt;(p, kings  [Co_Black], mobilityScore, ~att[Co_White]      , occupancy, mobility[Co_Black]);   </span></span>
+<span id="L373"><span class="lineNum">     373</span> <span class="tlaGNC">     2366852 :    evalMob&lt;P_wn, Co_White&gt;(p, knights[Co_White], mobilityScore, safeSquare[Co_White], occupancy, mobility[Co_White]);</span></span>
+<span id="L374"><span class="lineNum">     374</span> <span class="tlaGNC">     2366852 :    evalMob&lt;P_wb, Co_White&gt;(p, bishops[Co_White], mobilityScore, safeSquare[Co_White], occupancy, mobility[Co_White]);</span></span>
+<span id="L375"><span class="lineNum">     375</span> <span class="tlaGNC">     2366852 :    evalMob&lt;P_wr, Co_White&gt;(p, rooks  [Co_White], mobilityScore, safeSquare[Co_White], occupancy, mobility[Co_White]);</span></span>
+<span id="L376"><span class="lineNum">     376</span> <span class="tlaGNC">     2366852 :    evalMobQ&lt;     Co_White&gt;(p, queens [Co_White], mobilityScore, safeSquare[Co_White], occupancy, mobility[Co_White]);</span></span>
+<span id="L377"><span class="lineNum">     377</span> <span class="tlaGNC">     2366852 :    evalMobK&lt;     Co_White&gt;(p, kings  [Co_White], mobilityScore, ~att[Co_Black]      , occupancy, mobility[Co_White]);</span></span>
+<span id="L378"><span class="lineNum">     378</span> <span class="tlaGNC">     2366852 :    evalMob&lt;P_wn, Co_Black&gt;(p, knights[Co_Black], mobilityScore, safeSquare[Co_Black], occupancy, mobility[Co_Black]);</span></span>
+<span id="L379"><span class="lineNum">     379</span> <span class="tlaGNC">     2366852 :    evalMob&lt;P_wb, Co_Black&gt;(p, bishops[Co_Black], mobilityScore, safeSquare[Co_Black], occupancy, mobility[Co_Black]);</span></span>
+<span id="L380"><span class="lineNum">     380</span> <span class="tlaGNC">     2366852 :    evalMob&lt;P_wr, Co_Black&gt;(p, rooks  [Co_Black], mobilityScore, safeSquare[Co_Black], occupancy, mobility[Co_Black]);</span></span>
+<span id="L381"><span class="lineNum">     381</span> <span class="tlaGNC">     2366852 :    evalMobQ&lt;     Co_Black&gt;(p, queens [Co_Black], mobilityScore, safeSquare[Co_Black], occupancy, mobility[Co_Black]);</span></span>
+<span id="L382"><span class="lineNum">     382</span> <span class="tlaGNC">     2366852 :    evalMobK&lt;     Co_Black&gt;(p, kings  [Co_Black], mobilityScore, ~att[Co_White]      , occupancy, mobility[Co_Black]);   </span></span>
 <span id="L383"><span class="lineNum">     383</span>              : }</span>
 <span id="L384"><span class="lineNum">     384</span>              : </span>
 <span id="L385"><span class="lineNum">     385</span>              : #pragma GCC diagnostic pop</span>
@@ -469,7 +469,7 @@
 <span id="L407"><span class="lineNum">     407</span>              : </span>
 <span id="L408"><span class="lineNum">     408</span>              : FORCE_FINLINE void Searcher::timeCheck(){</span>
 <span id="L409"><span class="lineNum">     409</span>              :    static uint64_t periodicCheck = 0ull; ///@todo this is slow because of guard variable</span>
-<span id="L410"><span class="lineNum">     410</span> <span class="tlaGNC">     4947663 :    if (periodicCheck == 0ull) {</span></span>
+<span id="L410"><span class="lineNum">     410</span> <span class="tlaGNC">     4947539 :    if (periodicCheck == 0ull) {</span></span>
 <span id="L411"><span class="lineNum">     411</span> <span class="tlaGNC">        4834 :       periodicCheck = (TimeMan::maxNodes &gt; 0) ? std::min(TimeMan::maxNodes, PERIODICCHECK) : PERIODICCHECK;</span></span>
 <span id="L412"><span class="lineNum">     412</span> <span class="tlaGNC">        9668 :       const Counter nodeCount = isStoppableCoSearcher ? stats.counters[Stats::sid_nodes] + stats.counters[Stats::sid_qnodes]</span></span>
 <span id="L413"><span class="lineNum">     413</span> <span class="tlaGNC">        4834 :                                 : ThreadPool::instance().counter(Stats::sid_nodes) + ThreadPool::instance().counter(Stats::sid_qnodes);</span></span>
@@ -489,12 +489,12 @@
 <span id="L427"><span class="lineNum">     427</span>              :          ThreadPool::instance().main().stopFlag = masterStopFlag;</span>
 <span id="L428"><span class="lineNum">     428</span>              :       }</span>
 <span id="L429"><span class="lineNum">     429</span>              :    }</span>
-<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC tlaBgGNC">     4947663 :    --periodicCheck;</span></span>
-<span id="L431"><span class="lineNum">     431</span> <span class="tlaGNC">     4947663 : }</span></span>
+<span id="L430"><span class="lineNum">     430</span> <span class="tlaGNC tlaBgGNC">     4947539 :    --periodicCheck;</span></span>
+<span id="L431"><span class="lineNum">     431</span> <span class="tlaGNC">     4947539 : }</span></span>
 <span id="L432"><span class="lineNum">     432</span>              : </span>
 <span id="L433"><span class="lineNum">     433</span>              : // pvs inspired by Xiphos</span>
 <span id="L434"><span class="lineNum">     434</span>              : template&lt;bool pvnode&gt;</span>
-<span id="L435"><span class="lineNum">     435</span> <span class="tlaGNC">     4947785 : ScoreType Searcher::pvs(ScoreType                    alpha,</span></span>
+<span id="L435"><span class="lineNum">     435</span> <span class="tlaGNC">     4947632 : ScoreType Searcher::pvs(ScoreType                    alpha,</span></span>
 <span id="L436"><span class="lineNum">     436</span>              :                         ScoreType                    beta,</span>
 <span id="L437"><span class="lineNum">     437</span>              :                         const Position&amp;              p,</span>
 <span id="L438"><span class="lineNum">     438</span>              :                         DepthType                    depth,</span>
@@ -507,56 +507,56 @@
 <span id="L445"><span class="lineNum">     445</span>              :                         const std::vector&lt;MiniMove&gt;* skipMoves) {</span>
 <span id="L446"><span class="lineNum">     446</span>              : </span>
 <span id="L447"><span class="lineNum">     447</span>              :    // stopFlag management and time check. Only on main thread and not at each node (see PERIODICCHECK)</span>
-<span id="L448"><span class="lineNum">     448</span> <span class="tlaGNC">     4947785 :    if (isMainThread() || isStoppableCoSearcher) timeCheck();</span></span>
-<span id="L449"><span class="lineNum">     449</span> <span class="tlaGNC">     4947785 :    if (stopFlag) return STOPSCORE;</span></span>
+<span id="L448"><span class="lineNum">     448</span> <span class="tlaGNC">     4947632 :    if (isMainThread() || isStoppableCoSearcher) timeCheck();</span></span>
+<span id="L449"><span class="lineNum">     449</span> <span class="tlaGNC">     4947632 :    if (stopFlag) return STOPSCORE;</span></span>
 <span id="L450"><span class="lineNum">     450</span>              : </span>
-<span id="L451"><span class="lineNum">     451</span> <span class="tlaGNC">     4947785 :    debug_king_cap(p);</span></span>
+<span id="L451"><span class="lineNum">     451</span> <span class="tlaGNC">     4947628 :    debug_king_cap(p);</span></span>
 <span id="L452"><span class="lineNum">     452</span>              : </span>
 <span id="L453"><span class="lineNum">     453</span>              :    // initiate the big pvsData structure with already given parameters</span>
-<span id="L454"><span class="lineNum">     454</span> <span class="tlaGNC">     4947785 :    PVSData pvsData;</span></span>
-<span id="L455"><span class="lineNum">     455</span> <span class="tlaGNC">     4947785 :    pvsData.cutNode = cutNode_;</span></span>
-<span id="L456"><span class="lineNum">     456</span> <span class="tlaGNC">     4947785 :    pvsData.isInCheck = isInCheck_;</span></span>
-<span id="L457"><span class="lineNum">     457</span> <span class="tlaGNC">     4947785 :    pvsData.alpha = alpha;</span></span>
-<span id="L458"><span class="lineNum">     458</span> <span class="tlaGNC">     4947785 :    pvsData.beta = beta;</span></span>
-<span id="L459"><span class="lineNum">     459</span> <span class="tlaGNC">     4947785 :    pvsData.pvnode = pvnode;</span></span>
-<span id="L460"><span class="lineNum">     460</span> <span class="tlaGNC">     4947785 :    pvsData.withoutSkipMove = skipMoves == nullptr;</span></span>
-<span id="L461"><span class="lineNum">     461</span> <span class="tlaGNC">     4947785 :    pvsData.previousMoveIsNullMove = p.lastMove == NULLMOVE;</span></span>
+<span id="L454"><span class="lineNum">     454</span> <span class="tlaGNC">     4947628 :    PVSData pvsData;</span></span>
+<span id="L455"><span class="lineNum">     455</span> <span class="tlaGNC">     4947628 :    pvsData.cutNode = cutNode_;</span></span>
+<span id="L456"><span class="lineNum">     456</span> <span class="tlaGNC">     4947628 :    pvsData.isInCheck = isInCheck_;</span></span>
+<span id="L457"><span class="lineNum">     457</span> <span class="tlaGNC">     4947628 :    pvsData.alpha = alpha;</span></span>
+<span id="L458"><span class="lineNum">     458</span> <span class="tlaGNC">     4947628 :    pvsData.beta = beta;</span></span>
+<span id="L459"><span class="lineNum">     459</span> <span class="tlaGNC">     4947628 :    pvsData.pvnode = pvnode;</span></span>
+<span id="L460"><span class="lineNum">     460</span> <span class="tlaGNC">     4947628 :    pvsData.withoutSkipMove = skipMoves == nullptr;</span></span>
+<span id="L461"><span class="lineNum">     461</span> <span class="tlaGNC">     4947628 :    pvsData.previousMoveIsNullMove = p.lastMove == NULLMOVE;</span></span>
 <span id="L462"><span class="lineNum">     462</span>              :    </span>
 <span id="L463"><span class="lineNum">     463</span>              :    // some evaluation are used inside search</span>
-<span id="L464"><span class="lineNum">     464</span> <span class="tlaGNC">     4947785 :    EvalData evalData;</span></span>
+<span id="L464"><span class="lineNum">     464</span> <span class="tlaGNC">     4947628 :    EvalData evalData;</span></span>
 <span id="L465"><span class="lineNum">     465</span>              : </span>
 <span id="L466"><span class="lineNum">     466</span>              :    // height is updated recursively in pvs and qsearch calls </span>
 <span id="L467"><span class="lineNum">     467</span>              :    // but also given to Searcher itself in order to be available inside eval (which have &quot;context&quot;).</span>
 <span id="L468"><span class="lineNum">     468</span>              :    // @todo simplify this using only one solution !</span>
-<span id="L469"><span class="lineNum">     469</span> <span class="tlaGNC">     4947785 :    height_ = height;</span></span>
-<span id="L470"><span class="lineNum">     470</span> <span class="tlaGNC">     4947785 :    pvsData.theirTurn = height%2;</span></span>
-<span id="L471"><span class="lineNum">     471</span> <span class="tlaGNC">     4947785 :    pvsData.rootnode = height == 0;</span></span>
+<span id="L469"><span class="lineNum">     469</span> <span class="tlaGNC">     4947628 :    height_ = height;</span></span>
+<span id="L470"><span class="lineNum">     470</span> <span class="tlaGNC">     4947628 :    pvsData.theirTurn = height%2;</span></span>
+<span id="L471"><span class="lineNum">     471</span> <span class="tlaGNC">     4947628 :    pvsData.rootnode = height == 0;</span></span>
 <span id="L472"><span class="lineNum">     472</span>              : </span>
 <span id="L473"><span class="lineNum">     473</span>              :    // we cannot search deeper than MAX_DEPTH, if so just return static evaluation in this case</span>
-<span id="L474"><span class="lineNum">     474</span> <span class="tlaGNC">     4947785 :    if (height &gt;= MAX_DEPTH - 1 || depth &gt;= MAX_DEPTH - 1) return eval(p, evalData, *this);</span></span>
+<span id="L474"><span class="lineNum">     474</span> <span class="tlaGNC">     4947628 :    if (height &gt;= MAX_DEPTH - 1 || depth &gt;= MAX_DEPTH - 1) return eval(p, evalData, *this);</span></span>
 <span id="L475"><span class="lineNum">     475</span>              : </span>
 <span id="L476"><span class="lineNum">     476</span>              :    // if not at root we check for draws (3rep, fifty and material)</span>
-<span id="L477"><span class="lineNum">     477</span> <span class="tlaGNC">     4947785 :    if (!pvsData.rootnode){</span></span>
-<span id="L478"><span class="lineNum">     478</span> <span class="tlaGNC">     4946421 :       if (const auto INRscore = interiorNodeRecognizer&lt;pvnode&gt;(p, height); INRscore.has_value()){</span></span>
+<span id="L477"><span class="lineNum">     477</span> <span class="tlaGNC">     4947628 :    if (!pvsData.rootnode){</span></span>
+<span id="L478"><span class="lineNum">     478</span> <span class="tlaGNC">     4946269 :       if (const auto INRscore = interiorNodeRecognizer&lt;pvnode&gt;(p, height); INRscore.has_value()){</span></span>
 <span id="L479"><span class="lineNum">     479</span> <span class="tlaGNC">        6580 :          return INRscore.value();</span></span>
 <span id="L480"><span class="lineNum">     480</span>              :       }</span>
 <span id="L481"><span class="lineNum">     481</span>              :    }</span>
 <span id="L482"><span class="lineNum">     482</span>              : </span>
 <span id="L483"><span class="lineNum">     483</span>              :    // on pvs leaf node, call a quiet search</span>
-<span id="L484"><span class="lineNum">     484</span> <span class="tlaGNC">     4941205 :    if (depth &lt;= 0) {</span></span>
+<span id="L484"><span class="lineNum">     484</span> <span class="tlaGNC">     4941048 :    if (depth &lt;= 0) {</span></span>
 <span id="L485"><span class="lineNum">     485</span>              :       // don't enter qsearch when in check</span>
 <span id="L486"><span class="lineNum">     486</span>              :       //if (pvsData.isInCheck) depth = 1;</span>
 <span id="L487"><span class="lineNum">     487</span>              :       //else</span>
-<span id="L488"><span class="lineNum">     488</span> <span class="tlaGNC">     1823607 :          return qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, pvsData.isInCheck);</span></span>
+<span id="L488"><span class="lineNum">     488</span> <span class="tlaGNC">     1823455 :          return qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, pvsData.isInCheck);</span></span>
 <span id="L489"><span class="lineNum">     489</span>              :    }</span>
 <span id="L490"><span class="lineNum">     490</span>              : </span>
 <span id="L491"><span class="lineNum">     491</span>              :    // update selective depth as soon as we &quot;really enter&quot; a node</span>
-<span id="L492"><span class="lineNum">     492</span> <span class="tlaGNC">     3117598 :    seldepth = std::max(seldepth,height);</span></span>
+<span id="L492"><span class="lineNum">     492</span> <span class="tlaGNC">     3117593 :    seldepth = std::max(seldepth,height);</span></span>
 <span id="L493"><span class="lineNum">     493</span>              : </span>
 <span id="L494"><span class="lineNum">     494</span>              :    // update nodes count as soon as we &quot;really enter&quot; a node</span>
-<span id="L495"><span class="lineNum">     495</span> <span class="tlaGNC">     3117598 :    ++stats.counters[Stats::sid_nodes];</span></span>
+<span id="L495"><span class="lineNum">     495</span> <span class="tlaGNC">     3117593 :    ++stats.counters[Stats::sid_nodes];</span></span>
 <span id="L496"><span class="lineNum">     496</span>              : </span>
-<span id="L497"><span class="lineNum">     497</span> <span class="tlaGNC">     3117598 :    if (!pvsData.rootnode){</span></span>
+<span id="L497"><span class="lineNum">     497</span> <span class="tlaGNC">     3117593 :    if (!pvsData.rootnode){</span></span>
 <span id="L498"><span class="lineNum">     498</span>              :       // mate distance pruning</span>
 <span id="L499"><span class="lineNum">     499</span> <span class="tlaGNC">     3116234 :       alpha = std::max(alpha, matedScore(height));</span></span>
 <span id="L500"><span class="lineNum">     500</span> <span class="tlaGNC">     3116234 :       beta  = std::min(beta, matingScore(height + 1));</span></span>
@@ -568,36 +568,36 @@
 <span id="L506"><span class="lineNum">     506</span>              :    }</span>
 <span id="L507"><span class="lineNum">     507</span>              : </span>
 <span id="L508"><span class="lineNum">     508</span>              :    // get the CMH pointer, can be needed to update tables</span>
-<span id="L509"><span class="lineNum">     509</span> <span class="tlaGNC">     3117537 :    getCMHPtr(p.halfmoves, pvsData.cmhPtr);</span></span>
+<span id="L509"><span class="lineNum">     509</span> <span class="tlaGNC">     3117532 :    getCMHPtr(p.halfmoves, pvsData.cmhPtr);</span></span>
 <span id="L510"><span class="lineNum">     510</span>              : </span>
 <span id="L511"><span class="lineNum">     511</span>              :    // the position hash will be used quite often</span>
-<span id="L512"><span class="lineNum">     512</span> <span class="tlaGNC">     3117537 :    Hash pHash = computeHash(p);</span></span>
+<span id="L512"><span class="lineNum">     512</span> <span class="tlaGNC">     3117532 :    Hash pHash = computeHash(p);</span></span>
 <span id="L513"><span class="lineNum">     513</span>              :    // let's consider skipmove(s) in position hashing</span>
-<span id="L514"><span class="lineNum">     514</span> <span class="tlaGNC">     3117537 :    if (skipMoves){</span></span>
-<span id="L515"><span class="lineNum">     515</span> <span class="tlaGNC">       89384 :       for (const auto &amp; it : *skipMoves) { </span></span>
+<span id="L514"><span class="lineNum">     514</span> <span class="tlaGNC">     3117532 :    if (skipMoves){</span></span>
+<span id="L515"><span class="lineNum">     515</span> <span class="tlaGNC">       89366 :       for (const auto &amp; it : *skipMoves) { </span></span>
 <span id="L516"><span class="lineNum">     516</span> <span class="tlaUNC tlaBgUNC">           0 :           assert( isValidMove(it) );</span></span>
-<span id="L517"><span class="lineNum">     517</span> <span class="tlaGNC tlaBgGNC">       44698 :           pHash ^= Zobrist::hashMove(it);</span></span>
+<span id="L517"><span class="lineNum">     517</span> <span class="tlaGNC tlaBgGNC">       44686 :           pHash ^= Zobrist::hashMove(it);</span></span>
 <span id="L518"><span class="lineNum">     518</span>              :       }</span>
 <span id="L519"><span class="lineNum">     519</span>              :    }</span>
 <span id="L520"><span class="lineNum">     520</span>              : </span>
 <span id="L521"><span class="lineNum">     521</span>              :    // Check for end-game knowledge</span>
 <span id="L522"><span class="lineNum">     522</span>              :    Hash matHash = nullHash;</span>
 <span id="L523"><span class="lineNum">     523</span>              :    MaterialHash::Terminaison terminaison = MaterialHash::Ter_Unknown;   </span>
-<span id="L524"><span class="lineNum">     524</span> <span class="tlaGNC">     3117537 :    if (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] &lt; 5) {</span></span>
+<span id="L524"><span class="lineNum">     524</span> <span class="tlaGNC">     3117532 :    if (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] &lt; 5) {</span></span>
 <span id="L525"><span class="lineNum">     525</span> <span class="tlaGNC">     1437435 :       matHash = MaterialHash::getMaterialHash(p.mat);</span></span>
 <span id="L526"><span class="lineNum">     526</span> <span class="tlaGNC">     1437435 :       if ( matHash != nullHash ){</span></span>
 <span id="L527"><span class="lineNum">     527</span>              :          const MaterialHash::MaterialHashEntry&amp; MEntry = MaterialHash::materialHashTable[matHash];</span>
 <span id="L528"><span class="lineNum">     528</span> <span class="tlaGNC">     1437428 :          terminaison = MEntry.t;</span></span>
 <span id="L529"><span class="lineNum">     529</span>              :       }</span>
 <span id="L530"><span class="lineNum">     530</span>              :    }</span>
-<span id="L531"><span class="lineNum">     531</span> <span class="tlaGNC">     3117537 :    pvsData.isKnownEndGame = terminaison != MaterialHash::Ter_Unknown;</span></span>
+<span id="L531"><span class="lineNum">     531</span> <span class="tlaGNC">     3117532 :    pvsData.isKnownEndGame = terminaison != MaterialHash::Ter_Unknown;</span></span>
 <span id="L532"><span class="lineNum">     532</span>              : </span>
 <span id="L533"><span class="lineNum">     533</span>              :    // probe TT</span>
 <span id="L534"><span class="lineNum">     534</span>              :    TT::Entry e;</span>
-<span id="L535"><span class="lineNum">     535</span> <span class="tlaGNC">     3117537 :    const bool ttDepthOk = TT::getEntry(*this, p, pHash, depth, e);</span></span>
-<span id="L536"><span class="lineNum">     536</span> <span class="tlaGNC">     3117537 :    pvsData.bound = static_cast&lt;TT::Bound&gt;(e.b &amp; ~TT::B_allFlags);</span></span>
+<span id="L535"><span class="lineNum">     535</span> <span class="tlaGNC">     3117532 :    const bool ttDepthOk = TT::getEntry(*this, p, pHash, depth, e);</span></span>
+<span id="L536"><span class="lineNum">     536</span> <span class="tlaGNC">     3117532 :    pvsData.bound = static_cast&lt;TT::Bound&gt;(e.b &amp; ~TT::B_allFlags);</span></span>
 <span id="L537"><span class="lineNum">     537</span>              :    // if depth of TT entry is enough, and not at root, then we consider to early return</span>
-<span id="L538"><span class="lineNum">     538</span> <span class="tlaGNC">     3117537 :    if (ttDepthOk &amp;&amp; !pvsData.rootnode) { </span></span>
+<span id="L538"><span class="lineNum">     538</span> <span class="tlaGNC">     3117532 :    if (ttDepthOk &amp;&amp; !pvsData.rootnode) { </span></span>
 <span id="L539"><span class="lineNum">     539</span> <span class="tlaGNC">      524326 :       if ((pvsData.bound == TT::B_alpha &amp;&amp; e.s &lt;= alpha) </span></span>
 <span id="L540"><span class="lineNum">     540</span> <span class="tlaGNC">      462640 :        || (pvsData.bound == TT::B_beta  &amp;&amp; e.s &gt;= beta)  </span></span>
 <span id="L541"><span class="lineNum">     541</span> <span class="tlaGNC">      110994 :        || (pvsData.bound == TT::B_exact) ) {</span></span>
@@ -640,11 +640,11 @@
 <span id="L578"><span class="lineNum">     578</span>              :    // if entry hash is not null and entry move is valid, </span>
 <span id="L579"><span class="lineNum">     579</span>              :    // then this is a valid TT move (we don't care about depth of the entry here)</span>
 <span id="L580"><span class="lineNum">     580</span>              :    ///@todo try to store more things in TT bound ...</span>
-<span id="L581"><span class="lineNum">     581</span> <span class="tlaGNC">     2701495 :    pvsData.ttHit       = e.h != nullHash;</span></span>
-<span id="L582"><span class="lineNum">     582</span> <span class="tlaGNC">     2701495 :    pvsData.validTTmove = pvsData.ttHit &amp;&amp; e.m != INVALIDMINIMOVE;</span></span>
-<span id="L583"><span class="lineNum">     583</span> <span class="tlaGNC">     2701495 :    pvsData.ttPV        = pvnode || (pvsData.validTTmove &amp;&amp; (e.b &amp; TT::B_ttPVFlag)); </span></span>
-<span id="L584"><span class="lineNum">     584</span> <span class="tlaGNC">     2701495 :    pvsData.ttIsCheck   = pvsData.validTTmove &amp;&amp; (e.b &amp; TT::B_isCheckFlag);</span></span>
-<span id="L585"><span class="lineNum">     585</span> <span class="tlaGNC">     2701495 :    pvsData.formerPV    = pvsData.ttPV &amp;&amp; !pvnode;</span></span>
+<span id="L581"><span class="lineNum">     581</span> <span class="tlaGNC">     2701490 :    pvsData.ttHit       = e.h != nullHash;</span></span>
+<span id="L582"><span class="lineNum">     582</span> <span class="tlaGNC">     2701490 :    pvsData.validTTmove = pvsData.ttHit &amp;&amp; e.m != INVALIDMINIMOVE;</span></span>
+<span id="L583"><span class="lineNum">     583</span> <span class="tlaGNC">     2701490 :    pvsData.ttPV        = pvnode || (pvsData.validTTmove &amp;&amp; (e.b &amp; TT::B_ttPVFlag)); </span></span>
+<span id="L584"><span class="lineNum">     584</span> <span class="tlaGNC">     2701490 :    pvsData.ttIsCheck   = pvsData.validTTmove &amp;&amp; (e.b &amp; TT::B_isCheckFlag);</span></span>
+<span id="L585"><span class="lineNum">     585</span> <span class="tlaGNC">     2701490 :    pvsData.formerPV    = pvsData.ttPV &amp;&amp; !pvnode;</span></span>
 <span id="L586"><span class="lineNum">     586</span>              : </span>
 <span id="L587"><span class="lineNum">     587</span>              :    // an idea from Ethereal : </span>
 <span id="L588"><span class="lineNum">     588</span>              :    // near TT hits in terms of depth can trigger early returns</span>
@@ -677,10 +677,10 @@
 <span id="L615"><span class="lineNum">     615</span>              : </span>
 <span id="L616"><span class="lineNum">     616</span>              : #ifdef WITH_SYZYGY</span>
 <span id="L617"><span class="lineNum">     617</span>              :    // probe TB</span>
-<span id="L618"><span class="lineNum">     618</span> <span class="tlaGNC">     2650966 :    ScoreType tbScore = 0;</span></span>
-<span id="L619"><span class="lineNum">     619</span> <span class="tlaGNC">       16084 :    if (!pvsData.rootnode </span></span>
+<span id="L618"><span class="lineNum">     618</span> <span class="tlaGNC">     2650961 :    ScoreType tbScore = 0;</span></span>
+<span id="L619"><span class="lineNum">     619</span> <span class="tlaGNC">       16079 :    if (!pvsData.rootnode </span></span>
 <span id="L620"><span class="lineNum">     620</span> <span class="tlaGNC">     2649602 :      &amp;&amp; pvsData.withoutSkipMove </span></span>
-<span id="L621"><span class="lineNum">     621</span> <span class="tlaGNC">     5264806 :      &amp;&amp; BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black]) &lt;= SyzygyTb::MAX_TB_MEN){</span></span>
+<span id="L621"><span class="lineNum">     621</span> <span class="tlaGNC">     5264801 :      &amp;&amp; BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black]) &lt;= SyzygyTb::MAX_TB_MEN){</span></span>
 <span id="L622"><span class="lineNum">     622</span> <span class="tlaUNC tlaBgUNC">           0 :       if (SyzygyTb::probe_wdl(p, tbScore, true) &gt; 0) {</span></span>
 <span id="L623"><span class="lineNum">     623</span> <span class="tlaUNC">           0 :          ++stats.counters[Stats::sid_tbHit1];</span></span>
 <span id="L624"><span class="lineNum">     624</span>              :          // if this is a winning/losing EGT position, we add up static evaluation</span>
@@ -703,18 +703,18 @@
 <span id="L641"><span class="lineNum">     641</span>              :    }</span>
 <span id="L642"><span class="lineNum">     642</span>              : #endif</span>
 <span id="L643"><span class="lineNum">     643</span>              : </span>
-<span id="L644"><span class="lineNum">     644</span> <span class="tlaGNC tlaBgGNC">     2650966 :    assert(p.halfmoves - 1 &lt; MAX_PLY &amp;&amp; p.halfmoves - 1 &gt;= 0);</span></span>
+<span id="L644"><span class="lineNum">     644</span> <span class="tlaGNC tlaBgGNC">     2650961 :    assert(p.halfmoves - 1 &lt; MAX_PLY &amp;&amp; p.halfmoves - 1 &gt;= 0);</span></span>
 <span id="L645"><span class="lineNum">     645</span>              : </span>
 <span id="L646"><span class="lineNum">     646</span>              :    // now, let's get a static score for the position.</span>
 <span id="L647"><span class="lineNum">     647</span>              :    ScoreType evalScore;</span>
 <span id="L648"><span class="lineNum">     648</span>              : </span>
 <span id="L649"><span class="lineNum">     649</span>              :    // do not eval position when in check, we won't use it (as we won't forward prune)</span>
-<span id="L650"><span class="lineNum">     650</span> <span class="tlaGNC">     2650966 :    if (pvsData.isInCheck){</span></span>
+<span id="L650"><span class="lineNum">     650</span> <span class="tlaGNC">     2650961 :    if (pvsData.isInCheck){</span></span>
 <span id="L651"><span class="lineNum">     651</span>              :       evalScore = matedScore(height);</span>
 <span id="L652"><span class="lineNum">     652</span>              :    }</span>
 <span id="L653"><span class="lineNum">     653</span>              :    // skip eval: if nullmove just applied we can hack</span>
 <span id="L654"><span class="lineNum">     654</span>              :    // but this won't work with asymetric HalfKA NNUE</span>
-<span id="L655"><span class="lineNum">     655</span> <span class="tlaGNC">     2315839 :    else if (!DynamicConfig::useNNUE &amp;&amp; pvsData.previousMoveIsNullMove &amp;&amp; height &gt; 0){</span></span>
+<span id="L655"><span class="lineNum">     655</span> <span class="tlaGNC">     2315834 :    else if (!DynamicConfig::useNNUE &amp;&amp; pvsData.previousMoveIsNullMove &amp;&amp; height &gt; 0){</span></span>
 <span id="L656"><span class="lineNum">     656</span> <span class="tlaUNC tlaBgUNC">           0 :       evalScore = 2 * EvalConfig::tempo - stack[p.halfmoves - 1].eval;</span></span>
 <span id="L657"><span class="lineNum">     657</span>              : #ifdef DEBUG_STATICEVAL</span>
 <span id="L658"><span class="lineNum">     658</span>              :       checkEval(p,evalScore,*this,&quot;null move trick (pvs)&quot;);</span>
@@ -723,16 +723,16 @@
 <span id="L661"><span class="lineNum">     661</span>              :    else {</span>
 <span id="L662"><span class="lineNum">     662</span>              :       // if we had a TT hit (with or without associated move), </span>
 <span id="L663"><span class="lineNum">     663</span>              :       // we can use its eval instead of calling eval()</span>
-<span id="L664"><span class="lineNum">     664</span> <span class="tlaGNC tlaBgGNC">     2315839 :       if (pvsData.ttHit) {</span></span>
+<span id="L664"><span class="lineNum">     664</span> <span class="tlaGNC tlaBgGNC">     2315834 :       if (pvsData.ttHit) {</span></span>
 <span id="L665"><span class="lineNum">     665</span>              :          stats.incr(Stats::sid_ttschits);</span>
-<span id="L666"><span class="lineNum">     666</span> <span class="tlaGNC">     1188392 :          evalScore = e.e;</span></span>
+<span id="L666"><span class="lineNum">     666</span> <span class="tlaGNC">     1188391 :          evalScore = e.e;</span></span>
 <span id="L667"><span class="lineNum">     667</span>              :          // but we are missing game phase in this case</span>
 <span id="L668"><span class="lineNum">     668</span>              :          // so let's look for a material match</span>
-<span id="L669"><span class="lineNum">     669</span> <span class="tlaGNC">     1188392 :          matHash = matHash != nullHash ? matHash : MaterialHash::getMaterialHash(p.mat);</span></span>
-<span id="L670"><span class="lineNum">     670</span> <span class="tlaGNC">      629690 :          if (matHash != nullHash) {</span></span>
+<span id="L669"><span class="lineNum">     669</span> <span class="tlaGNC">     1188391 :          matHash = matHash != nullHash ? matHash : MaterialHash::getMaterialHash(p.mat);</span></span>
+<span id="L670"><span class="lineNum">     670</span> <span class="tlaGNC">      629689 :          if (matHash != nullHash) {</span></span>
 <span id="L671"><span class="lineNum">     671</span>              :             stats.incr(Stats::sid_materialTableHitsSearch);</span>
 <span id="L672"><span class="lineNum">     672</span>              :             const MaterialHash::MaterialHashEntry&amp; MEntry = MaterialHash::materialHashTable[matHash];</span>
-<span id="L673"><span class="lineNum">     673</span> <span class="tlaGNC">     1188280 :             evalData.gp = MEntry.gamePhase();</span></span>
+<span id="L673"><span class="lineNum">     673</span> <span class="tlaGNC">     1188279 :             evalData.gp = MEntry.gamePhase();</span></span>
 <span id="L674"><span class="lineNum">     674</span>              :          }</span>
 <span id="L675"><span class="lineNum">     675</span>              :          else { </span>
 <span id="L676"><span class="lineNum">     676</span>              :             stats.incr(Stats::sid_materialTableMissSearch);</span>
@@ -744,14 +744,14 @@
 <span id="L682"><span class="lineNum">     682</span>              :       // if no TT hit call evaluation</span>
 <span id="L683"><span class="lineNum">     683</span>              :       else {</span>
 <span id="L684"><span class="lineNum">     684</span>              :          stats.incr(Stats::sid_ttscmiss);</span>
-<span id="L685"><span class="lineNum">     685</span> <span class="tlaGNC">     1127447 :          evalScore = eval(p, evalData, *this);</span></span>
+<span id="L685"><span class="lineNum">     685</span> <span class="tlaGNC">     1127443 :          evalScore = eval(p, evalData, *this);</span></span>
 <span id="L686"><span class="lineNum">     686</span>              : #ifdef DEBUG_STATICEVAL</span>
 <span id="L687"><span class="lineNum">     687</span>              :          checkEval(p,evalScore,*this,&quot;from eval (pvs)&quot;);</span>
 <span id="L688"><span class="lineNum">     688</span>              :  #endif</span>
 <span id="L689"><span class="lineNum">     689</span>              :       }</span>
 <span id="L690"><span class="lineNum">     690</span>              :    }</span>
 <span id="L691"><span class="lineNum">     691</span>              : </span>
-<span id="L692"><span class="lineNum">     692</span> <span class="tlaGNC">     2650966 :    if (evalData.gp == 0){</span></span>
+<span id="L692"><span class="lineNum">     692</span> <span class="tlaGNC">     2650961 :    if (evalData.gp == 0){</span></span>
 <span id="L693"><span class="lineNum">     693</span>              :       // if no match yet, compute game phase now</span>
 <span id="L694"><span class="lineNum">     694</span> <span class="tlaGNC">      335239 :       ScoreType matScoreW = 0;</span></span>
 <span id="L695"><span class="lineNum">     695</span> <span class="tlaGNC">      335239 :       ScoreType matScoreB = 0;</span></span>
@@ -759,77 +759,77 @@
 <span id="L697"><span class="lineNum">     697</span>              :    }</span>
 <span id="L698"><span class="lineNum">     698</span>              : </span>
 <span id="L699"><span class="lineNum">     699</span>              :    // insert only static eval in stack data, never hash score for consistancy!</span>
-<span id="L700"><span class="lineNum">     700</span> <span class="tlaGNC">     2650966 :    stack[p.halfmoves].eval = evalScore; </span></span>
+<span id="L700"><span class="lineNum">     700</span> <span class="tlaGNC">     2650961 :    stack[p.halfmoves].eval = evalScore; </span></span>
 <span id="L701"><span class="lineNum">     701</span>              : </span>
 <span id="L702"><span class="lineNum">     702</span>              :    // backup the static evaluation score as we will try to get a better evalScore approximation</span>
 <span id="L703"><span class="lineNum">     703</span>              :    const ScoreType staticScore = evalScore;</span>
 <span id="L704"><span class="lineNum">     704</span>              : </span>
 <span id="L705"><span class="lineNum">     705</span>              :    // if no TT hit yet, we insert an eval without a move here in case of forward pruning (depth is negative, bound is none) ...</span>
 <span id="L706"><span class="lineNum">     706</span>              :    // Be carefull here, _data2 in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely</span>
-<span id="L707"><span class="lineNum">     707</span> <span class="tlaGNC">     2650966 :    if (!pvsData.ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(evalScore, height), TT::createHashScore(staticScore, height), TT::B_none, -2, isMainThread());</span></span>
+<span id="L707"><span class="lineNum">     707</span> <span class="tlaGNC">     2650961 :    if (!pvsData.ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(evalScore, height), TT::createHashScore(staticScore, height), TT::B_none, -2, isMainThread());</span></span>
 <span id="L708"><span class="lineNum">     708</span>              : </span>
 <span id="L709"><span class="lineNum">     709</span>              :    // if TT hit, we can use entry score as a best draft </span>
 <span id="L710"><span class="lineNum">     710</span>              :    // but we set evalScoreIsHashScore to be aware of that !</span>
-<span id="L711"><span class="lineNum">     711</span> <span class="tlaGNC">     2650966 :    if (pvsData.ttHit &amp;&amp; e.d &gt; 0 &amp;&amp; !pvsData.isInCheck &amp;&amp; !pvsData.isKnownEndGame</span></span>
-<span id="L712"><span class="lineNum">     712</span> <span class="tlaGNC">      409126 :      &amp;&amp; ((pvsData.bound == TT::B_alpha &amp;&amp; e.s &lt; evalScore) || (pvsData.bound == TT::B_beta &amp;&amp; e.s &gt; evalScore) || (pvsData.bound == TT::B_exact))){</span></span>
-<span id="L713"><span class="lineNum">     713</span> <span class="tlaGNC">      191230 :      evalScore = TT::adjustHashScore(e.s, height);</span></span>
-<span id="L714"><span class="lineNum">     714</span> <span class="tlaGNC">      191230 :      pvsData.evalScoreIsHashScore = true;</span></span>
+<span id="L711"><span class="lineNum">     711</span> <span class="tlaGNC">     2650961 :    if (pvsData.ttHit &amp;&amp; e.d &gt; 0 &amp;&amp; !pvsData.isInCheck &amp;&amp; !pvsData.isKnownEndGame</span></span>
+<span id="L712"><span class="lineNum">     712</span> <span class="tlaGNC">      409125 :      &amp;&amp; ((pvsData.bound == TT::B_alpha &amp;&amp; e.s &lt; evalScore) || (pvsData.bound == TT::B_beta &amp;&amp; e.s &gt; evalScore) || (pvsData.bound == TT::B_exact))){</span></span>
+<span id="L713"><span class="lineNum">     713</span> <span class="tlaGNC">      191229 :      evalScore = TT::adjustHashScore(e.s, height);</span></span>
+<span id="L714"><span class="lineNum">     714</span> <span class="tlaGNC">      191229 :      pvsData.evalScoreIsHashScore = true;</span></span>
 <span id="L715"><span class="lineNum">     715</span>              :      stats.incr(Stats::sid_staticScoreIsFromSearch);</span>
 <span id="L716"><span class="lineNum">     716</span>              :    }</span>
 <span id="L717"><span class="lineNum">     717</span>              : </span>
 <span id="L718"><span class="lineNum">     718</span>              :    // take **initial** position situation (from game history) into account for pruning ? </span>
 <span id="L719"><span class="lineNum">     719</span>              :    ///@todo retry this</span>
-<span id="L720"><span class="lineNum">     720</span> <span class="tlaGNC">     2650966 :    pvsData.isBoomingAttack = positionEvolution == MoveDifficultyUtil::PE_boomingAttack;</span></span>
-<span id="L721"><span class="lineNum">     721</span> <span class="tlaGNC">     2650966 :    pvsData.isBoomingDefend = positionEvolution == MoveDifficultyUtil::PE_boomingDefence;</span></span>
-<span id="L722"><span class="lineNum">     722</span> <span class="tlaGNC">     2650966 :    pvsData.isMoobingAttack = positionEvolution == MoveDifficultyUtil::PE_moobingAttack;</span></span>
-<span id="L723"><span class="lineNum">     723</span> <span class="tlaGNC">     2650966 :    pvsData.isMoobingDefend = positionEvolution == MoveDifficultyUtil::PE_moobingDefence;</span></span>
+<span id="L720"><span class="lineNum">     720</span> <span class="tlaGNC">     2650961 :    pvsData.isBoomingAttack = positionEvolution == MoveDifficultyUtil::PE_boomingAttack;</span></span>
+<span id="L721"><span class="lineNum">     721</span> <span class="tlaGNC">     2650961 :    pvsData.isBoomingDefend = positionEvolution == MoveDifficultyUtil::PE_boomingDefence;</span></span>
+<span id="L722"><span class="lineNum">     722</span> <span class="tlaGNC">     2650961 :    pvsData.isMoobingAttack = positionEvolution == MoveDifficultyUtil::PE_moobingAttack;</span></span>
+<span id="L723"><span class="lineNum">     723</span> <span class="tlaGNC">     2650961 :    pvsData.isMoobingDefend = positionEvolution == MoveDifficultyUtil::PE_moobingDefence;</span></span>
 <span id="L724"><span class="lineNum">     724</span>              : </span>
 <span id="L725"><span class="lineNum">     725</span>              :    // take **initial** position situation (from IID variability) into account for pruning ? </span>
 <span id="L726"><span class="lineNum">     726</span>              :    ///@todo retry this</span>
-<span id="L727"><span class="lineNum">     727</span> <span class="tlaGNC">     2650966 :    pvsData.isEmergencyDefence = false;//moveDifficulty == MoveDifficultyUtil::MD_moobDefenceIID;</span></span>
-<span id="L728"><span class="lineNum">     728</span> <span class="tlaGNC">     2650966 :    pvsData.isEmergencyAttack  = false;//moveDifficulty == MoveDifficultyUtil::MD_moobAttackIID;</span></span>
+<span id="L727"><span class="lineNum">     727</span> <span class="tlaGNC">     2650961 :    pvsData.isEmergencyDefence = false;//moveDifficulty == MoveDifficultyUtil::MD_moobDefenceIID;</span></span>
+<span id="L728"><span class="lineNum">     728</span> <span class="tlaGNC">     2650961 :    pvsData.isEmergencyAttack  = false;//moveDifficulty == MoveDifficultyUtil::MD_moobAttackIID;</span></span>
 <span id="L729"><span class="lineNum">     729</span>              : </span>
 <span id="L730"><span class="lineNum">     730</span>              :    // take **current** position danger level into account for purning</span>
 <span id="L731"><span class="lineNum">     731</span>              :    // no HCE has been done, we need to work a little to get data from evaluation of the position</span>
-<span id="L732"><span class="lineNum">     732</span> <span class="tlaGNC">     2650966 :    if (!evalData.evalDone) {</span></span>
+<span id="L732"><span class="lineNum">     732</span> <span class="tlaGNC">     2650961 :    if (!evalData.evalDone) {</span></span>
 <span id="L733"><span class="lineNum">     733</span>              :       EvalScore mobilityScore = {0, 0};</span>
-<span id="L734"><span class="lineNum">     734</span> <span class="tlaGNC">     2366857 :       array2d&lt;BitBoard,2,6&gt; checkers     = {{emptyBitBoard}};</span></span>
-<span id="L735"><span class="lineNum">     735</span> <span class="tlaGNC">     2366857 :       array2d&lt;BitBoard,2,6&gt; attFromPiece = {{emptyBitBoard}};</span></span>
-<span id="L736"><span class="lineNum">     736</span> <span class="tlaGNC">     2366857 :       colored&lt;BitBoard&gt; att              = {emptyBitBoard, emptyBitBoard};</span></span>
-<span id="L737"><span class="lineNum">     737</span> <span class="tlaGNC">     2366857 :       colored&lt;BitBoard&gt; att2             = {emptyBitBoard, emptyBitBoard};</span></span>
+<span id="L734"><span class="lineNum">     734</span> <span class="tlaGNC">     2366852 :       array2d&lt;BitBoard,2,6&gt; checkers     = {{emptyBitBoard}};</span></span>
+<span id="L735"><span class="lineNum">     735</span> <span class="tlaGNC">     2366852 :       array2d&lt;BitBoard,2,6&gt; attFromPiece = {{emptyBitBoard}};</span></span>
+<span id="L736"><span class="lineNum">     736</span> <span class="tlaGNC">     2366852 :       colored&lt;BitBoard&gt; att              = {emptyBitBoard, emptyBitBoard};</span></span>
+<span id="L737"><span class="lineNum">     737</span> <span class="tlaGNC">     2366852 :       colored&lt;BitBoard&gt; att2             = {emptyBitBoard, emptyBitBoard};</span></span>
 <span id="L738"><span class="lineNum">     738</span>              : </span>
 <span id="L739"><span class="lineNum">     739</span>              :       evalFeatures(p, attFromPiece, att, att2, checkers, evalData.danger, mobilityScore, evalData.mobility);</span>
 <span id="L740"><span class="lineNum">     740</span>              : </span>
-<span id="L741"><span class="lineNum">     741</span> <span class="tlaGNC">     2366857 :       evalData.haveThreats[Co_White] = (att[Co_White] &amp; p.allPieces[Co_Black]) != emptyBitBoard;</span></span>
-<span id="L742"><span class="lineNum">     742</span> <span class="tlaGNC">     2366857 :       evalData.haveThreats[Co_Black] = (att[Co_Black] &amp; p.allPieces[Co_White]) != emptyBitBoard;</span></span>
+<span id="L741"><span class="lineNum">     741</span> <span class="tlaGNC">     2366852 :       evalData.haveThreats[Co_White] = (att[Co_White] &amp; p.allPieces[Co_Black]) != emptyBitBoard;</span></span>
+<span id="L742"><span class="lineNum">     742</span> <span class="tlaGNC">     2366852 :       evalData.haveThreats[Co_Black] = (att[Co_Black] &amp; p.allPieces[Co_White]) != emptyBitBoard;</span></span>
 <span id="L743"><span class="lineNum">     743</span>              : </span>
-<span id="L744"><span class="lineNum">     744</span> <span class="tlaGNC">     2366857 :       evalData.goodThreats[Co_White] = ((attFromPiece[Co_White][P_wp - 1] &amp; p.allPieces[Co_Black] &amp; ~p.blackPawn()) |</span></span>
-<span id="L745"><span class="lineNum">     745</span> <span class="tlaGNC">     2366857 :                                         (attFromPiece[Co_White][P_wn - 1] &amp; (p.blackQueen() | p.blackRook())) |</span></span>
-<span id="L746"><span class="lineNum">     746</span> <span class="tlaGNC">     2366857 :                                         (attFromPiece[Co_White][P_wb - 1] &amp; (p.blackQueen() | p.blackRook())) |</span></span>
-<span id="L747"><span class="lineNum">     747</span> <span class="tlaGNC">     2366857 :                                         (attFromPiece[Co_White][P_wr - 1] &amp; p.blackQueen())) != emptyBitBoard;</span></span>
-<span id="L748"><span class="lineNum">     748</span> <span class="tlaGNC">     2366857 :       evalData.goodThreats[Co_Black] = ((attFromPiece[Co_Black][P_wp - 1] &amp; p.allPieces[Co_White] &amp; ~p.whitePawn()) |</span></span>
-<span id="L749"><span class="lineNum">     749</span> <span class="tlaGNC">     2366857 :                                         (attFromPiece[Co_Black][P_wn - 1] &amp; (p.whiteQueen() | p.whiteRook())) |</span></span>
-<span id="L750"><span class="lineNum">     750</span> <span class="tlaGNC">     2366857 :                                         (attFromPiece[Co_Black][P_wb - 1] &amp; (p.whiteQueen() | p.whiteRook())) |</span></span>
-<span id="L751"><span class="lineNum">     751</span> <span class="tlaGNC">     2366857 :                                         (attFromPiece[Co_Black][P_wr - 1] &amp; p.whiteQueen())) != emptyBitBoard;</span></span>
+<span id="L744"><span class="lineNum">     744</span> <span class="tlaGNC">     2366852 :       evalData.goodThreats[Co_White] = ((attFromPiece[Co_White][P_wp - 1] &amp; p.allPieces[Co_Black] &amp; ~p.blackPawn()) |</span></span>
+<span id="L745"><span class="lineNum">     745</span> <span class="tlaGNC">     2366852 :                                         (attFromPiece[Co_White][P_wn - 1] &amp; (p.blackQueen() | p.blackRook())) |</span></span>
+<span id="L746"><span class="lineNum">     746</span> <span class="tlaGNC">     2366852 :                                         (attFromPiece[Co_White][P_wb - 1] &amp; (p.blackQueen() | p.blackRook())) |</span></span>
+<span id="L747"><span class="lineNum">     747</span> <span class="tlaGNC">     2366852 :                                         (attFromPiece[Co_White][P_wr - 1] &amp; p.blackQueen())) != emptyBitBoard;</span></span>
+<span id="L748"><span class="lineNum">     748</span> <span class="tlaGNC">     2366852 :       evalData.goodThreats[Co_Black] = ((attFromPiece[Co_Black][P_wp - 1] &amp; p.allPieces[Co_White] &amp; ~p.whitePawn()) |</span></span>
+<span id="L749"><span class="lineNum">     749</span> <span class="tlaGNC">     2366852 :                                         (attFromPiece[Co_Black][P_wn - 1] &amp; (p.whiteQueen() | p.whiteRook())) |</span></span>
+<span id="L750"><span class="lineNum">     750</span> <span class="tlaGNC">     2366852 :                                         (attFromPiece[Co_Black][P_wb - 1] &amp; (p.whiteQueen() | p.whiteRook())) |</span></span>
+<span id="L751"><span class="lineNum">     751</span> <span class="tlaGNC">     2366852 :                                         (attFromPiece[Co_Black][P_wr - 1] &amp; p.whiteQueen())) != emptyBitBoard;</span></span>
 <span id="L752"><span class="lineNum">     752</span>              :    }</span>
 <span id="L753"><span class="lineNum">     753</span>              : </span>
 <span id="L754"><span class="lineNum">     754</span>              :    // if the position is really intense, eventually for both side (thus very sharp), will try to prune/reduce a little less</span>
-<span id="L755"><span class="lineNum">     755</span> <span class="tlaGNC">     2650966 :    const int dangerFactor          = (evalData.danger[Co_White] + evalData.danger[Co_Black]) / SearchConfig::dangerDivisor;</span></span>
-<span id="L756"><span class="lineNum">     756</span> <span class="tlaGNC">     2650966 :    const bool isDangerPrune        = dangerFactor &gt;= SearchConfig::dangerLimitPruning;</span></span>
-<span id="L757"><span class="lineNum">     757</span> <span class="tlaGNC">     2650966 :    const bool isDangerForwardPrune = dangerFactor &gt;= SearchConfig::dangerLimitForwardPruning;</span></span>
-<span id="L758"><span class="lineNum">     758</span> <span class="tlaGNC">     2650966 :    const bool isDangerRed          = dangerFactor &gt;= SearchConfig::dangerLimitReduction;</span></span>
+<span id="L755"><span class="lineNum">     755</span> <span class="tlaGNC">     2650961 :    const int dangerFactor          = (evalData.danger[Co_White] + evalData.danger[Co_Black]) / SearchConfig::dangerDivisor;</span></span>
+<span id="L756"><span class="lineNum">     756</span> <span class="tlaGNC">     2650961 :    const bool isDangerPrune        = dangerFactor &gt;= SearchConfig::dangerLimitPruning;</span></span>
+<span id="L757"><span class="lineNum">     757</span> <span class="tlaGNC">     2650961 :    const bool isDangerForwardPrune = dangerFactor &gt;= SearchConfig::dangerLimitForwardPruning;</span></span>
+<span id="L758"><span class="lineNum">     758</span> <span class="tlaGNC">     2650961 :    const bool isDangerRed          = dangerFactor &gt;= SearchConfig::dangerLimitReduction;</span></span>
 <span id="L759"><span class="lineNum">     759</span>              :    ///@todo this is not used for now</span>
-<span id="L760"><span class="lineNum">     760</span> <span class="tlaGNC">     2650966 :    if (isDangerPrune)        stats.incr(Stats::sid_dangerPrune);</span></span>
-<span id="L761"><span class="lineNum">     761</span> <span class="tlaGNC">     2650966 :    if (isDangerForwardPrune) stats.incr(Stats::sid_dangerForwardPrune);</span></span>
-<span id="L762"><span class="lineNum">     762</span> <span class="tlaGNC">     2650966 :    if (isDangerRed)          stats.incr(Stats::sid_dangerReduce);</span></span>
+<span id="L760"><span class="lineNum">     760</span> <span class="tlaGNC">     2650961 :    if (isDangerPrune)        stats.incr(Stats::sid_dangerPrune);</span></span>
+<span id="L761"><span class="lineNum">     761</span> <span class="tlaGNC">     2650961 :    if (isDangerForwardPrune) stats.incr(Stats::sid_dangerForwardPrune);</span></span>
+<span id="L762"><span class="lineNum">     762</span> <span class="tlaGNC">     2650961 :    if (isDangerRed)          stats.incr(Stats::sid_dangerReduce);</span></span>
 <span id="L763"><span class="lineNum">     763</span>              : </span>
 <span id="L764"><span class="lineNum">     764</span>              :    // if we are doing a big attack, we will look for tactics involving sacrifices</span>
-<span id="L765"><span class="lineNum">     765</span> <span class="tlaGNC">     2650966 :    const int dangerGoodAttack  = evalData.danger[~p.c] / SearchConfig::dangerDivisor;</span></span>
+<span id="L765"><span class="lineNum">     765</span> <span class="tlaGNC">     2650961 :    const int dangerGoodAttack  = evalData.danger[~p.c] / SearchConfig::dangerDivisor;</span></span>
 <span id="L766"><span class="lineNum">     766</span>              :    // unless if we are ourself under attack</span>
-<span id="L767"><span class="lineNum">     767</span> <span class="tlaGNC">     2650966 :    const int dangerUnderAttack = evalData.danger[p.c]  / SearchConfig::dangerDivisor;</span></span>
+<span id="L767"><span class="lineNum">     767</span> <span class="tlaGNC">     2650961 :    const int dangerUnderAttack = evalData.danger[p.c]  / SearchConfig::dangerDivisor;</span></span>
 <span id="L768"><span class="lineNum">     768</span>              : </span>
 <span id="L769"><span class="lineNum">     769</span>              :    // when score is fluctuating a lot in the main ID search, let's prune a bit less</span>
-<span id="L770"><span class="lineNum">     770</span> <span class="tlaGNC">     2650966 :    const DepthType emergencyDepthCorrection = pvsData.isEmergencyDefence || pvsData.isEmergencyAttack; </span></span>
+<span id="L770"><span class="lineNum">     770</span> <span class="tlaGNC">     2650961 :    const DepthType emergencyDepthCorrection = pvsData.isEmergencyDefence || pvsData.isEmergencyAttack; </span></span>
 <span id="L771"><span class="lineNum">     771</span>              :    // take asymetry into account, prune less when it is not our turn</span>
 <span id="L772"><span class="lineNum">     772</span>              :    const DepthType asymetryDepthCorrection = 0; //pvsData.theirTurn; ///@todo</span>
 <span id="L773"><span class="lineNum">     773</span>              :    // when score is fluctuating a lot in the current game, let's prune a bit less</span>
@@ -843,27 +843,27 @@
 <span id="L781"><span class="lineNum">     781</span>              :    const DepthType depthCorrection = emergencyDepthCorrection || asymetryDepthCorrection || situationDepthCorrection;</span>
 <span id="L782"><span class="lineNum">     782</span>              : </span>
 <span id="L783"><span class="lineNum">     783</span>              :    // some heuristic will depend on not-updated initial alpha</span>
-<span id="L784"><span class="lineNum">     784</span> <span class="tlaGNC">     2650966 :    const ScoreType alphaInit = alpha;</span></span>
+<span id="L784"><span class="lineNum">     784</span> <span class="tlaGNC">     2650961 :    const ScoreType alphaInit = alpha;</span></span>
 <span id="L785"><span class="lineNum">     785</span>              : </span>
 <span id="L786"><span class="lineNum">     786</span>              :    // moves loop data</span>
-<span id="L787"><span class="lineNum">     787</span> <span class="tlaGNC">     2650966 :    MoveList moves;</span></span>
+<span id="L787"><span class="lineNum">     787</span> <span class="tlaGNC">     2650961 :    MoveList moves;</span></span>
 <span id="L788"><span class="lineNum">     788</span>              :    bool     moveGenerated    = false;</span>
 <span id="L789"><span class="lineNum">     789</span>              :    bool     capMoveGenerated = false;</span>
 <span id="L790"><span class="lineNum">     790</span>              : </span>
 <span id="L791"><span class="lineNum">     791</span>              :    // nmp things</span>
-<span id="L792"><span class="lineNum">     792</span> <span class="tlaGNC">     2650966 :    pvsData.mateThreat = false;</span></span>
+<span id="L792"><span class="lineNum">     792</span> <span class="tlaGNC">     2650961 :    pvsData.mateThreat = false;</span></span>
 <span id="L793"><span class="lineNum">     793</span>              :    MiniMove refutation = INVALIDMINIMOVE;</span>
 <span id="L794"><span class="lineNum">     794</span>              : </span>
 <span id="L795"><span class="lineNum">     795</span>              :    // a depth that take TT depth into account</span>
-<span id="L796"><span class="lineNum">     796</span> <span class="tlaGNC">     2650966 :    pvsData.marginDepth = std::max(0, depth - (pvsData.evalScoreIsHashScore ? e.d : 0)); </span></span>
+<span id="L796"><span class="lineNum">     796</span> <span class="tlaGNC">     2650961 :    pvsData.marginDepth = std::max(0, depth - (pvsData.evalScoreIsHashScore ? e.d : 0)); </span></span>
 <span id="L797"><span class="lineNum">     797</span>              : </span>
 <span id="L798"><span class="lineNum">     798</span>              :    // is the reported static eval better than a move before in the search tree ?</span>
 <span id="L799"><span class="lineNum">     799</span>              :    // ! be carefull pvsData.improving implies not being in check !</span>
-<span id="L800"><span class="lineNum">     800</span> <span class="tlaGNC">     2650966 :    pvsData.improving = (!pvsData.isInCheck &amp;&amp; height &gt; 1 &amp;&amp; stack[p.halfmoves].eval &gt;= stack[p.halfmoves - 2].eval);</span></span>
+<span id="L800"><span class="lineNum">     800</span> <span class="tlaGNC">     2650961 :    pvsData.improving = (!pvsData.isInCheck &amp;&amp; height &gt; 1 &amp;&amp; stack[p.halfmoves].eval &gt;= stack[p.halfmoves - 2].eval);</span></span>
 <span id="L801"><span class="lineNum">     801</span>              : </span>
 <span id="L802"><span class="lineNum">     802</span>              :    // in end game situations, some prudence is required with pruning</span>
-<span id="L803"><span class="lineNum">     803</span> <span class="tlaGNC">     2650966 :    pvsData.isNotPawnEndGame = p.mat[p.c][M_t] &gt; 0;</span></span>
-<span id="L804"><span class="lineNum">     804</span> <span class="tlaGNC">     2650966 :    pvsData.lessZugzwangRisk = pvsData.isNotPawnEndGame || evalData.mobility[p.c] &gt; 4;</span></span>
+<span id="L803"><span class="lineNum">     803</span> <span class="tlaGNC">     2650961 :    pvsData.isNotPawnEndGame = p.mat[p.c][M_t] &gt; 0;</span></span>
+<span id="L804"><span class="lineNum">     804</span> <span class="tlaGNC">     2650961 :    pvsData.lessZugzwangRisk = pvsData.isNotPawnEndGame || evalData.mobility[p.c] &gt; 4;</span></span>
 <span id="L805"><span class="lineNum">     805</span>              : </span>
 <span id="L806"><span class="lineNum">     806</span>              :    // forward prunings (only at not pvnode)</span>
 <span id="L807"><span class="lineNum">     807</span>              :    if constexpr(!pvnode){</span>
@@ -1015,7 +1015,7 @@
 <span id="L953"><span class="lineNum">     953</span>              :    }</span>
 <span id="L954"><span class="lineNum">     954</span>              : </span>
 <span id="L955"><span class="lineNum">     955</span>              :    // Ed Schroder style IIR</span>
-<span id="L956"><span class="lineNum">     956</span> <span class="tlaGNC">     1323929 :    if (SearchConfig::doIIR &amp;&amp; depth &gt;= SearchConfig::iirMinDepth &amp;&amp; !pvsData.ttHit){</span></span>
+<span id="L956"><span class="lineNum">     956</span> <span class="tlaGNC">     1323924 :    if (SearchConfig::doIIR &amp;&amp; depth &gt;= SearchConfig::iirMinDepth &amp;&amp; !pvsData.ttHit){</span></span>
 <span id="L957"><span class="lineNum">     957</span>              :       stats.incr(Stats::sid_iid);</span>
 <span id="L958"><span class="lineNum">     958</span> <span class="tlaGNC">      279780 :       depth -= SearchConfig::iirReduction;</span></span>
 <span id="L959"><span class="lineNum">     959</span>              :    }</span>
@@ -1045,21 +1045,21 @@
 <span id="L983"><span class="lineNum">     983</span>              : </span>
 <span id="L984"><span class="lineNum">     984</span>              :    // reset killers</span>
 <span id="L985"><span class="lineNum">     985</span>              :    if (height &lt;= MAX_DEPTH - 2){</span>
-<span id="L986"><span class="lineNum">     986</span> <span class="tlaGNC">     1323929 :       killerT.killers[height + 1][0] = killerT.killers[height + 1][1] = INVALIDMOVE;</span></span>
+<span id="L986"><span class="lineNum">     986</span> <span class="tlaGNC">     1323924 :       killerT.killers[height + 1][0] = killerT.killers[height + 1][1] = INVALIDMOVE;</span></span>
 <span id="L987"><span class="lineNum">     987</span>              :    }</span>
 <span id="L988"><span class="lineNum">     988</span>              : </span>
 <span id="L989"><span class="lineNum">     989</span>              :    // backup refutation from null move heuristic</span>
-<span id="L990"><span class="lineNum">     990</span> <span class="tlaGNC">     1323929 :    stack[p.halfmoves].threat = refutation;</span></span>
+<span id="L990"><span class="lineNum">     990</span> <span class="tlaGNC">     1323924 :    stack[p.halfmoves].threat = refutation;</span></span>
 <span id="L991"><span class="lineNum">     991</span>              : </span>
 <span id="L992"><span class="lineNum">     992</span>              :    // verify threat evolution for Botvinnik-Markoff extension </span>
 <span id="L993"><span class="lineNum">     993</span> <span class="tlaGNC">     1307845 :    const MiniMove formerRefutation = height &gt; 1 ? stack[p.halfmoves - 2].threat : INVALIDMINIMOVE;</span></span>
-<span id="L994"><span class="lineNum">     994</span> <span class="tlaGNC">     1323929 :    pvsData.BMextension = DynamicConfig::useNNUE &amp;&amp; height &gt; 1 &amp;&amp; </span></span>
+<span id="L994"><span class="lineNum">     994</span> <span class="tlaGNC">     1323924 :    pvsData.BMextension = DynamicConfig::useNNUE &amp;&amp; height &gt; 1 &amp;&amp; </span></span>
 <span id="L995"><span class="lineNum">     995</span> <span class="tlaGNC">     1330698 :                          isValidMove(refutation) &amp;&amp; isValidMove(formerRefutation) &amp;&amp;</span></span>
 <span id="L996"><span class="lineNum">     996</span> <span class="tlaGNC">       19688 :                          (sameMove(refutation, formerRefutation) ||</span></span>
 <span id="L997"><span class="lineNum">     997</span> <span class="tlaGNC">       45636 :                           (isCapture(refutation) &amp;&amp; Move2To(refutation) == correctedMove2ToKingDest(formerRefutation)));</span></span>
 <span id="L998"><span class="lineNum">     998</span>              : </span>
 <span id="L999"><span class="lineNum">     999</span>              :    // verify situation for various pruning heuristics</span>
-<span id="L1000"><span class="lineNum">    1000</span> <span class="tlaGNC">     1323929 :    if (!pvsData.rootnode) {</span></span>
+<span id="L1000"><span class="lineNum">    1000</span> <span class="tlaGNC">     1323924 :    if (!pvsData.rootnode) {</span></span>
 <span id="L1001"><span class="lineNum">    1001</span>              :       // LMP</span>
 <span id="L1002"><span class="lineNum">    1002</span> <span class="tlaGNC">     1322565 :       pvsData.lmp = SearchConfig::doLMP &amp;&amp; depth &lt;= SearchConfig::lmpMaxDepth;</span></span>
 <span id="L1003"><span class="lineNum">    1003</span>              :       // futility</span>
@@ -1074,7 +1074,7 @@
 <span id="L1012"><span class="lineNum">    1012</span>              :    }</span>
 <span id="L1013"><span class="lineNum">    1013</span>              : </span>
 <span id="L1014"><span class="lineNum">    1014</span>              : #ifdef WITH_SYZYGY</span>
-<span id="L1015"><span class="lineNum">    1015</span> <span class="tlaGNC">     1323929 :    if (pvsData.rootnode &amp;&amp; pvsData.withoutSkipMove &amp;&amp; (BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) &lt;= SyzygyTb::MAX_TB_MEN) {</span></span>
+<span id="L1015"><span class="lineNum">    1015</span> <span class="tlaGNC">     1323924 :    if (pvsData.rootnode &amp;&amp; pvsData.withoutSkipMove &amp;&amp; (BB::countBit(p.allPieces[Co_White] | p.allPieces[Co_Black])) &lt;= SyzygyTb::MAX_TB_MEN) {</span></span>
 <span id="L1016"><span class="lineNum">    1016</span> <span class="tlaUNC tlaBgUNC">           0 :       tbScore = 0;</span></span>
 <span id="L1017"><span class="lineNum">    1017</span> <span class="tlaUNC">           0 :       if (MoveList movesTB; SyzygyTb::probe_root(*this, p, tbScore, movesTB) &lt; 0) { // only good moves if TB success</span></span>
 <span id="L1018"><span class="lineNum">    1018</span>              :          stats.incr(Stats::sid_tbFail);</span>
@@ -1093,34 +1093,34 @@
 <span id="L1031"><span class="lineNum">    1031</span>              : </span>
 <span id="L1032"><span class="lineNum">    1032</span>              :    // bestScore / bestMove will be updated in move loop and returned at the end and inserted in TT</span>
 <span id="L1033"><span class="lineNum">    1033</span>              :    ScoreType bestScore = matedScore(height);</span>
-<span id="L1034"><span class="lineNum">    1034</span> <span class="tlaGNC tlaBgGNC">       16084 :    Move bestMove = INVALIDMOVE;</span></span>
+<span id="L1034"><span class="lineNum">    1034</span> <span class="tlaGNC tlaBgGNC">       16079 :    Move bestMove = INVALIDMOVE;</span></span>
 <span id="L1035"><span class="lineNum">    1035</span>              : </span>
 <span id="L1036"><span class="lineNum">    1036</span>              :    TT::Bound hashBound = TT::B_alpha;</span>
 <span id="L1037"><span class="lineNum">    1037</span>              :    </span>
 <span id="L1038"><span class="lineNum">    1038</span>              :    // try the tt move before move generation (if not skipped move)</span>
-<span id="L1039"><span class="lineNum">    1039</span> <span class="tlaGNC">      514833 :    if (pvsData.validTTmove &amp;&amp; </span></span>
-<span id="L1040"><span class="lineNum">    1040</span> <span class="tlaGNC">     1330689 :        (moves.empty() || !pvsData.rootnode) &amp;&amp; // avoid trying TT move at root if coming from a TB probe hit that filled moves</span></span>
-<span id="L1041"><span class="lineNum">    1041</span> <span class="tlaGNC">      514833 :        !isSkipMove(e.m, skipMoves)) {</span></span>
+<span id="L1039"><span class="lineNum">    1039</span> <span class="tlaGNC">      514832 :    if (pvsData.validTTmove &amp;&amp; </span></span>
+<span id="L1040"><span class="lineNum">    1040</span> <span class="tlaGNC">     1330684 :        (moves.empty() || !pvsData.rootnode) &amp;&amp; // avoid trying TT move at root if coming from a TB probe hit that filled moves</span></span>
+<span id="L1041"><span class="lineNum">    1041</span> <span class="tlaGNC">      514832 :        !isSkipMove(e.m, skipMoves)) {</span></span>
 <span id="L1042"><span class="lineNum">    1042</span>              : </span>
 <span id="L1043"><span class="lineNum">    1043</span>              : #ifdef DEBUG_APPLY</span>
 <span id="L1044"><span class="lineNum">    1044</span>              :       // to debug race condition in entry affectation !</span>
 <span id="L1045"><span class="lineNum">    1045</span>              :       if (!isPseudoLegal(p, e.m)) { Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;invalide TT move !&quot;; }</span>
 <span id="L1046"><span class="lineNum">    1046</span>              : #endif</span>
 <span id="L1047"><span class="lineNum">    1047</span>              : </span>
-<span id="L1048"><span class="lineNum">    1048</span> <span class="tlaGNC">      514833 :       pvsData.ttMoveTried = true;</span></span>
-<span id="L1049"><span class="lineNum">    1049</span> <span class="tlaGNC">      514833 :       pvsData.isTTMove = true;</span></span>
-<span id="L1050"><span class="lineNum">    1050</span> <span class="tlaGNC">      514833 :       if (isCapture(e.m)) pvsData.ttMoveIsCapture = true;</span></span>
-<span id="L1051"><span class="lineNum">    1051</span> <span class="tlaGNC">       12871 :       bestMove = e.m; // in order to preserve tt move for alpha bound entry</span></span>
+<span id="L1048"><span class="lineNum">    1048</span> <span class="tlaGNC">      514832 :       pvsData.ttMoveTried = true;</span></span>
+<span id="L1049"><span class="lineNum">    1049</span> <span class="tlaGNC">      514832 :       pvsData.isTTMove = true;</span></span>
+<span id="L1050"><span class="lineNum">    1050</span> <span class="tlaGNC">      514832 :       if (isCapture(e.m)) pvsData.ttMoveIsCapture = true;</span></span>
+<span id="L1051"><span class="lineNum">    1051</span> <span class="tlaGNC">       12870 :       bestMove = e.m; // in order to preserve tt move for alpha bound entry</span></span>
 <span id="L1052"><span class="lineNum">    1052</span>              : </span>
-<span id="L1053"><span class="lineNum">    1053</span> <span class="tlaGNC">      514833 :       Position p2 = p;</span></span>
-<span id="L1054"><span class="lineNum">    1054</span> <span class="tlaGNC">      514833 :       if (const MoveInfo moveInfo(p2,e.m); applyMove(p2, moveInfo, true)) {</span></span>
+<span id="L1053"><span class="lineNum">    1053</span> <span class="tlaGNC">      514832 :       Position p2 = p;</span></span>
+<span id="L1054"><span class="lineNum">    1054</span> <span class="tlaGNC">      514832 :       if (const MoveInfo moveInfo(p2,e.m); applyMove(p2, moveInfo, true)) {</span></span>
 <span id="L1055"><span class="lineNum">    1055</span>              : </span>
 <span id="L1056"><span class="lineNum">    1056</span>              :          // We have a TT move.</span>
 <span id="L1057"><span class="lineNum">    1057</span>              :          // The TT move can trigger singular extension</span>
 <span id="L1058"><span class="lineNum">    1058</span>              :          // And it won't be reduced by any mean</span>
 <span id="L1059"><span class="lineNum">    1059</span>              :          // Remember that if no tt hit, depth has been reduced already (by IIR)</span>
 <span id="L1060"><span class="lineNum">    1060</span>              :          DepthType extension = 0;</span>
-<span id="L1061"><span class="lineNum">    1061</span> <span class="tlaGNC">      514833 :          if (DynamicConfig::level &gt; 80) {</span></span>
+<span id="L1061"><span class="lineNum">    1061</span> <span class="tlaGNC">      514832 :          if (DynamicConfig::level &gt; 80) {</span></span>
 <span id="L1062"><span class="lineNum">    1062</span>              :             // singular move extension</span>
 <span id="L1063"><span class="lineNum">    1063</span> <span class="tlaGNC">      514829 :             if (pvsData.withoutSkipMove</span></span>
 <span id="L1064"><span class="lineNum">    1064</span> <span class="tlaGNC">      503491 :               &amp;&amp; depth &gt;= SearchConfig::singularExtensionDepth</span></span>
@@ -1175,26 +1175,26 @@
 <span id="L1113"><span class="lineNum">    1113</span>              :          }</span>
 <span id="L1114"><span class="lineNum">    1114</span>              : </span>
 <span id="L1115"><span class="lineNum">    1115</span>              :          // prefetch as soon as possible</span>
-<span id="L1116"><span class="lineNum">    1116</span> <span class="tlaGNC">      504298 :          TT::prefetch(computeHash(p2));</span></span>
+<span id="L1116"><span class="lineNum">    1116</span> <span class="tlaGNC">      504297 :          TT::prefetch(computeHash(p2));</span></span>
 <span id="L1117"><span class="lineNum">    1117</span>              : </span>
 <span id="L1118"><span class="lineNum">    1118</span>              : #ifdef WITH_NNUE</span>
-<span id="L1119"><span class="lineNum">    1119</span> <span class="tlaGNC">      504298 :          NNUEEvaluator newEvaluator = p.evaluator();</span></span>
+<span id="L1119"><span class="lineNum">    1119</span> <span class="tlaGNC">      504297 :          NNUEEvaluator newEvaluator = p.evaluator();</span></span>
 <span id="L1120"><span class="lineNum">    1120</span>              :          p2.associateEvaluator(newEvaluator);</span>
-<span id="L1121"><span class="lineNum">    1121</span> <span class="tlaGNC">      504298 :          applyMoveNNUEUpdate(p2, moveInfo);</span></span>
+<span id="L1121"><span class="lineNum">    1121</span> <span class="tlaGNC">      504297 :          applyMoveNNUEUpdate(p2, moveInfo);</span></span>
 <span id="L1122"><span class="lineNum">    1122</span>              : #endif</span>
 <span id="L1123"><span class="lineNum">    1123</span>              : </span>
-<span id="L1124"><span class="lineNum">    1124</span> <span class="tlaGNC">      504298 :          ++pvsData.validMoveCount;</span></span>
-<span id="L1125"><span class="lineNum">    1125</span> <span class="tlaGNC">      504298 :          ++pvsData.validNonPrunedCount;</span></span>
+<span id="L1124"><span class="lineNum">    1124</span> <span class="tlaGNC">      504297 :          ++pvsData.validMoveCount;</span></span>
+<span id="L1125"><span class="lineNum">    1125</span> <span class="tlaGNC">      504297 :          ++pvsData.validNonPrunedCount;</span></span>
 <span id="L1126"><span class="lineNum">    1126</span>              : </span>
-<span id="L1127"><span class="lineNum">    1127</span> <span class="tlaGNC">      504298 :          pvsData.earlyMove = true;</span></span>
-<span id="L1128"><span class="lineNum">    1128</span> <span class="tlaGNC">     1008596 :          pvsData.isQuiet   = Move2Type(e.m) == T_std &amp;&amp; !isNoisy(p, e.m);</span></span>
-<span id="L1129"><span class="lineNum">    1129</span> <span class="tlaGNC">      504298 :          if (pvsData.isQuiet) ++pvsData.validQuietMoveCount;</span></span>
+<span id="L1127"><span class="lineNum">    1127</span> <span class="tlaGNC">      504297 :          pvsData.earlyMove = true;</span></span>
+<span id="L1128"><span class="lineNum">    1128</span> <span class="tlaGNC">     1008594 :          pvsData.isQuiet   = Move2Type(e.m) == T_std &amp;&amp; !isNoisy(p, e.m);</span></span>
+<span id="L1129"><span class="lineNum">    1129</span> <span class="tlaGNC">      504297 :          if (pvsData.isQuiet) ++pvsData.validQuietMoveCount;</span></span>
 <span id="L1130"><span class="lineNum">    1130</span>              : </span>
-<span id="L1131"><span class="lineNum">    1131</span> <span class="tlaGNC">      504298 :          pvsData.isCheck = pvsData.ttIsCheck || isPosInCheck(p2);</span></span>
+<span id="L1131"><span class="lineNum">    1131</span> <span class="tlaGNC">      504297 :          pvsData.isCheck = pvsData.ttIsCheck || isPosInCheck(p2);</span></span>
 <span id="L1132"><span class="lineNum">    1132</span>              : </span>
-<span id="L1133"><span class="lineNum">    1133</span> <span class="tlaGNC">      504298 :          assert(p2.halfmoves &lt; MAX_PLY &amp;&amp; p2.halfmoves &gt;= 0);</span></span>
-<span id="L1134"><span class="lineNum">    1134</span> <span class="tlaGNC">      504298 :          stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!</span></span>
-<span id="L1135"><span class="lineNum">    1135</span> <span class="tlaGNC">      504298 :          stack[p2.halfmoves].h = p2.h;</span></span>
+<span id="L1133"><span class="lineNum">    1133</span> <span class="tlaGNC">      504297 :          assert(p2.halfmoves &lt; MAX_PLY &amp;&amp; p2.halfmoves &gt;= 0);</span></span>
+<span id="L1134"><span class="lineNum">    1134</span> <span class="tlaGNC">      504297 :          stack[p2.halfmoves].p = p2; ///@todo another expensive copy !!!!</span></span>
+<span id="L1135"><span class="lineNum">    1135</span> <span class="tlaGNC">      504297 :          stack[p2.halfmoves].h = p2.h;</span></span>
 <span id="L1136"><span class="lineNum">    1136</span>              : </span>
 <span id="L1137"><span class="lineNum">    1137</span>              : #ifdef DEBUG_TT_CHECK</span>
 <span id="L1138"><span class="lineNum">    1138</span>              :          if (pvsData.ttIsCheck &amp;&amp; !isPosInCheck(p2)) {</span>
@@ -1203,26 +1203,26 @@
 <span id="L1141"><span class="lineNum">    1141</span>              :          }</span>
 <span id="L1142"><span class="lineNum">    1142</span>              : #endif</span>
 <span id="L1143"><span class="lineNum">    1143</span>              : </span>
-<span id="L1144"><span class="lineNum">    1144</span> <span class="tlaGNC">      504298 :          PVList childPV;</span></span>
+<span id="L1144"><span class="lineNum">    1144</span> <span class="tlaGNC">      504297 :          PVList childPV;</span></span>
 <span id="L1145"><span class="lineNum">    1145</span>              :          ScoreType ttScore;</span>
-<span id="L1146"><span class="lineNum">    1146</span> <span class="tlaGNC">      504298 :          ttScore = -pvs&lt;pvnode&gt;(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, static_cast&lt;DepthType&gt;(extensions + extension), pvsData.isCheck, !pvsData.cutNode);</span></span>
+<span id="L1146"><span class="lineNum">    1146</span> <span class="tlaGNC">      504297 :          ttScore = -pvs&lt;pvnode&gt;(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, static_cast&lt;DepthType&gt;(extensions + extension), pvsData.isCheck, !pvsData.cutNode);</span></span>
 <span id="L1147"><span class="lineNum">    1147</span>              : </span>
-<span id="L1148"><span class="lineNum">    1148</span> <span class="tlaGNC">      504298 :          if (stopFlag) return STOPSCORE;</span></span>
+<span id="L1148"><span class="lineNum">    1148</span> <span class="tlaGNC">      504297 :          if (stopFlag) return STOPSCORE;</span></span>
 <span id="L1149"><span class="lineNum">    1149</span>              : </span>
-<span id="L1150"><span class="lineNum">    1150</span> <span class="tlaGNC">      504298 :          if (pvsData.rootnode) { </span></span>
-<span id="L1151"><span class="lineNum">    1151</span> <span class="tlaGNC">        1339 :             rootScores.emplace_back(e.m, ttScore);</span></span>
+<span id="L1150"><span class="lineNum">    1150</span> <span class="tlaGNC">      504297 :          if (pvsData.rootnode) { </span></span>
+<span id="L1151"><span class="lineNum">    1151</span> <span class="tlaGNC">        1338 :             rootScores.emplace_back(e.m, ttScore);</span></span>
 <span id="L1152"><span class="lineNum">    1152</span>              :          }</span>
 <span id="L1153"><span class="lineNum">    1153</span>              : </span>
-<span id="L1154"><span class="lineNum">    1154</span> <span class="tlaGNC">      504298 :          if (ttScore &gt; bestScore) {</span></span>
-<span id="L1155"><span class="lineNum">    1155</span> <span class="tlaGNC">      504293 :             if (pvsData.rootnode) previousBest = e.m;</span></span>
+<span id="L1154"><span class="lineNum">    1154</span> <span class="tlaGNC">      504297 :          if (ttScore &gt; bestScore) {</span></span>
+<span id="L1155"><span class="lineNum">    1155</span> <span class="tlaGNC">      504292 :             if (pvsData.rootnode) previousBest = e.m;</span></span>
 <span id="L1156"><span class="lineNum">    1156</span>              :             bestScore = ttScore;</span>
-<span id="L1157"><span class="lineNum">    1157</span> <span class="tlaGNC">      504293 :             bestMove  = e.m;</span></span>
-<span id="L1158"><span class="lineNum">    1158</span> <span class="tlaGNC">      504293 :             pvsData.bestMoveIsCheck = pvsData.isCheck;</span></span>
-<span id="L1159"><span class="lineNum">    1159</span> <span class="tlaGNC">      504293 :             if (ttScore &gt; alpha) {</span></span>
+<span id="L1157"><span class="lineNum">    1157</span> <span class="tlaGNC">      504292 :             bestMove  = e.m;</span></span>
+<span id="L1158"><span class="lineNum">    1158</span> <span class="tlaGNC">      504292 :             pvsData.bestMoveIsCheck = pvsData.isCheck;</span></span>
+<span id="L1159"><span class="lineNum">    1159</span> <span class="tlaGNC">      504292 :             if (ttScore &gt; alpha) {</span></span>
 <span id="L1160"><span class="lineNum">    1160</span>              :                hashBound = TT::B_exact;</span>
-<span id="L1161"><span class="lineNum">    1161</span> <span class="tlaGNC">      280572 :                pvsData.alphaUpdated = true;</span></span>
+<span id="L1161"><span class="lineNum">    1161</span> <span class="tlaGNC">      280571 :                pvsData.alphaUpdated = true;</span></span>
 <span id="L1162"><span class="lineNum">    1162</span>              :                if constexpr(pvnode) updatePV(pv, bestMove, childPV);</span>
-<span id="L1163"><span class="lineNum">    1163</span> <span class="tlaGNC">      280572 :                if (ttScore &gt;= beta) {</span></span>
+<span id="L1163"><span class="lineNum">    1163</span> <span class="tlaGNC">      280571 :                if (ttScore &gt;= beta) {</span></span>
 <span id="L1164"><span class="lineNum">    1164</span>              :                   stats.incr(Stats::sid_ttbeta);</span>
 <span id="L1165"><span class="lineNum">    1165</span>              : </span>
 <span id="L1166"><span class="lineNum">    1166</span>              :                   // increase history bonus of this move</span>
@@ -1243,125 +1243,125 @@
 <span id="L1181"><span class="lineNum">    1181</span>              :                   return ttScore;</span>
 <span id="L1182"><span class="lineNum">    1182</span>              :                }</span>
 <span id="L1183"><span class="lineNum">    1183</span>              :                stats.incr(Stats::sid_ttalpha);</span>
-<span id="L1184"><span class="lineNum">    1184</span> <span class="tlaGNC">        5607 :                alpha = ttScore;</span></span>
+<span id="L1184"><span class="lineNum">    1184</span> <span class="tlaGNC">        5606 :                alpha = ttScore;</span></span>
 <span id="L1185"><span class="lineNum">    1185</span>              :             }</span>
 <span id="L1186"><span class="lineNum">    1186</span>              :          }</span>
 <span id="L1187"><span class="lineNum">    1187</span> <span class="tlaGNC">           5 :          else if (pvsData.rootnode &amp;&amp; !pvsData.isInCheck &amp;&amp; ttScore &lt; alpha - SearchConfig::failLowRootMargin /*&amp;&amp; !isMateScore(ttScore)*/) {</span></span>
 <span id="L1188"><span class="lineNum">    1188</span> <span class="tlaUNC tlaBgUNC">           0 :             return alpha - SearchConfig::failLowRootMargin;</span></span>
 <span id="L1189"><span class="lineNum">    1189</span>              :          }</span>
-<span id="L1190"><span class="lineNum">    1190</span> <span class="tlaGNC tlaBgGNC">      504298 :       }</span></span>
-<span id="L1191"><span class="lineNum">    1191</span> <span class="tlaGNC">      514833 :    }</span></span>
+<span id="L1190"><span class="lineNum">    1190</span> <span class="tlaGNC tlaBgGNC">      504297 :       }</span></span>
+<span id="L1191"><span class="lineNum">    1191</span> <span class="tlaGNC">      514832 :    }</span></span>
 <span id="L1192"><span class="lineNum">    1192</span>              : </span>
-<span id="L1193"><span class="lineNum">    1193</span> <span class="tlaGNC">     1038429 :    ScoreType score = matedScore(height);</span></span>
+<span id="L1193"><span class="lineNum">    1193</span> <span class="tlaGNC">     1038424 :    ScoreType score = matedScore(height);</span></span>
 <span id="L1194"><span class="lineNum">    1194</span>              :    bool skipQuiet = false;</span>
 <span id="L1195"><span class="lineNum">    1195</span>              :    bool skipCap = false;</span>
 <span id="L1196"><span class="lineNum">    1196</span>              : </span>
 <span id="L1197"><span class="lineNum">    1197</span>              :    // depending if probecut already generates capture or not, generate all moves or only missing quiets</span>
-<span id="L1198"><span class="lineNum">    1198</span> <span class="tlaGNC">     1038429 :    if (!moveGenerated) {</span></span>
+<span id="L1198"><span class="lineNum">    1198</span> <span class="tlaGNC">     1038424 :    if (!moveGenerated) {</span></span>
 <span id="L1199"><span class="lineNum">    1199</span> <span class="tlaGNC">     1025557 :       if (capMoveGenerated) MoveGen::generate&lt;MoveGen::GP_quiet&gt;(p, moves, true);</span></span>
 <span id="L1200"><span class="lineNum">    1200</span>              :       else</span>
-<span id="L1201"><span class="lineNum">    1201</span> <span class="tlaGNC">     1036593 :          if ( pvsData.isInCheck ) MoveGen::generate&lt;MoveGen::GP_evasion&gt;(p, moves, false);</span></span>
-<span id="L1202"><span class="lineNum">    1202</span> <span class="tlaGNC">      792588 :          else MoveGen::generate&lt;MoveGen::GP_all&gt;(p, moves, false);</span></span>
+<span id="L1201"><span class="lineNum">    1201</span> <span class="tlaGNC">     1036588 :          if ( pvsData.isInCheck ) MoveGen::generate&lt;MoveGen::GP_evasion&gt;(p, moves, false);</span></span>
+<span id="L1202"><span class="lineNum">    1202</span> <span class="tlaGNC">      792583 :          else MoveGen::generate&lt;MoveGen::GP_all&gt;(p, moves, false);</span></span>
 <span id="L1203"><span class="lineNum">    1203</span>              :    }</span>
-<span id="L1204"><span class="lineNum">    1204</span> <span class="tlaGNC">     1038429 :    if (moves.empty()) return pvsData.isInCheck ? matedScore(height) : drawScore(p, height);</span></span>
+<span id="L1204"><span class="lineNum">    1204</span> <span class="tlaGNC">     1038424 :    if (moves.empty()) return pvsData.isInCheck ? matedScore(height) : drawScore(p, height);</span></span>
 <span id="L1205"><span class="lineNum">    1205</span>              : </span>
 <span id="L1206"><span class="lineNum">    1206</span>              : #ifdef USE_PARTIAL_SORT</span>
-<span id="L1207"><span class="lineNum">    1207</span> <span class="tlaGNC">     1893703 :    MoveSorter ms(*this, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &amp;e : nullptr,</span></span>
+<span id="L1207"><span class="lineNum">    1207</span> <span class="tlaGNC">     1893694 :    MoveSorter ms(*this, p, evalData.gp, height, pvsData.cmhPtr, true, pvsData.isInCheck, pvsData.validTTmove ? &amp;e : nullptr,</span></span>
 <span id="L1208"><span class="lineNum">    1208</span> <span class="tlaGNC">       46204 :                  refutation != INVALIDMINIMOVE &amp;&amp; isCapture(Move2Type(refutation)) ? refutation : INVALIDMINIMOVE);</span></span>
-<span id="L1209"><span class="lineNum">    1209</span> <span class="tlaGNC">     1038416 :    ms.score(moves);</span></span>
-<span id="L1210"><span class="lineNum">    1210</span> <span class="tlaGNC">     1038416 :    size_t offset = 0;</span></span>
+<span id="L1209"><span class="lineNum">    1209</span> <span class="tlaGNC">     1038411 :    ms.score(moves);</span></span>
+<span id="L1210"><span class="lineNum">    1210</span> <span class="tlaGNC">     1038411 :    size_t offset = 0;</span></span>
 <span id="L1211"><span class="lineNum">    1211</span>              :    const Move* it = nullptr;</span>
 <span id="L1212"><span class="lineNum">    1212</span>              :    //if(!pvsData.cutNode) ms.sort(moves); // we expect one of the first best move to fail high on cutNode</span>
-<span id="L1213"><span class="lineNum">    1213</span> <span class="tlaGNC">    25417073 :    while ((it = ms.pickNextLazy(moves, offset/*, !pvsData.cutNode*/)) &amp;&amp; !stopFlag) {</span></span>
+<span id="L1213"><span class="lineNum">    1213</span> <span class="tlaGNC">    25416760 :    while ((it = ms.pickNextLazy(moves, offset/*, !pvsData.cutNode*/)) &amp;&amp; !stopFlag) {</span></span>
 <span id="L1214"><span class="lineNum">    1214</span>              : #else</span>
 <span id="L1215"><span class="lineNum">    1215</span>              :    MoveSorter::scoreAndSort(moves);</span>
 <span id="L1216"><span class="lineNum">    1216</span>              :    for (auto it = moves.begin(); it != moves.end() &amp;&amp; !stopFlag; ++it) {</span>
 <span id="L1217"><span class="lineNum">    1217</span>              : #endif</span>
 <span id="L1218"><span class="lineNum">    1218</span>              : </span>
-<span id="L1219"><span class="lineNum">    1219</span> <span class="tlaGNC">    12584150 :       pvsData.isTTMove = false;</span></span>
-<span id="L1220"><span class="lineNum">    1220</span> <span class="tlaGNC">    26578889 :       pvsData.isQuiet = Move2Type(*it) == T_std &amp;&amp; !isNoisy(p,*it);</span></span>
+<span id="L1219"><span class="lineNum">    1219</span> <span class="tlaGNC">    12583991 :       pvsData.isTTMove = false;</span></span>
+<span id="L1220"><span class="lineNum">    1220</span> <span class="tlaGNC">    26578573 :       pvsData.isQuiet = Move2Type(*it) == T_std &amp;&amp; !isNoisy(p,*it);</span></span>
 <span id="L1221"><span class="lineNum">    1221</span>              : </span>
-<span id="L1222"><span class="lineNum">    1222</span> <span class="tlaGNC">     8831152 :       if (isSkipMove(*it, skipMoves)) continue;        // skipmoves</span></span>
-<span id="L1223"><span class="lineNum">    1223</span> <span class="tlaGNC">    12557677 :       if (pvsData.validTTmove &amp;&amp; pvsData.ttMoveTried &amp;&amp; sameMove(e.m, *it)) continue; // already tried</span></span>
+<span id="L1222"><span class="lineNum">    1222</span> <span class="tlaGNC">     8831139 :       if (isSkipMove(*it, skipMoves)) continue;        // skipmoves</span></span>
+<span id="L1223"><span class="lineNum">    1223</span> <span class="tlaGNC">    12557530 :       if (pvsData.validTTmove &amp;&amp; pvsData.ttMoveTried &amp;&amp; sameMove(e.m, *it)) continue; // already tried</span></span>
 <span id="L1224"><span class="lineNum">    1224</span>              : </span>
-<span id="L1225"><span class="lineNum">    1225</span> <span class="tlaGNC">    12328344 :       Position p2 = p;</span></span>
-<span id="L1226"><span class="lineNum">    1226</span> <span class="tlaGNC">    12328344 :       const MoveInfo moveInfo(p2,*it);</span></span>
+<span id="L1225"><span class="lineNum">    1225</span> <span class="tlaGNC">    12328198 :       Position p2 = p;</span></span>
+<span id="L1226"><span class="lineNum">    1226</span> <span class="tlaGNC">    12328198 :       const MoveInfo moveInfo(p2,*it);</span></span>
 <span id="L1227"><span class="lineNum">    1227</span>              : </span>
 <span id="L1228"><span class="lineNum">    1228</span>              :       // do not apply NNUE update here, but later after prunning, right before next call to pvs</span>
-<span id="L1229"><span class="lineNum">    1229</span> <span class="tlaGNC">    12328344 :       if (!applyMove(p2, moveInfo, true)) continue;</span></span>
+<span id="L1229"><span class="lineNum">    1229</span> <span class="tlaGNC">    12328198 :       if (!applyMove(p2, moveInfo, true)) continue;</span></span>
 <span id="L1230"><span class="lineNum">    1230</span>              : </span>
 <span id="L1231"><span class="lineNum">    1231</span>              :       // prefetch as soon as possible</span>
-<span id="L1232"><span class="lineNum">    1232</span> <span class="tlaGNC">    11192317 :       TT::prefetch(computeHash(p2));</span></span>
-<span id="L1233"><span class="lineNum">    1233</span> <span class="tlaGNC">    11192317 :       const Square to = Move2To(*it);</span></span>
+<span id="L1232"><span class="lineNum">    1232</span> <span class="tlaGNC">    11192171 :       TT::prefetch(computeHash(p2));</span></span>
+<span id="L1233"><span class="lineNum">    1233</span> <span class="tlaGNC">    11192171 :       const Square to = Move2To(*it);</span></span>
 <span id="L1234"><span class="lineNum">    1234</span>              : #ifdef DEBUG_KING_CAP</span>
 <span id="L1235"><span class="lineNum">    1235</span>              :       if (p.c == Co_White &amp;&amp; to == p.king[Co_Black]) return matingScore(height - 1);</span>
 <span id="L1236"><span class="lineNum">    1236</span>              :       if (p.c == Co_Black &amp;&amp; to == p.king[Co_White]) return matingScore(height - 1);</span>
 <span id="L1237"><span class="lineNum">    1237</span>              : #endif</span>
 <span id="L1238"><span class="lineNum">    1238</span>              : </span>
-<span id="L1239"><span class="lineNum">    1239</span> <span class="tlaGNC">    11192317 :       ++pvsData.validMoveCount;</span></span>
-<span id="L1240"><span class="lineNum">    1240</span> <span class="tlaGNC">    11192317 :       if (pvsData.isQuiet) ++pvsData.validQuietMoveCount;</span></span>
+<span id="L1239"><span class="lineNum">    1239</span> <span class="tlaGNC">    11192171 :       ++pvsData.validMoveCount;</span></span>
+<span id="L1240"><span class="lineNum">    1240</span> <span class="tlaGNC">    11192171 :       if (pvsData.isQuiet) ++pvsData.validQuietMoveCount;</span></span>
 <span id="L1241"><span class="lineNum">    1241</span>              : </span>
-<span id="L1242"><span class="lineNum">    1242</span> <span class="tlaGNC">    11192317 :       pvsData.isCheck = isPosInCheck(p2);</span></span>
+<span id="L1242"><span class="lineNum">    1242</span> <span class="tlaGNC">    11192171 :       pvsData.isCheck = isPosInCheck(p2);</span></span>
 <span id="L1243"><span class="lineNum">    1243</span>              : </span>
-<span id="L1244"><span class="lineNum">    1244</span> <span class="tlaGNC">    11192317 :       const bool noCheck = !pvsData.isInCheck &amp;&amp; !pvsData.isCheck;</span></span>
+<span id="L1244"><span class="lineNum">    1244</span> <span class="tlaGNC">    11192171 :       const bool noCheck = !pvsData.isInCheck &amp;&amp; !pvsData.isCheck;</span></span>
 <span id="L1245"><span class="lineNum">    1245</span>              : </span>
-<span id="L1246"><span class="lineNum">    1246</span> <span class="tlaGNC">    22384634 :       pvsData.isAdvancedPawnPush = PieceTools::getPieceType(p, Move2From(*it)) == P_wp &amp;&amp; (SQRANK(to) &gt; 5 || SQRANK(to) &lt; 2);</span></span>
-<span id="L1247"><span class="lineNum">    1247</span> <span class="tlaGNC">    11192317 :       pvsData.earlyMove = pvsData.validMoveCount &lt; (2 /*+2*pvsData.rootnode*/);</span></span>
+<span id="L1246"><span class="lineNum">    1246</span> <span class="tlaGNC">    22384342 :       pvsData.isAdvancedPawnPush = PieceTools::getPieceType(p, Move2From(*it)) == P_wp &amp;&amp; (SQRANK(to) &gt; 5 || SQRANK(to) &lt; 2);</span></span>
+<span id="L1247"><span class="lineNum">    1247</span> <span class="tlaGNC">    11192171 :       pvsData.earlyMove = pvsData.validMoveCount &lt; (2 /*+2*pvsData.rootnode*/);</span></span>
 <span id="L1248"><span class="lineNum">    1248</span>              : </span>
-<span id="L1249"><span class="lineNum">    1249</span> <span class="tlaGNC">    11192317 :       PVList childPV;</span></span>
+<span id="L1249"><span class="lineNum">    1249</span> <span class="tlaGNC">    11192171 :       PVList childPV;</span></span>
 <span id="L1250"><span class="lineNum">    1250</span>              :       // PVS</span>
-<span id="L1251"><span class="lineNum">    1251</span> <span class="tlaGNC">    11192317 :       if (pvsData.earlyMove || !SearchConfig::doPVS){</span></span>
-<span id="L1252"><span class="lineNum">    1252</span> <span class="tlaGNC">      805068 :          stack[p2.halfmoves].p = p2;</span></span>
-<span id="L1253"><span class="lineNum">    1253</span> <span class="tlaGNC">      805068 :          stack[p2.halfmoves].h = p2.h;         </span></span>
+<span id="L1251"><span class="lineNum">    1251</span> <span class="tlaGNC">    11192171 :       if (pvsData.earlyMove || !SearchConfig::doPVS){</span></span>
+<span id="L1252"><span class="lineNum">    1252</span> <span class="tlaGNC">      805064 :          stack[p2.halfmoves].p = p2;</span></span>
+<span id="L1253"><span class="lineNum">    1253</span> <span class="tlaGNC">      805064 :          stack[p2.halfmoves].h = p2.h;         </span></span>
 <span id="L1254"><span class="lineNum">    1254</span>              : #ifdef WITH_NNUE</span>
-<span id="L1255"><span class="lineNum">    1255</span> <span class="tlaGNC">      805068 :          NNUEEvaluator newEvaluator = p.evaluator();</span></span>
+<span id="L1255"><span class="lineNum">    1255</span> <span class="tlaGNC">      805064 :          NNUEEvaluator newEvaluator = p.evaluator();</span></span>
 <span id="L1256"><span class="lineNum">    1256</span>              :          p2.associateEvaluator(newEvaluator);</span>
-<span id="L1257"><span class="lineNum">    1257</span> <span class="tlaGNC">      805068 :          applyMoveNNUEUpdate(p2, moveInfo);</span></span>
+<span id="L1257"><span class="lineNum">    1257</span> <span class="tlaGNC">      805064 :          applyMoveNNUEUpdate(p2, moveInfo);</span></span>
 <span id="L1258"><span class="lineNum">    1258</span>              : #endif</span>
 <span id="L1259"><span class="lineNum">    1259</span>              :          // get depth of next search</span>
 <span id="L1260"><span class="lineNum">    1260</span>              :          // Remember that if no tt hit, depth has been reduced already (by IIR)</span>
 <span id="L1261"><span class="lineNum">    1261</span>              :          const auto [nextDepth, extension, reduction] = depthPolicy(p, depth, height, *it, pvsData, evalData, evalScore, extensions, false);</span>
-<span id="L1262"><span class="lineNum">    1262</span> <span class="tlaGNC">      805068 :          score = -pvs&lt;pvnode&gt;(-beta, -alpha, p2, nextDepth, height + 1, childPV, seldepth, static_cast&lt;DepthType&gt;(extensions + extension), pvsData.isCheck, false);</span></span>
-<span id="L1263"><span class="lineNum">    1263</span> <span class="tlaGNC">      805068 :          ++pvsData.validNonPrunedCount;</span></span>
+<span id="L1262"><span class="lineNum">    1262</span> <span class="tlaGNC">      805064 :          score = -pvs&lt;pvnode&gt;(-beta, -alpha, p2, nextDepth, height + 1, childPV, seldepth, static_cast&lt;DepthType&gt;(extensions + extension), pvsData.isCheck, false);</span></span>
+<span id="L1263"><span class="lineNum">    1263</span> <span class="tlaGNC">      805064 :          ++pvsData.validNonPrunedCount;</span></span>
 <span id="L1264"><span class="lineNum">    1264</span>              :       }</span>
 <span id="L1265"><span class="lineNum">    1265</span>              :       else {</span>
 <span id="L1266"><span class="lineNum">    1266</span>              :          // reductions &amp; prunings</span>
-<span id="L1267"><span class="lineNum">    1267</span> <span class="tlaGNC">    10387249 :          const bool isPrunable           = /*pvsData.isNotPawnEndGame &amp;&amp;*/ !pvsData.isAdvancedPawnPush &amp;&amp; !isMateScore(alpha) &amp;&amp; !killerT.isKiller(*it, height) &amp;&amp; !DynamicConfig::mateFinder;</span></span>
-<span id="L1268"><span class="lineNum">    1268</span> <span class="tlaGNC">    10387249 :          const bool isReductible         = SearchConfig::doLMR &amp;&amp; depth &gt;= SearchConfig::lmrMinDepth &amp;&amp; /*pvsData.isNotPawnEndGame &amp;&amp;*/ !pvsData.isAdvancedPawnPush &amp;&amp; !DynamicConfig::mateFinder;</span></span>
-<span id="L1269"><span class="lineNum">    1269</span> <span class="tlaGNC">    10387249 :          const bool isPrunableStd        = isPrunable &amp;&amp; pvsData.isQuiet;</span></span>
-<span id="L1270"><span class="lineNum">    1270</span> <span class="tlaGNC">    10387249 :          const bool isPrunableStdNoCheck = isPrunableStd &amp;&amp; noCheck;</span></span>
-<span id="L1271"><span class="lineNum">    1271</span> <span class="tlaGNC">    20715407 :          const bool isPrunableCap        = isPrunable &amp;&amp; Move2Type(*it) == T_capture &amp;&amp; noCheck;</span></span>
-<span id="L1272"><span class="lineNum">    1272</span> <span class="tlaGNC">      400972 :          const bool isPrunableBadCap     = isPrunableCap &amp;&amp; isBadCap(*it);</span></span>
+<span id="L1267"><span class="lineNum">    1267</span> <span class="tlaGNC">    10387107 :          const bool isPrunable           = /*pvsData.isNotPawnEndGame &amp;&amp;*/ !pvsData.isAdvancedPawnPush &amp;&amp; !isMateScore(alpha) &amp;&amp; !killerT.isKiller(*it, height) &amp;&amp; !DynamicConfig::mateFinder;</span></span>
+<span id="L1268"><span class="lineNum">    1268</span> <span class="tlaGNC">    10387107 :          const bool isReductible         = SearchConfig::doLMR &amp;&amp; depth &gt;= SearchConfig::lmrMinDepth &amp;&amp; /*pvsData.isNotPawnEndGame &amp;&amp;*/ !pvsData.isAdvancedPawnPush &amp;&amp; !DynamicConfig::mateFinder;</span></span>
+<span id="L1269"><span class="lineNum">    1269</span> <span class="tlaGNC">    10387107 :          const bool isPrunableStd        = isPrunable &amp;&amp; pvsData.isQuiet;</span></span>
+<span id="L1270"><span class="lineNum">    1270</span> <span class="tlaGNC">    10387107 :          const bool isPrunableStdNoCheck = isPrunableStd &amp;&amp; noCheck;</span></span>
+<span id="L1271"><span class="lineNum">    1271</span> <span class="tlaGNC">    20715123 :          const bool isPrunableCap        = isPrunable &amp;&amp; Move2Type(*it) == T_capture &amp;&amp; noCheck;</span></span>
+<span id="L1272"><span class="lineNum">    1272</span> <span class="tlaGNC">      400974 :          const bool isPrunableBadCap     = isPrunableCap &amp;&amp; isBadCap(*it);</span></span>
 <span id="L1273"><span class="lineNum">    1273</span>              : </span>
 <span id="L1274"><span class="lineNum">    1274</span>              :          // skip quiet if LMP was triggered</span>
-<span id="L1275"><span class="lineNum">    1275</span> <span class="tlaGNC">    10387249 :          if (skipQuiet &amp;&amp; pvsData.isQuiet &amp;&amp; noCheck &amp;&amp; isPrunableStdNoCheck){</span></span>
+<span id="L1275"><span class="lineNum">    1275</span> <span class="tlaGNC">    10387107 :          if (skipQuiet &amp;&amp; pvsData.isQuiet &amp;&amp; noCheck &amp;&amp; isPrunableStdNoCheck){</span></span>
 <span id="L1276"><span class="lineNum">    1276</span>              :             stats.incr(Stats::sid_lmp);</span>
 <span id="L1277"><span class="lineNum">    1277</span> <span class="tlaGNC">    13841942 :             continue;</span></span>
 <span id="L1278"><span class="lineNum">    1278</span>              :          }</span>
 <span id="L1279"><span class="lineNum">    1279</span>              :          // skip other bad capture</span>
-<span id="L1280"><span class="lineNum">    1280</span> <span class="tlaGNC">     4149551 :          if (skipCap &amp;&amp; Move2Type(*it) == T_capture &amp;&amp; isPrunableBadCap){</span></span>
+<span id="L1280"><span class="lineNum">    1280</span> <span class="tlaGNC">     4149409 :          if (skipCap &amp;&amp; Move2Type(*it) == T_capture &amp;&amp; isPrunableBadCap){</span></span>
 <span id="L1281"><span class="lineNum">    1281</span>              :             stats.incr(Stats::sid_see2);</span>
 <span id="L1282"><span class="lineNum">    1282</span> <span class="tlaGNC">       51900 :             continue;</span></span>
 <span id="L1283"><span class="lineNum">    1283</span>              :          }</span>
 <span id="L1284"><span class="lineNum">    1284</span>              : </span>
 <span id="L1285"><span class="lineNum">    1285</span>              :          // forward pruning heuristic for quiet moves</span>
-<span id="L1286"><span class="lineNum">    1286</span> <span class="tlaGNC">     3932726 :          if (isPrunableStdNoCheck){</span></span>
+<span id="L1286"><span class="lineNum">    1286</span> <span class="tlaGNC">     3932584 :          if (isPrunableStdNoCheck){</span></span>
 <span id="L1287"><span class="lineNum">    1287</span>              :             // futility</span>
-<span id="L1288"><span class="lineNum">    1288</span> <span class="tlaGNC">     2726499 :             if (pvsData.futility) {</span></span>
+<span id="L1288"><span class="lineNum">    1288</span> <span class="tlaGNC">     2726355 :             if (pvsData.futility) {</span></span>
 <span id="L1289"><span class="lineNum">    1289</span>              :                stats.incr(Stats::sid_futility);</span>
 <span id="L1290"><span class="lineNum">    1290</span>              :                skipQuiet = true;</span>
 <span id="L1291"><span class="lineNum">    1291</span> <span class="tlaGNC">      112670 :                continue;</span></span>
 <span id="L1292"><span class="lineNum">    1292</span>              :             }</span>
 <span id="L1293"><span class="lineNum">    1293</span>              : </span>
 <span id="L1294"><span class="lineNum">    1294</span>              :             // LMP</span>
-<span id="L1295"><span class="lineNum">    1295</span> <span class="tlaGNC">     2613829 :             if (pvsData.lmp &amp;&amp; pvsData.validMoveCount &gt; SearchConfig::lmpLimit[pvsData.improving][depth + depthCorrection]) {</span></span>
+<span id="L1295"><span class="lineNum">    1295</span> <span class="tlaGNC">     2613685 :             if (pvsData.lmp &amp;&amp; pvsData.validMoveCount &gt; SearchConfig::lmpLimit[pvsData.improving][depth + depthCorrection]) {</span></span>
 <span id="L1296"><span class="lineNum">    1296</span>              :                stats.incr(Stats::sid_lmp);</span>
 <span id="L1297"><span class="lineNum">    1297</span>              :                skipQuiet = true;</span>
 <span id="L1298"><span class="lineNum">    1298</span> <span class="tlaGNC">      220505 :                continue;</span></span>
 <span id="L1299"><span class="lineNum">    1299</span>              :             }</span>
 <span id="L1300"><span class="lineNum">    1300</span>              : </span>
 <span id="L1301"><span class="lineNum">    1301</span>              :             // History pruning (including CMH)</span>
-<span id="L1302"><span class="lineNum">    1302</span> <span class="tlaGNC">     2577400 :             if (pvsData.historyPruning &amp;&amp; </span></span>
+<span id="L1302"><span class="lineNum">    1302</span> <span class="tlaGNC">     2577256 :             if (pvsData.historyPruning &amp;&amp; </span></span>
 <span id="L1303"><span class="lineNum">    1303</span> <span class="tlaGNC">      368152 :                Move2Score(*it) &lt; SearchConfig::historyPruningCoeff.threshold(depth, evalData.gp, pvsData.improving, pvsData.cutNode)) {</span></span>
 <span id="L1304"><span class="lineNum">    1304</span>              :                stats.incr(Stats::sid_historyPruning);</span>
 <span id="L1305"><span class="lineNum">    1305</span>              :                skipQuiet = true;</span>
@@ -1369,7 +1369,7 @@
 <span id="L1307"><span class="lineNum">    1307</span>              :             }</span>
 <span id="L1308"><span class="lineNum">    1308</span>              : </span>
 <span id="L1309"><span class="lineNum">    1309</span>              :             // CMH pruning alone</span>
-<span id="L1310"><span class="lineNum">    1310</span> <span class="tlaGNC">     2360202 :             if (pvsData.CMHPruning ) {</span></span>
+<span id="L1310"><span class="lineNum">    1310</span> <span class="tlaGNC">     2360058 :             if (pvsData.CMHPruning ) {</span></span>
 <span id="L1311"><span class="lineNum">    1311</span> <span class="tlaGNC">      526842 :                if (isCMHBad(p, Move2From(*it), Move2To(*it), pvsData.cmhPtr, SearchConfig::CMHMargin)) {</span></span>
 <span id="L1312"><span class="lineNum">    1312</span>              :                   stats.incr(Stats::sid_CMHPruning);</span>
 <span id="L1313"><span class="lineNum">    1313</span> <span class="tlaGNC">       88589 :                   continue;</span></span>
@@ -1378,14 +1378,14 @@
 <span id="L1316"><span class="lineNum">    1316</span>              :          }</span>
 <span id="L1317"><span class="lineNum">    1317</span>              :          else{</span>
 <span id="L1318"><span class="lineNum">    1318</span>              :             // capture history pruning (only std cap)</span>
-<span id="L1319"><span class="lineNum">    1319</span> <span class="tlaGNC">     1440625 :             if (pvsData.capHistoryPruning &amp;&amp; isPrunableCap &amp;&amp;</span></span>
+<span id="L1319"><span class="lineNum">    1319</span> <span class="tlaGNC">     1440627 :             if (pvsData.capHistoryPruning &amp;&amp; isPrunableCap &amp;&amp;</span></span>
 <span id="L1320"><span class="lineNum">    1320</span> <span class="tlaGNC">      234398 :                historyT.historyCap[PieceIdx(p.board_const(Move2From(*it)))][to][Abs(p.board_const(to))-1] &lt; SearchConfig::captureHistoryPruningCoeff.threshold(depth, evalData.gp, pvsData.improving, pvsData.cutNode)){</span></span>
 <span id="L1321"><span class="lineNum">    1321</span>              :                stats.incr(Stats::sid_capHistPruning);</span>
 <span id="L1322"><span class="lineNum">    1322</span> <span class="tlaGNC">        9358 :                continue;</span></span>
 <span id="L1323"><span class="lineNum">    1323</span>              :             }</span>
 <span id="L1324"><span class="lineNum">    1324</span>              : </span>
 <span id="L1325"><span class="lineNum">    1325</span>              :             // SEE (capture)</span>
-<span id="L1326"><span class="lineNum">    1326</span> <span class="tlaGNC">     1196869 :             if (!pvsData.rootnode &amp;&amp; isPrunableBadCap) {</span></span>
+<span id="L1326"><span class="lineNum">    1326</span> <span class="tlaGNC">     1196871 :             if (!pvsData.rootnode &amp;&amp; isPrunableBadCap) {</span></span>
 <span id="L1327"><span class="lineNum">    1327</span> <span class="tlaGNC">      219806 :                if (pvsData.futility) {</span></span>
 <span id="L1328"><span class="lineNum">    1328</span>              :                   stats.incr(Stats::sid_see);</span>
 <span id="L1329"><span class="lineNum">    1329</span>              :                   skipCap = true;</span>
@@ -1401,13 +1401,13 @@
 <span id="L1339"><span class="lineNum">    1339</span>              : </span>
 <span id="L1340"><span class="lineNum">    1340</span>              :          // get depth of next search</span>
 <span id="L1341"><span class="lineNum">    1341</span>              :          // Remember that if no tt hit, depth has been reduced already (by IIR)</span>
-<span id="L1342"><span class="lineNum">    1342</span> <span class="tlaGNC">     3318604 :          auto [nextDepth, extension, reduction] = depthPolicy(p, depth, height, *it, pvsData, evalData, evalScore, extensions, isReductible);</span></span>
+<span id="L1342"><span class="lineNum">    1342</span> <span class="tlaGNC">     3318462 :          auto [nextDepth, extension, reduction] = depthPolicy(p, depth, height, *it, pvsData, evalData, evalScore, extensions, isReductible);</span></span>
 <span id="L1343"><span class="lineNum">    1343</span>              : </span>
 <span id="L1344"><span class="lineNum">    1344</span>              :          // SEE (quiet)</span>
 <span id="L1345"><span class="lineNum">    1345</span>              :          ScoreType seeValue = 0;</span>
-<span id="L1346"><span class="lineNum">    1346</span> <span class="tlaGNC">     3318604 :          if (isPrunableStdNoCheck) {</span></span>
-<span id="L1347"><span class="lineNum">    1347</span> <span class="tlaGNC">     2271613 :             seeValue = SEE(p, *it);</span></span>
-<span id="L1348"><span class="lineNum">    1348</span> <span class="tlaGNC">     3234576 :             if (!pvsData.rootnode &amp;&amp; seeValue &lt; - (SearchConfig::seeQuietInit + SearchConfig::seeQuietFactor * (nextDepth - 1) * (nextDepth + std::max(0, dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeQuietDangerDivisor))){</span></span>
+<span id="L1346"><span class="lineNum">    1346</span> <span class="tlaGNC">     3318462 :          if (isPrunableStdNoCheck) {</span></span>
+<span id="L1347"><span class="lineNum">    1347</span> <span class="tlaGNC">     2271469 :             seeValue = SEE(p, *it);</span></span>
+<span id="L1348"><span class="lineNum">    1348</span> <span class="tlaGNC">     3234432 :             if (!pvsData.rootnode &amp;&amp; seeValue &lt; - (SearchConfig::seeQuietInit + SearchConfig::seeQuietFactor * (nextDepth - 1) * (nextDepth + std::max(0, dangerGoodAttack - dangerUnderAttack)/SearchConfig::seeQuietDangerDivisor))){</span></span>
 <span id="L1349"><span class="lineNum">    1349</span>              :                stats.incr(Stats::sid_seeQuiet);</span>
 <span id="L1350"><span class="lineNum">    1350</span> <span class="tlaGNC">      370674 :                continue;</span></span>
 <span id="L1351"><span class="lineNum">    1351</span>              :             }</span>
@@ -1415,18 +1415,18 @@
 <span id="L1353"><span class="lineNum">    1353</span>              :             //else if (seeValue &lt; 0 &amp;&amp; nextDepth &gt; 1) --nextDepth;</span>
 <span id="L1354"><span class="lineNum">    1354</span>              :          }</span>
 <span id="L1355"><span class="lineNum">    1355</span>              : </span>
-<span id="L1356"><span class="lineNum">    1356</span> <span class="tlaGNC">     2947930 :          ++pvsData.validNonPrunedCount;</span></span>
+<span id="L1356"><span class="lineNum">    1356</span> <span class="tlaGNC">     2947788 :          ++pvsData.validNonPrunedCount;</span></span>
 <span id="L1357"><span class="lineNum">    1357</span>              : </span>
 <span id="L1358"><span class="lineNum">    1358</span>              :          // PVS</span>
-<span id="L1359"><span class="lineNum">    1359</span> <span class="tlaGNC">     2947930 :          stack[p2.halfmoves].p = p2;</span></span>
-<span id="L1360"><span class="lineNum">    1360</span> <span class="tlaGNC">     2947930 :          stack[p2.halfmoves].h = p2.h;         </span></span>
+<span id="L1359"><span class="lineNum">    1359</span> <span class="tlaGNC">     2947788 :          stack[p2.halfmoves].p = p2;</span></span>
+<span id="L1360"><span class="lineNum">    1360</span> <span class="tlaGNC">     2947788 :          stack[p2.halfmoves].h = p2.h;         </span></span>
 <span id="L1361"><span class="lineNum">    1361</span>              : #ifdef WITH_NNUE</span>
-<span id="L1362"><span class="lineNum">    1362</span> <span class="tlaGNC">     2947930 :          NNUEEvaluator newEvaluator = p.evaluator();</span></span>
+<span id="L1362"><span class="lineNum">    1362</span> <span class="tlaGNC">     2947788 :          NNUEEvaluator newEvaluator = p.evaluator();</span></span>
 <span id="L1363"><span class="lineNum">    1363</span>              :          p2.associateEvaluator(newEvaluator);</span>
-<span id="L1364"><span class="lineNum">    1364</span> <span class="tlaGNC">     2947930 :          applyMoveNNUEUpdate(p2, moveInfo);</span></span>
+<span id="L1364"><span class="lineNum">    1364</span> <span class="tlaGNC">     2947788 :          applyMoveNNUEUpdate(p2, moveInfo);</span></span>
 <span id="L1365"><span class="lineNum">    1365</span>              : #endif</span>
-<span id="L1366"><span class="lineNum">    1366</span> <span class="tlaGNC">     2947930 :          score = -pvs&lt;false&gt;(-alpha - 1, -alpha, p2, nextDepth, height + 1, childPV, seldepth, static_cast&lt;DepthType&gt;(extensions + extension), pvsData.isCheck, true);</span></span>
-<span id="L1367"><span class="lineNum">    1367</span> <span class="tlaGNC">     2947930 :          if (reduction &gt; 0 &amp;&amp; score &gt; alpha) {</span></span>
+<span id="L1366"><span class="lineNum">    1366</span> <span class="tlaGNC">     2947788 :          score = -pvs&lt;false&gt;(-alpha - 1, -alpha, p2, nextDepth, height + 1, childPV, seldepth, static_cast&lt;DepthType&gt;(extensions + extension), pvsData.isCheck, true);</span></span>
+<span id="L1367"><span class="lineNum">    1367</span> <span class="tlaGNC">     2947788 :          if (reduction &gt; 0 &amp;&amp; score &gt; alpha) {</span></span>
 <span id="L1368"><span class="lineNum">    1368</span>              :             stats.incr(Stats::sid_lmrFail);</span>
 <span id="L1369"><span class="lineNum">    1369</span>              :             childPV.clear();</span>
 <span id="L1370"><span class="lineNum">    1370</span> <span class="tlaGNC">       37143 :             score = -pvs&lt;false&gt;(-alpha - 1, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, static_cast&lt;DepthType&gt;(extensions + extension), pvsData.isCheck, !pvsData.cutNode);</span></span>
@@ -1443,31 +1443,31 @@
 <span id="L1381"><span class="lineNum">    1381</span>              :             }</span>
 <span id="L1382"><span class="lineNum">    1382</span>              : */</span>
 <span id="L1383"><span class="lineNum">    1383</span>              :          }</span>
-<span id="L1384"><span class="lineNum">    1384</span> <span class="tlaGNC">     2947930 :          if ( score &gt; alpha &amp;&amp; (pvsData.rootnode || score &lt; beta)) {</span></span>
+<span id="L1384"><span class="lineNum">    1384</span> <span class="tlaGNC">     2947788 :          if ( score &gt; alpha &amp;&amp; (pvsData.rootnode || score &lt; beta)) {</span></span>
 <span id="L1385"><span class="lineNum">    1385</span>              :             stats.incr(Stats::sid_pvsFail);</span>
 <span id="L1386"><span class="lineNum">    1386</span>              :             childPV.clear();</span>
 <span id="L1387"><span class="lineNum">    1387</span>              :             // potential new pv node</span>
-<span id="L1388"><span class="lineNum">    1388</span> <span class="tlaGNC">        2954 :             score = -pvs&lt;true&gt;(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, static_cast&lt;DepthType&gt;(extensions + extension), pvsData.isCheck, false);</span></span>
+<span id="L1388"><span class="lineNum">    1388</span> <span class="tlaGNC">        2953 :             score = -pvs&lt;true&gt;(-beta, -alpha, p2, depth - 1 + extension, height + 1, childPV, seldepth, static_cast&lt;DepthType&gt;(extensions + extension), pvsData.isCheck, false);</span></span>
 <span id="L1389"><span class="lineNum">    1389</span>              :          }</span>
 <span id="L1390"><span class="lineNum">    1390</span>              :       }</span>
 <span id="L1391"><span class="lineNum">    1391</span>              : </span>
-<span id="L1392"><span class="lineNum">    1392</span> <span class="tlaGNC">     3752998 :       if (stopFlag) return STOPSCORE;</span></span>
+<span id="L1392"><span class="lineNum">    1392</span> <span class="tlaGNC">     3752852 :       if (stopFlag) return STOPSCORE;</span></span>
 <span id="L1393"><span class="lineNum">    1393</span>              : </span>
-<span id="L1394"><span class="lineNum">    1394</span> <span class="tlaGNC">     3752997 :       if (pvsData.rootnode) { </span></span>
-<span id="L1395"><span class="lineNum">    1395</span> <span class="tlaGNC">       27988 :          rootScores.emplace_back(*it, score);</span></span>
+<span id="L1394"><span class="lineNum">    1394</span> <span class="tlaGNC">     3752848 :       if (pvsData.rootnode) { </span></span>
+<span id="L1395"><span class="lineNum">    1395</span> <span class="tlaGNC">       27839 :          rootScores.emplace_back(*it, score);</span></span>
 <span id="L1396"><span class="lineNum">    1396</span>              :       }</span>
-<span id="L1397"><span class="lineNum">    1397</span> <span class="tlaGNC">     3752997 :       if (score &gt; bestScore) {</span></span>
-<span id="L1398"><span class="lineNum">    1398</span> <span class="tlaGNC">     1202231 :          if (pvsData.rootnode) previousBest = *it;</span></span>
+<span id="L1397"><span class="lineNum">    1397</span> <span class="tlaGNC">     3752848 :       if (score &gt; bestScore) {</span></span>
+<span id="L1398"><span class="lineNum">    1398</span> <span class="tlaGNC">     1202224 :          if (pvsData.rootnode) previousBest = *it;</span></span>
 <span id="L1399"><span class="lineNum">    1399</span>              :          bestScore = score;</span>
-<span id="L1400"><span class="lineNum">    1400</span> <span class="tlaGNC">     1202231 :          bestMove  = *it;</span></span>
-<span id="L1401"><span class="lineNum">    1401</span> <span class="tlaGNC">     1202231 :          pvsData.bestMoveIsCheck = pvsData.isCheck;</span></span>
+<span id="L1400"><span class="lineNum">    1400</span> <span class="tlaGNC">     1202224 :          bestMove  = *it;</span></span>
+<span id="L1401"><span class="lineNum">    1401</span> <span class="tlaGNC">     1202224 :          pvsData.bestMoveIsCheck = pvsData.isCheck;</span></span>
 <span id="L1402"><span class="lineNum">    1402</span>              :          //bestScoreUpdated = true;</span>
-<span id="L1403"><span class="lineNum">    1403</span> <span class="tlaGNC">     1202231 :          if (score &gt; alpha) {</span></span>
+<span id="L1403"><span class="lineNum">    1403</span> <span class="tlaGNC">     1202224 :          if (score &gt; alpha) {</span></span>
 <span id="L1404"><span class="lineNum">    1404</span>              :             if constexpr(pvnode) updatePV(pv, bestMove, childPV);</span>
-<span id="L1405"><span class="lineNum">    1405</span> <span class="tlaGNC">      536524 :             pvsData.alphaUpdated = true;</span></span>
-<span id="L1406"><span class="lineNum">    1406</span> <span class="tlaGNC">      536524 :             alpha = score;</span></span>
+<span id="L1405"><span class="lineNum">    1405</span> <span class="tlaGNC">      536517 :             pvsData.alphaUpdated = true;</span></span>
+<span id="L1406"><span class="lineNum">    1406</span> <span class="tlaGNC">      536517 :             alpha = score;</span></span>
 <span id="L1407"><span class="lineNum">    1407</span>              :             hashBound = TT::B_exact;</span>
-<span id="L1408"><span class="lineNum">    1408</span> <span class="tlaGNC">      536524 :             if (score &gt;= beta) {</span></span>
+<span id="L1408"><span class="lineNum">    1408</span> <span class="tlaGNC">      536517 :             if (score &gt;= beta) {</span></span>
 <span id="L1409"><span class="lineNum">    1409</span>              :                stats.incr(Stats::sid_beta);</span>
 <span id="L1410"><span class="lineNum">    1410</span>              : #ifdef WITH_BETACUTSTATS</span>
 <span id="L1411"><span class="lineNum">    1411</span>              :                updateStatBetaCut(p, *it, height);</span>
@@ -1497,31 +1497,31 @@
 <span id="L1435"><span class="lineNum">    1435</span>              :             stats.incr(Stats::sid_alpha);</span>
 <span id="L1436"><span class="lineNum">    1436</span>              :          }</span>
 <span id="L1437"><span class="lineNum">    1437</span>              :       }</span>
-<span id="L1438"><span class="lineNum">    1438</span> <span class="tlaGNC">     2550766 :       else if (pvsData.rootnode &amp;&amp; !pvsData.isInCheck &amp;&amp; pvsData.earlyMove &amp;&amp; score &lt; alpha - SearchConfig::failLowRootMargin) {</span></span>
+<span id="L1438"><span class="lineNum">    1438</span> <span class="tlaGNC">     2550624 :       else if (pvsData.rootnode &amp;&amp; !pvsData.isInCheck &amp;&amp; pvsData.earlyMove &amp;&amp; score &lt; alpha - SearchConfig::failLowRootMargin) {</span></span>
 <span id="L1439"><span class="lineNum">    1439</span> <span class="tlaUNC tlaBgUNC">           0 :          return alpha - SearchConfig::failLowRootMargin;</span></span>
 <span id="L1440"><span class="lineNum">    1440</span>              :       }</span>
 <span id="L1441"><span class="lineNum">    1441</span>              :    }</span>
 <span id="L1442"><span class="lineNum">    1442</span>              : </span>
-<span id="L1443"><span class="lineNum">    1443</span> <span class="tlaGNC tlaBgGNC">     1038415 :    if (alphaInit == alpha ) stats.incr(Stats::sid_alphanoupdate);</span></span>
+<span id="L1443"><span class="lineNum">    1443</span> <span class="tlaGNC tlaBgGNC">     1038407 :    if (alphaInit == alpha ) stats.incr(Stats::sid_alphanoupdate);</span></span>
 <span id="L1444"><span class="lineNum">    1444</span>              : </span>
 <span id="L1445"><span class="lineNum">    1445</span>              :    // check for draw and check mate</span>
-<span id="L1446"><span class="lineNum">    1446</span> <span class="tlaGNC">     1038415 :    if (pvsData.validMoveCount == 0){</span></span>
+<span id="L1446"><span class="lineNum">    1446</span> <span class="tlaGNC">     1038407 :    if (pvsData.validMoveCount == 0){</span></span>
 <span id="L1447"><span class="lineNum">    1447</span> <span class="tlaGNC">        4015 :       return !pvsData.withoutSkipMove ? alpha : pvsData.isInCheck ? matedScore(height) : drawScore(p, height);</span></span>
 <span id="L1448"><span class="lineNum">    1448</span>              :       //return (pvsData.isInCheck || !pvsData.withoutSkipMove) ? matedScore(height) : drawScore(p, height);</span>
 <span id="L1449"><span class="lineNum">    1449</span>              :    }</span>
 <span id="L1450"><span class="lineNum">    1450</span>              :    // post move loop version</span>
-<span id="L1451"><span class="lineNum">    1451</span> <span class="tlaGNC">     1034400 :    else if (is50moves(p,false)){</span></span>
+<span id="L1451"><span class="lineNum">    1451</span> <span class="tlaGNC">     1034392 :    else if (is50moves(p,false)){</span></span>
 <span id="L1452"><span class="lineNum">    1452</span> <span class="tlaUNC tlaBgUNC">           0 :       return drawScore(p, height);</span></span>
 <span id="L1453"><span class="lineNum">    1453</span>              :    }</span>
 <span id="L1454"><span class="lineNum">    1454</span>              : </span>
 <span id="L1455"><span class="lineNum">    1455</span>              :    // insert data in TT</span>
-<span id="L1456"><span class="lineNum">    1456</span> <span class="tlaGNC tlaBgGNC">     1034400 :    TT::setEntry(*this, pHash, bestMove, TT::createHashScore(bestScore, height), TT::createHashScore(evalScore, height),</span></span>
-<span id="L1457"><span class="lineNum">    1457</span> <span class="tlaGNC">     1034400 :                        static_cast&lt;TT::Bound&gt;(hashBound |</span></span>
-<span id="L1458"><span class="lineNum">    1458</span> <span class="tlaGNC">     1034400 :                        (pvsData.ttPV            ? TT::B_ttPVFlag      : TT::B_none) |</span></span>
-<span id="L1459"><span class="lineNum">    1459</span> <span class="tlaGNC">     2068800 :                        (pvsData.bestMoveIsCheck ? TT::B_isCheckFlag   : TT::B_none) |</span></span>
-<span id="L1460"><span class="lineNum">    1460</span> <span class="tlaGNC">     1034400 :                        (pvsData.isInCheck       ? TT::B_isInCheckFlag : TT::B_none)),</span></span>
+<span id="L1456"><span class="lineNum">    1456</span> <span class="tlaGNC tlaBgGNC">     1034392 :    TT::setEntry(*this, pHash, bestMove, TT::createHashScore(bestScore, height), TT::createHashScore(evalScore, height),</span></span>
+<span id="L1457"><span class="lineNum">    1457</span> <span class="tlaGNC">     1034392 :                        static_cast&lt;TT::Bound&gt;(hashBound |</span></span>
+<span id="L1458"><span class="lineNum">    1458</span> <span class="tlaGNC">     1034392 :                        (pvsData.ttPV            ? TT::B_ttPVFlag      : TT::B_none) |</span></span>
+<span id="L1459"><span class="lineNum">    1459</span> <span class="tlaGNC">     2068784 :                        (pvsData.bestMoveIsCheck ? TT::B_isCheckFlag   : TT::B_none) |</span></span>
+<span id="L1460"><span class="lineNum">    1460</span> <span class="tlaGNC">     1034392 :                        (pvsData.isInCheck       ? TT::B_isInCheckFlag : TT::B_none)),</span></span>
 <span id="L1461"><span class="lineNum">    1461</span>              :                        depth,</span>
-<span id="L1462"><span class="lineNum">    1462</span> <span class="tlaGNC">     1034400 :                        isMainThread());</span></span>
+<span id="L1462"><span class="lineNum">    1462</span> <span class="tlaGNC">     1034392 :                        isMainThread());</span></span>
 <span id="L1463"><span class="lineNum">    1463</span>              : </span>
 <span id="L1464"><span class="lineNum">    1464</span>              :    return bestScore;</span>
 <span id="L1465"><span class="lineNum">    1465</span>              : }</span>

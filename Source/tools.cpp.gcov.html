@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-04-07 09:53:30</td>
+            <td class="headerValue">2026-04-16 14:22:47</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">53.8&nbsp;%</td>
@@ -109,20 +109,20 @@
 <span id="L47"><span class="lineNum">      47</span>              :    }</span>
 <span id="L48"><span class="lineNum">      48</span>              : }</span>
 <span id="L49"><span class="lineNum">      49</span>              : #else</span>
-<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC tlaBgGNC">     8064478 : void debug_king_cap(const Position&amp;) { ; }</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC tlaBgGNC">     8064170 : void debug_king_cap(const Position&amp;) { ; }</span></span>
 <span id="L51"><span class="lineNum">      51</span>              : #endif</span>
 <span id="L52"><span class="lineNum">      52</span>              : </span>
 <span id="L53"><span class="lineNum">      53</span> <span class="tlaUNC tlaBgUNC">           0 : std::string ToString(const MiniMove&amp; m) { return ToString(static_cast&lt;Move&gt;(m), false); }</span></span>
 <span id="L54"><span class="lineNum">      54</span>              : </span>
-<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC tlaBgGNC">        5382 : std::string ToString(const Move&amp; m, bool withScore) {</span></span>
-<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">        5382 :    if (sameMove(m, INVALIDMOVE)) return &quot;invalid move&quot;; ///@todo 0000 ?</span></span>
-<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">        5370 :    if (sameMove(m, NULLMOVE)) return &quot;null move&quot;; ///@todo 0000 ?</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC tlaBgGNC">        5368 : std::string ToString(const Move&amp; m, bool withScore) {</span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">        5368 :    if (sameMove(m, INVALIDMOVE)) return &quot;invalid move&quot;; ///@todo 0000 ?</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">        5357 :    if (sameMove(m, NULLMOVE)) return &quot;null move&quot;; ///@todo 0000 ?</span></span>
 <span id="L58"><span class="lineNum">      58</span>              : </span>
-<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">        5410 :    const std::string score = (withScore ? &quot; (&quot; + std::to_string(Move2Score(m)) + &quot;)&quot; : &quot;&quot;);</span></span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">        5397 :    const std::string score = (withScore ? &quot; (&quot; + std::to_string(Move2Score(m)) + &quot;)&quot; : &quot;&quot;);</span></span>
 <span id="L60"><span class="lineNum">      60</span>              :    // FRC castling is encoded king takes rook</span>
 <span id="L61"><span class="lineNum">      61</span>              :    // standard chess castling is encoded with Smith notation</span>
-<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">        5370 :    if (!DynamicConfig::FRC) { </span></span>
-<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">       10726 :       switch (Move2Type(m)) {</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">        5357 :    if (!DynamicConfig::FRC) { </span></span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">       10702 :       switch (Move2Type(m)) {</span></span>
 <span id="L64"><span class="lineNum">      64</span> <span class="tlaGNC">          10 :          case T_bks: return &quot;e8g8&quot; + score;</span></span>
 <span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">          18 :          case T_wks: return &quot;e1g1&quot; + score;</span></span>
 <span id="L66"><span class="lineNum">      66</span> <span class="tlaUNC tlaBgUNC">           0 :          case T_bqs: return &quot;e8c8&quot; + score;</span></span>
@@ -132,19 +132,19 @@
 <span id="L70"><span class="lineNum">      70</span>              :       }</span>
 <span id="L71"><span class="lineNum">      71</span>              :    }</span>
 <span id="L72"><span class="lineNum">      72</span>              :    static constexpr array1d&lt;std::string_view,T_max&gt; promSuffixe = {&quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;q&quot;, &quot;r&quot;, &quot;b&quot;, &quot;n&quot;, &quot;q&quot;, &quot;r&quot;, &quot;b&quot;, &quot;n&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;};</span>
-<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC tlaBgGNC">       10684 :    const std::string_view &amp; prom = promSuffixe[Move2Type(m)];</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC tlaBgGNC">       10658 :    const std::string_view &amp; prom = promSuffixe[Move2Type(m)];</span></span>
 <span id="L74"><span class="lineNum">      74</span>              :    ///@todo remove string CTOR here in C++26 ;-)</span>
-<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">       21368 :    return std::string(SquareNames[Move2From(m)]) + std::string(SquareNames[Move2To(m)]) + std::string(prom) + score; </span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">       21316 :    return std::string(SquareNames[Move2From(m)]) + std::string(SquareNames[Move2To(m)]) + std::string(prom) + score; </span></span>
 <span id="L76"><span class="lineNum">      76</span>              : }</span>
 <span id="L77"><span class="lineNum">      77</span>              : </span>
-<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">         471 : std::string ToString(const PVList&amp; moves) {</span></span>
-<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">         471 :    std::stringstream ss;</span></span>
-<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">        4586 :    for (const auto &amp;m : moves) {</span></span>
-<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">        4115 :       if (m == INVALIDMOVE) break;</span></span>
-<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">       12345 :       ss &lt;&lt; ToString(m) &lt;&lt; &quot; &quot;;</span></span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">         467 : std::string ToString(const PVList&amp; moves) {</span></span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">         467 :    std::stringstream ss;</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">        4578 :    for (const auto &amp;m : moves) {</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">        4111 :       if (m == INVALIDMOVE) break;</span></span>
+<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">       12333 :       ss &lt;&lt; ToString(m) &lt;&lt; &quot; &quot;;</span></span>
 <span id="L83"><span class="lineNum">      83</span>              :    }</span>
-<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">         471 :    return ss.str();</span></span>
-<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">         471 : }</span></span>
+<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">         467 :    return ss.str();</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">         467 : }</span></span>
 <span id="L86"><span class="lineNum">      86</span>              : </span>
 <span id="L87"><span class="lineNum">      87</span> <span class="tlaUNC tlaBgUNC">           0 : std::string ToString(const Position::Material&amp; mat) {</span></span>
 <span id="L88"><span class="lineNum">      88</span> <span class="tlaUNC">           0 :    std::stringstream str;</span></span>
@@ -175,42 +175,42 @@
 <span id="L113"><span class="lineNum">     113</span> <span class="tlaUNC">           0 :    return str.str();</span></span>
 <span id="L114"><span class="lineNum">     114</span> <span class="tlaUNC">           0 : }</span></span>
 <span id="L115"><span class="lineNum">     115</span>              : </span>
-<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC tlaBgGNC">         439 : std::string ToString(const Position&amp; p, bool noEval) {</span></span>
-<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">         439 :    std::stringstream ss;</span></span>
+<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC tlaBgGNC">         437 : std::string ToString(const Position&amp; p, bool noEval) {</span></span>
+<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">         437 :    std::stringstream ss;</span></span>
 <span id="L118"><span class="lineNum">     118</span>              :    ss &lt;&lt; &quot;Position&quot; &lt;&lt; std::endl;</span>
-<span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">        3951 :    for (Square j = 7; j &gt;= 0; --j) {</span></span>
-<span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">        3512 :       ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; +-+-+-+-+-+-+-+-+&quot; &lt;&lt; std::endl;</span></span>
-<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC">        3512 :       ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; |&quot;;</span></span>
-<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">       31608 :       for (Square i = 0; i &lt; 8; ++i) ss &lt;&lt; PieceTools::getName/*UTF*/(p, static_cast&lt;Square&gt;(i + j * 8)) &lt;&lt; '|';</span></span>
+<span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">        3933 :    for (Square j = 7; j &gt;= 0; --j) {</span></span>
+<span id="L120"><span class="lineNum">     120</span> <span class="tlaGNC">        3496 :       ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; +-+-+-+-+-+-+-+-+&quot; &lt;&lt; std::endl;</span></span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC">        3496 :       ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; |&quot;;</span></span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">       31464 :       for (Square i = 0; i &lt; 8; ++i) ss &lt;&lt; PieceTools::getName/*UTF*/(p, static_cast&lt;Square&gt;(i + j * 8)) &lt;&lt; '|';</span></span>
 <span id="L123"><span class="lineNum">     123</span>              :       ss &lt;&lt; std::endl;</span>
 <span id="L124"><span class="lineNum">     124</span>              :    }</span>
-<span id="L125"><span class="lineNum">     125</span> <span class="tlaGNC">         439 :    ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; +-+-+-+-+-+-+-+-+&quot; &lt;&lt; std::endl;</span></span>
-<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">         439 :    if (p.ep &gt;= 0) ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; ep &quot; &lt;&lt; SquareNames[p.ep] &lt;&lt; std::endl;</span></span>
+<span id="L125"><span class="lineNum">     125</span> <span class="tlaGNC">         437 :    ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; +-+-+-+-+-+-+-+-+&quot; &lt;&lt; std::endl;</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">         437 :    if (p.ep &gt;= 0) ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; ep &quot; &lt;&lt; SquareNames[p.ep] &lt;&lt; std::endl;</span></span>
 <span id="L127"><span class="lineNum">     127</span>              :    //ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; wk &quot; &lt;&lt; (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:&quot;none&quot;) &lt;&lt; std::endl;</span>
 <span id="L128"><span class="lineNum">     128</span>              :    //ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; bk &quot; &lt;&lt; (p.king[Co_Black]!=INVALIDSQUARE?SquareNames[p.king[Co_Black]]:&quot;none&quot;) &lt;&lt; std::endl;</span>
-<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">        1088 :    ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; Turn &quot; &lt;&lt; (p.c == Co_White ? &quot;white&quot; : &quot;black&quot;) &lt;&lt; std::endl;</span></span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">        1081 :    ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; Turn &quot; &lt;&lt; (p.c == Co_White ? &quot;white&quot; : &quot;black&quot;) &lt;&lt; std::endl;</span></span>
 <span id="L130"><span class="lineNum">     130</span>              :    ScoreType sc = 0;</span>
-<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">         439 :    if (!noEval) {</span></span>
-<span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC">         439 :       EvalData data;</span></span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">         437 :    if (!noEval) {</span></span>
+<span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC">         437 :       EvalData data;</span></span>
 <span id="L133"><span class="lineNum">     133</span>              : #ifdef WITH_NNUE</span>
-<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">         439 :       NNUEEvaluator evaluator;</span></span>
-<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">         439 :       if (!p.associatedEvaluator) {</span></span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">         437 :       NNUEEvaluator evaluator;</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">         437 :       if (!p.associatedEvaluator) {</span></span>
 <span id="L136"><span class="lineNum">     136</span> <span class="tlaUNC tlaBgUNC">           0 :          p.associatedEvaluator = &amp;evaluator;</span></span>
 <span id="L137"><span class="lineNum">     137</span> <span class="tlaUNC">           0 :          p.resetNNUEEvaluator(evaluator);</span></span>
 <span id="L138"><span class="lineNum">     138</span>              :       }</span>
 <span id="L139"><span class="lineNum">     139</span>              : #endif</span>
-<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC tlaBgGNC">         439 :       const bool tmp = DynamicConfig::forceNNUE;</span></span>
-<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">         439 :       if (DynamicConfig::useNNUE) DynamicConfig::forceNNUE = true;</span></span>
-<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">         439 :       sc = eval(p, data, ThreadPool::instance().main(), true);</span></span>
-<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">         439 :       if (DynamicConfig::useNNUE) DynamicConfig::forceNNUE = tmp;</span></span>
-<span id="L144"><span class="lineNum">     144</span> <span class="tlaGNC">         878 :       ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; Phase &quot; &lt;&lt; data.gp &lt;&lt; std::endl;</span></span>
-<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">         878 :       ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; Static score &quot; &lt;&lt; sc &lt;&lt; std::endl;</span></span>
-<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">         878 :       ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; Hash &quot; &lt;&lt; computeHash(p) &lt;&lt; std::endl;</span></span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC tlaBgGNC">         437 :       const bool tmp = DynamicConfig::forceNNUE;</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">         437 :       if (DynamicConfig::useNNUE) DynamicConfig::forceNNUE = true;</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">         437 :       sc = eval(p, data, ThreadPool::instance().main(), true);</span></span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">         437 :       if (DynamicConfig::useNNUE) DynamicConfig::forceNNUE = tmp;</span></span>
+<span id="L144"><span class="lineNum">     144</span> <span class="tlaGNC">         874 :       ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; Phase &quot; &lt;&lt; data.gp &lt;&lt; std::endl;</span></span>
+<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">         874 :       ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; Static score &quot; &lt;&lt; sc &lt;&lt; std::endl;</span></span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">         874 :       ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; Hash &quot; &lt;&lt; computeHash(p) &lt;&lt; std::endl;</span></span>
 <span id="L147"><span class="lineNum">     147</span>              :    }</span>
-<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">        1317 :    ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; FEN &quot; &lt;&lt; GetFEN(p);</span></span>
+<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">        1311 :    ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; FEN &quot; &lt;&lt; GetFEN(p);</span></span>
 <span id="L149"><span class="lineNum">     149</span>              :    //ss &lt;&lt; ToString(p.mat);</span>
-<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">         439 :    return ss.str();</span></span>
-<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">         439 : }</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">         437 :    return ss.str();</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">         437 : }</span></span>
 <span id="L152"><span class="lineNum">     152</span>              : </span>
 <span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">           2 : std::string ToString(const BitBoard&amp; b) {</span></span>
 <span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">           2 :    std::bitset&lt;64&gt; bs(b);</span></span>
