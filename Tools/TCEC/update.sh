@@ -7,7 +7,7 @@ if [ ! -n "$VERSION" ];then
    exit 1
 fi
 
-NETNAME=natural_naughtiness.bin
+NETNAME=nihilist_nugget.bin
 
 # get minic
 git clone --branch=$VERSION https://github.com/tryingsomestuff/Minic
