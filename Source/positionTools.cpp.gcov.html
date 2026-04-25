@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-04-16 14:22:47</td>
+            <td class="headerValue">2026-04-25 08:53:02</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryMed">88.9&nbsp;%</td>
@@ -71,39 +71,39 @@
 <span id="L9"><span class="lineNum">       9</span>              : #include &quot;pieceTools.hpp&quot;</span>
 <span id="L10"><span class="lineNum">      10</span>              : #include &quot;tools.hpp&quot;</span>
 <span id="L11"><span class="lineNum">      11</span>              : </span>
-<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC tlaBgGNC">         687 : std::string GetFENShort(const Position &amp;p) { // &quot;rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR&quot;</span></span>
-<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">         687 :    std::stringstream ss;</span></span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC tlaBgGNC">         691 : std::string GetFENShort(const Position &amp;p) { // &quot;rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR&quot;</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">         691 :    std::stringstream ss;</span></span>
 <span id="L14"><span class="lineNum">      14</span>              :    int count = 0;</span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">        6183 :    for (int i = 7; i &gt;= 0; --i) {</span></span>
-<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">       49464 :       for (int j = 0; j &lt; 8; j++) {</span></span>
-<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">       43968 :          const Square k = static_cast&lt;Square&gt;(8 * i + j);</span></span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">       43968 :          if (p.board_const(k) == P_none) ++count;</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">        6219 :    for (int i = 7; i &gt;= 0; --i) {</span></span>
+<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">       49752 :       for (int j = 0; j &lt; 8; j++) {</span></span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">       44224 :          const Square k = static_cast&lt;Square&gt;(8 * i + j);</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC">       44224 :          if (p.board_const(k) == P_none) ++count;</span></span>
 <span id="L19"><span class="lineNum">      19</span>              :          else {</span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">       11592 :             if (count != 0) {</span></span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">        6118 :                ss &lt;&lt; count;</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">       11649 :             if (count != 0) {</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">        6161 :                ss &lt;&lt; count;</span></span>
 <span id="L22"><span class="lineNum">      22</span>              :                count = 0;</span>
 <span id="L23"><span class="lineNum">      23</span>              :             }</span>
 <span id="L24"><span class="lineNum">      24</span>              :             ss &lt;&lt; PieceTools::getName(p, k);</span>
 <span id="L25"><span class="lineNum">      25</span>              :          }</span>
-<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">       43968 :          if (j == 7) {</span></span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">        5496 :             if (count != 0) {</span></span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">        4037 :                ss &lt;&lt; count;</span></span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaGNC">       44224 :          if (j == 7) {</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">        5528 :             if (count != 0) {</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">        4112 :                ss &lt;&lt; count;</span></span>
 <span id="L29"><span class="lineNum">      29</span>              :                count = 0;</span>
 <span id="L30"><span class="lineNum">      30</span>              :             }</span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">        5496 :             if (i != 0) ss &lt;&lt; &quot;/&quot;;</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">        5528 :             if (i != 0) ss &lt;&lt; &quot;/&quot;;</span></span>
 <span id="L32"><span class="lineNum">      32</span>              :          }</span>
 <span id="L33"><span class="lineNum">      33</span>              :       }</span>
 <span id="L34"><span class="lineNum">      34</span>              :    }</span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">         687 :    return ss.str();</span></span>
-<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">         687 : }</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">         691 :    return ss.str();</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">         691 : }</span></span>
 <span id="L37"><span class="lineNum">      37</span>              : </span>
-<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">         687 : std::string GetFENShort2(const Position &amp;p) { // &quot;rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5</span></span>
-<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">         687 :    std::stringstream ss;</span></span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">        1704 :    ss &lt;&lt; GetFENShort(p) &lt;&lt; &quot; &quot; &lt;&lt; (p.c == Co_White ? &quot;w&quot; : &quot;b&quot;) &lt;&lt; &quot; &quot;;</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">         691 : std::string GetFENShort2(const Position &amp;p) { // &quot;rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">         691 :    std::stringstream ss;</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">        1716 :    ss &lt;&lt; GetFENShort(p) &lt;&lt; &quot; &quot; &lt;&lt; (p.c == Co_White ? &quot;w&quot; : &quot;b&quot;) &lt;&lt; &quot; &quot;;</span></span>
 <span id="L41"><span class="lineNum">      41</span>              :    bool withCastling = false;</span>
 <span id="L42"><span class="lineNum">      42</span>              : </span>
-<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">         687 :    std::string castlingChar = &quot;KQkq&quot;;</span></span>
-<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">         687 :    if (DynamicConfig::FRC) {</span></span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC">         691 :    std::string castlingChar = &quot;KQkq&quot;;</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">         691 :    if (DynamicConfig::FRC) {</span></span>
 <span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">          11 :       if (p.castling &amp; C_wqs) {</span></span>
 <span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">          11 :          for (Square s = Sq_a1; s &lt;= Sq_h1; ++s) {</span></span>
 <span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">          11 :             if (s &lt; p.king[Co_White] &amp;&amp; p.board_const(s) == P_wr) {</span></span>
@@ -138,34 +138,34 @@
 <span id="L76"><span class="lineNum">      76</span>              :       }</span>
 <span id="L77"><span class="lineNum">      77</span>              :    }</span>
 <span id="L78"><span class="lineNum">      78</span>              : </span>
-<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">         687 :    if (p.castling &amp; C_wks) {</span></span>
-<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">         226 :       ss &lt;&lt; castlingChar[0];</span></span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">         691 :    if (p.castling &amp; C_wks) {</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">         200 :       ss &lt;&lt; castlingChar[0];</span></span>
 <span id="L81"><span class="lineNum">      81</span>              :       withCastling = true;</span>
 <span id="L82"><span class="lineNum">      82</span>              :    }</span>
-<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">         687 :    if (p.castling &amp; C_wqs) {</span></span>
-<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">         182 :       ss &lt;&lt; castlingChar[1];</span></span>
+<span id="L83"><span class="lineNum">      83</span> <span class="tlaGNC">         691 :    if (p.castling &amp; C_wqs) {</span></span>
+<span id="L84"><span class="lineNum">      84</span> <span class="tlaGNC">         170 :       ss &lt;&lt; castlingChar[1];</span></span>
 <span id="L85"><span class="lineNum">      85</span>              :       withCastling = true;</span>
 <span id="L86"><span class="lineNum">      86</span>              :    }</span>
-<span id="L87"><span class="lineNum">      87</span> <span class="tlaGNC">         687 :    if (p.castling &amp; C_bks) {</span></span>
-<span id="L88"><span class="lineNum">      88</span> <span class="tlaGNC">          95 :       ss &lt;&lt; castlingChar[2];</span></span>
+<span id="L87"><span class="lineNum">      87</span> <span class="tlaGNC">         691 :    if (p.castling &amp; C_bks) {</span></span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaGNC">          97 :       ss &lt;&lt; castlingChar[2];</span></span>
 <span id="L89"><span class="lineNum">      89</span>              :       withCastling = true;</span>
 <span id="L90"><span class="lineNum">      90</span>              :    }</span>
-<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">         687 :    if (p.castling &amp; C_bqs) {</span></span>
-<span id="L92"><span class="lineNum">      92</span> <span class="tlaGNC">          95 :       ss &lt;&lt; castlingChar[3];</span></span>
+<span id="L91"><span class="lineNum">      91</span> <span class="tlaGNC">         691 :    if (p.castling &amp; C_bqs) {</span></span>
+<span id="L92"><span class="lineNum">      92</span> <span class="tlaGNC">         117 :       ss &lt;&lt; castlingChar[3];</span></span>
 <span id="L93"><span class="lineNum">      93</span>              :       withCastling = true;</span>
 <span id="L94"><span class="lineNum">      94</span>              :    }</span>
-<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC">         592 :    if (!withCastling) ss &lt;&lt; &quot;-&quot;;</span></span>
-<span id="L96"><span class="lineNum">      96</span> <span class="tlaGNC">         687 :    if (p.ep != INVALIDSQUARE) ss &lt;&lt; &quot; &quot; &lt;&lt; SquareNames[p.ep];</span></span>
+<span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC">         574 :    if (!withCastling) ss &lt;&lt; &quot;-&quot;;</span></span>
+<span id="L96"><span class="lineNum">      96</span> <span class="tlaGNC">         692 :    if (p.ep != INVALIDSQUARE) ss &lt;&lt; &quot; &quot; &lt;&lt; SquareNames[p.ep];</span></span>
 <span id="L97"><span class="lineNum">      97</span>              :    else</span>
-<span id="L98"><span class="lineNum">      98</span> <span class="tlaGNC">         687 :       ss &lt;&lt; &quot; -&quot;;</span></span>
-<span id="L99"><span class="lineNum">      99</span> <span class="tlaGNC">         687 :    return ss.str();</span></span>
-<span id="L100"><span class="lineNum">     100</span> <span class="tlaGNC">         687 : }</span></span>
+<span id="L98"><span class="lineNum">      98</span> <span class="tlaGNC">         690 :       ss &lt;&lt; &quot; -&quot;;</span></span>
+<span id="L99"><span class="lineNum">      99</span> <span class="tlaGNC">         691 :    return ss.str();</span></span>
+<span id="L100"><span class="lineNum">     100</span> <span class="tlaGNC">         691 : }</span></span>
 <span id="L101"><span class="lineNum">     101</span>              : </span>
-<span id="L102"><span class="lineNum">     102</span> <span class="tlaGNC">         687 : std::string GetFEN(const Position &amp;p) { // &quot;rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5 0 2&quot;</span></span>
-<span id="L103"><span class="lineNum">     103</span> <span class="tlaGNC">         687 :    std::stringstream ss;</span></span>
-<span id="L104"><span class="lineNum">     104</span> <span class="tlaGNC">        2748 :    ss &lt;&lt; GetFENShort2(p) &lt;&lt; &quot; &quot; &lt;&lt; static_cast&lt;int&gt;(p.fifty) &lt;&lt; &quot; &quot; &lt;&lt; static_cast&lt;int&gt;(p.moves);</span></span>
-<span id="L105"><span class="lineNum">     105</span> <span class="tlaGNC">         687 :    return ss.str();</span></span>
-<span id="L106"><span class="lineNum">     106</span> <span class="tlaGNC">         687 : }</span></span>
+<span id="L102"><span class="lineNum">     102</span> <span class="tlaGNC">         691 : std::string GetFEN(const Position &amp;p) { // &quot;rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d5 0 2&quot;</span></span>
+<span id="L103"><span class="lineNum">     103</span> <span class="tlaGNC">         691 :    std::stringstream ss;</span></span>
+<span id="L104"><span class="lineNum">     104</span> <span class="tlaGNC">        2764 :    ss &lt;&lt; GetFENShort2(p) &lt;&lt; &quot; &quot; &lt;&lt; static_cast&lt;int&gt;(p.fifty) &lt;&lt; &quot; &quot; &lt;&lt; static_cast&lt;int&gt;(p.moves);</span></span>
+<span id="L105"><span class="lineNum">     105</span> <span class="tlaGNC">         691 :    return ss.str();</span></span>
+<span id="L106"><span class="lineNum">     106</span> <span class="tlaGNC">         691 : }</span></span>
 <span id="L107"><span class="lineNum">     107</span>              : </span>
 <span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC">           8 : std::string SanitizeCastling(const Position &amp;p, const std::string &amp;str) {</span></span>
 <span id="L109"><span class="lineNum">     109</span>              :    // standard chess</span>
@@ -175,7 +175,7 @@
 <span id="L113"><span class="lineNum">     113</span>              :    return str;</span>
 <span id="L114"><span class="lineNum">     114</span>              : }</span>
 <span id="L115"><span class="lineNum">     115</span>              : </span>
-<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC">   205101717 : Square kingSquare(const Position &amp;p) { return p.king[p.c]; }</span></span>
+<span id="L116"><span class="lineNum">     116</span> <span class="tlaGNC">   217264474 : Square kingSquare(const Position &amp;p) { return p.king[p.c]; }</span></span>
 <span id="L117"><span class="lineNum">     117</span>              : </span>
 <span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">           8 : bool readMove(const Position &amp;p, const std::string &amp;ss, Square &amp;from, Square &amp;to, MType &amp;moveType, bool forbidCastling) {</span></span>
 <span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">           8 :    if (ss.empty()) {</span></span>
@@ -286,21 +286,21 @@
 <span id="L224"><span class="lineNum">     224</span>              : #pragma GCC diagnostic push</span>
 <span id="L225"><span class="lineNum">     225</span>              : #pragma GCC diagnostic ignored &quot;-Wconversion&quot;</span>
 <span id="L226"><span class="lineNum">     226</span>              : </span>
-<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">   105562803 : float gamePhase(const Position::Material &amp;mat, ScoreType &amp;matScoreW, ScoreType &amp;matScoreB) {</span></span>
-<span id="L228"><span class="lineNum">     228</span> <span class="tlaGNC">   105562803 :    const float totalMatScore = 2.f * absValueGP(P_wq) + </span></span>
-<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">   105562803 :                                4.f * absValueGP(P_wr) + </span></span>
-<span id="L230"><span class="lineNum">     230</span> <span class="tlaGNC">   105562803 :                                4.f * absValueGP(P_wb) + </span></span>
-<span id="L231"><span class="lineNum">     231</span> <span class="tlaGNC">   105562803 :                                4.f * absValueGP(P_wn) +</span></span>
-<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">   105562803 :                                16.f * absValueGP(P_wp); </span></span>
-<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">   105562803 :    const ScoreType matPieceScoreW = mat[Co_White][M_q] * absValueGP(P_wq) + mat[Co_White][M_r] * absValueGP(P_wr) +</span></span>
-<span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">   105562803 :                                     mat[Co_White][M_b] * absValueGP(P_wb) + mat[Co_White][M_n] * absValueGP(P_wn);</span></span>
-<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">   105562803 :    const ScoreType matPieceScoreB = mat[Co_Black][M_q] * absValueGP(P_wq) + mat[Co_Black][M_r] * absValueGP(P_wr) +</span></span>
-<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">   105562803 :                                     mat[Co_Black][M_b] * absValueGP(P_wb) + mat[Co_Black][M_n] * absValueGP(P_wn);</span></span>
-<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC">   105562803 :    const ScoreType matPawnScoreW = mat[Co_White][M_p] * absValueGP(P_wp);</span></span>
-<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">   105562803 :    const ScoreType matPawnScoreB = mat[Co_Black][M_p] * absValueGP(P_wp);</span></span>
-<span id="L239"><span class="lineNum">     239</span> <span class="tlaGNC">   105562803 :    matScoreW = matPieceScoreW + matPawnScoreW;</span></span>
-<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">   105562803 :    matScoreB = matPieceScoreB + matPawnScoreB;</span></span>
-<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">   105562803 :    return std::min(1.f,(matScoreW + matScoreB) / totalMatScore);</span></span>
+<span id="L227"><span class="lineNum">     227</span> <span class="tlaGNC">   105591412 : float gamePhase(const Position::Material &amp;mat, ScoreType &amp;matScoreW, ScoreType &amp;matScoreB) {</span></span>
+<span id="L228"><span class="lineNum">     228</span> <span class="tlaGNC">   105591412 :    const float totalMatScore = 2.f * absValueGP(P_wq) + </span></span>
+<span id="L229"><span class="lineNum">     229</span> <span class="tlaGNC">   105591412 :                                4.f * absValueGP(P_wr) + </span></span>
+<span id="L230"><span class="lineNum">     230</span> <span class="tlaGNC">   105591412 :                                4.f * absValueGP(P_wb) + </span></span>
+<span id="L231"><span class="lineNum">     231</span> <span class="tlaGNC">   105591412 :                                4.f * absValueGP(P_wn) +</span></span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">   105591412 :                                16.f * absValueGP(P_wp); </span></span>
+<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">   105591412 :    const ScoreType matPieceScoreW = mat[Co_White][M_q] * absValueGP(P_wq) + mat[Co_White][M_r] * absValueGP(P_wr) +</span></span>
+<span id="L234"><span class="lineNum">     234</span> <span class="tlaGNC">   105591412 :                                     mat[Co_White][M_b] * absValueGP(P_wb) + mat[Co_White][M_n] * absValueGP(P_wn);</span></span>
+<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">   105591412 :    const ScoreType matPieceScoreB = mat[Co_Black][M_q] * absValueGP(P_wq) + mat[Co_Black][M_r] * absValueGP(P_wr) +</span></span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">   105591412 :                                     mat[Co_Black][M_b] * absValueGP(P_wb) + mat[Co_Black][M_n] * absValueGP(P_wn);</span></span>
+<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC">   105591412 :    const ScoreType matPawnScoreW = mat[Co_White][M_p] * absValueGP(P_wp);</span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">   105591412 :    const ScoreType matPawnScoreB = mat[Co_Black][M_p] * absValueGP(P_wp);</span></span>
+<span id="L239"><span class="lineNum">     239</span> <span class="tlaGNC">   105591412 :    matScoreW = matPieceScoreW + matPawnScoreW;</span></span>
+<span id="L240"><span class="lineNum">     240</span> <span class="tlaGNC">   105591412 :    matScoreB = matPieceScoreB + matPawnScoreB;</span></span>
+<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">   105591412 :    return std::min(1.f,(matScoreW + matScoreB) / totalMatScore);</span></span>
 <span id="L242"><span class="lineNum">     242</span>              : }</span>
 <span id="L243"><span class="lineNum">     243</span>              : </span>
 <span id="L244"><span class="lineNum">     244</span>              : #pragma GCC diagnostic pop</span>

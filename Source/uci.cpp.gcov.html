@@ -31,13 +31,13 @@
             <td class="headerValue">coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryLo">55.4&nbsp;%</td>
+            <td class="headerCovTableEntryLo">60.4&nbsp;%</td>
             <td class="headerCovTableEntry">202</td>
-            <td class="headerCovTableEntry">112</td>
+            <td class="headerCovTableEntry">122</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-04-16 14:22:47</td>
+            <td class="headerValue">2026-04-25 08:53:02</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
@@ -197,108 +197,108 @@
 <span id="L135"><span class="lineNum">     135</span>              :    }</span>
 <span id="L136"><span class="lineNum">     136</span> <span class="tlaGNC">          22 :    else if (uciCommand == &quot;go&quot;) {</span></span>
 <span id="L137"><span class="lineNum">     137</span> <span class="tlaGNC">           9 :       if (ThreadPool::instance().main().searching()) {</span></span>
-<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">           7 :          Logging::LogIt(Logging::logGUI) &lt;&lt; &quot;info string go command received, but search already in progress&quot;;</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">           5 :          Logging::LogIt(Logging::logGUI) &lt;&lt; &quot;info string go command received, but search already in progress&quot;;</span></span>
 <span id="L139"><span class="lineNum">     139</span>              :       }</span>
 <span id="L140"><span class="lineNum">     140</span>              :       else {</span>
-<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">           2 :          if (COM::position.h != nullHash) {</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">           4 :          if (COM::position.h != nullHash) {</span></span>
 <span id="L142"><span class="lineNum">     142</span>              :             ///@todo MoveList root_moves;</span>
 <span id="L143"><span class="lineNum">     143</span>              : </span>
-<span id="L144"><span class="lineNum">     144</span> <span class="tlaGNC">           2 :             TimeMan::isDynamic       = false;</span></span>
-<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">           2 :             TimeMan::nbMoveInTC      = -1;</span></span>
-<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">           2 :             TimeMan::msecPerMove     = -1;</span></span>
-<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">           2 :             TimeMan::msecInTC        = -1;</span></span>
-<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">           2 :             TimeMan::msecInc         = -1;</span></span>
-<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">           2 :             TimeMan::msecUntilNextTC = -1;</span></span>
-<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">           2 :             TimeMan::moveToGo        = -1;</span></span>
-<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">           2 :             COM::depth               = MAX_DEPTH; // infinity</span></span>
+<span id="L144"><span class="lineNum">     144</span> <span class="tlaGNC">           4 :             TimeMan::isDynamic       = false;</span></span>
+<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">           4 :             TimeMan::nbMoveInTC      = -1;</span></span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">           4 :             TimeMan::msecPerMove     = -1;</span></span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">           4 :             TimeMan::msecInTC        = -1;</span></span>
+<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">           4 :             TimeMan::msecInc         = -1;</span></span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">           4 :             TimeMan::msecUntilNextTC = -1;</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">           4 :             TimeMan::moveToGo        = -1;</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">           4 :             COM::depth               = MAX_DEPTH; // infinity</span></span>
 <span id="L152"><span class="lineNum">     152</span>              : </span>
-<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">           2 :             DynamicConfig::mateFinder = false;</span></span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">           4 :             DynamicConfig::mateFinder = false;</span></span>
 <span id="L154"><span class="lineNum">     154</span>              :             COM::State state          = COM::st_searching; //uci is/should be stateless but we use this anyhow</span>
 <span id="L155"><span class="lineNum">     155</span>              : </span>
 <span id="L156"><span class="lineNum">     156</span>              :             std::string param;</span>
 <span id="L157"><span class="lineNum">     157</span>              :             bool        noParam = true;</span>
-<span id="L158"><span class="lineNum">     158</span> <span class="tlaGNC">           4 :             while (iss &gt;&gt; param) {</span></span>
-<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">           2 :                Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;received parameter &quot; &lt;&lt; param;</span></span>
-<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">           2 :                if (param == &quot;infinite&quot;) {</span></span>
+<span id="L158"><span class="lineNum">     158</span> <span class="tlaGNC">           9 :             while (iss &gt;&gt; param) {</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">           5 :                Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;received parameter &quot; &lt;&lt; param;</span></span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">           5 :                if (param == &quot;infinite&quot;) {</span></span>
 <span id="L161"><span class="lineNum">     161</span>              :                   noParam              = false;</span>
 <span id="L162"><span class="lineNum">     162</span> <span class="tlaUNC tlaBgUNC">           0 :                   TimeMan::msecPerMove = INFINITETIME;</span></span>
 <span id="L163"><span class="lineNum">     163</span>              :                   state                = COM::st_analyzing;</span>
 <span id="L164"><span class="lineNum">     164</span>              :                }</span>
-<span id="L165"><span class="lineNum">     165</span> <span class="tlaGNC tlaBgGNC">           2 :                else if (param == &quot;depth&quot;) {</span></span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaGNC tlaBgGNC">           5 :                else if (param == &quot;depth&quot;) {</span></span>
 <span id="L166"><span class="lineNum">     166</span>              :                   noParam = false;</span>
-<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">           1 :                   int d   = 0;</span></span>
-<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">           1 :                   iss &gt;&gt; d;</span></span>
-<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC">           1 :                   COM::depth           = clampDepth(d);</span></span>
-<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">           1 :                   TimeMan::msecPerMove = INFINITETIME;</span></span>
+<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">           2 :                   int d   = 0;</span></span>
+<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">           2 :                   iss &gt;&gt; d;</span></span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC">           2 :                   COM::depth           = clampDepth(d);</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">           2 :                   TimeMan::msecPerMove = INFINITETIME;</span></span>
 <span id="L171"><span class="lineNum">     171</span>              :                }</span>
-<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC">           1 :                else if (param == &quot;movetime&quot;) {</span></span>
+<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC">           3 :                else if (param == &quot;movetime&quot;) {</span></span>
 <span id="L173"><span class="lineNum">     173</span>              :                   noParam = false;</span>
 <span id="L174"><span class="lineNum">     174</span>              :                   iss &gt;&gt; TimeMan::msecPerMove;</span>
 <span id="L175"><span class="lineNum">     175</span>              :                }</span>
-<span id="L176"><span class="lineNum">     176</span> <span class="tlaUNC tlaBgUNC">           0 :                else if (param == &quot;nodes&quot;) {</span></span>
+<span id="L176"><span class="lineNum">     176</span> <span class="tlaGNC">           2 :                else if (param == &quot;nodes&quot;) {</span></span>
 <span id="L177"><span class="lineNum">     177</span>              :                   noParam = false;</span>
 <span id="L178"><span class="lineNum">     178</span>              :                   iss &gt;&gt; TimeMan::maxNodes;</span>
 <span id="L179"><span class="lineNum">     179</span>              :                }</span>
-<span id="L180"><span class="lineNum">     180</span> <span class="tlaUNC">           0 :                else if (param == &quot;searchmoves&quot;) { Logging::LogIt(Logging::logGUI) &lt;&lt; &quot;info string &quot; &lt;&lt; param &lt;&lt; &quot; not implemented yet&quot;; }</span></span>
-<span id="L181"><span class="lineNum">     181</span> <span class="tlaUNC">           0 :                else if (param == &quot;wtime&quot;) {</span></span>
+<span id="L180"><span class="lineNum">     180</span> <span class="tlaGNC">           1 :                else if (param == &quot;searchmoves&quot;) { Logging::LogIt(Logging::logGUI) &lt;&lt; &quot;info string &quot; &lt;&lt; param &lt;&lt; &quot; not implemented yet&quot;; }</span></span>
+<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">           1 :                else if (param == &quot;wtime&quot;) {</span></span>
 <span id="L182"><span class="lineNum">     182</span>              :                   noParam = false;</span>
 <span id="L183"><span class="lineNum">     183</span>              :                   int t;</span>
-<span id="L184"><span class="lineNum">     184</span> <span class="tlaUNC">           0 :                   iss &gt;&gt; t;</span></span>
+<span id="L184"><span class="lineNum">     184</span> <span class="tlaUNC tlaBgUNC">           0 :                   iss &gt;&gt; t;</span></span>
 <span id="L185"><span class="lineNum">     185</span> <span class="tlaUNC">           0 :                   if (COM::position.c == Co_White) {</span></span>
 <span id="L186"><span class="lineNum">     186</span> <span class="tlaUNC">           0 :                      TimeMan::msecUntilNextTC = t;</span></span>
 <span id="L187"><span class="lineNum">     187</span> <span class="tlaUNC">           0 :                      TimeMan::isDynamic       = true;</span></span>
 <span id="L188"><span class="lineNum">     188</span>              :                   }</span>
 <span id="L189"><span class="lineNum">     189</span>              :                }</span>
-<span id="L190"><span class="lineNum">     190</span> <span class="tlaUNC">           0 :                else if (param == &quot;btime&quot;) {</span></span>
+<span id="L190"><span class="lineNum">     190</span> <span class="tlaGNC tlaBgGNC">           1 :                else if (param == &quot;btime&quot;) {</span></span>
 <span id="L191"><span class="lineNum">     191</span>              :                   noParam = false;</span>
 <span id="L192"><span class="lineNum">     192</span>              :                   int t;</span>
-<span id="L193"><span class="lineNum">     193</span> <span class="tlaUNC">           0 :                   iss &gt;&gt; t;</span></span>
+<span id="L193"><span class="lineNum">     193</span> <span class="tlaUNC tlaBgUNC">           0 :                   iss &gt;&gt; t;</span></span>
 <span id="L194"><span class="lineNum">     194</span> <span class="tlaUNC">           0 :                   if (COM::position.c == Co_Black) {</span></span>
 <span id="L195"><span class="lineNum">     195</span> <span class="tlaUNC">           0 :                      TimeMan::msecUntilNextTC = t;</span></span>
 <span id="L196"><span class="lineNum">     196</span> <span class="tlaUNC">           0 :                      TimeMan::isDynamic       = true;</span></span>
 <span id="L197"><span class="lineNum">     197</span>              :                   }</span>
 <span id="L198"><span class="lineNum">     198</span>              :                }</span>
-<span id="L199"><span class="lineNum">     199</span> <span class="tlaUNC">           0 :                else if (param == &quot;winc&quot;) {</span></span>
+<span id="L199"><span class="lineNum">     199</span> <span class="tlaGNC tlaBgGNC">           1 :                else if (param == &quot;winc&quot;) {</span></span>
 <span id="L200"><span class="lineNum">     200</span>              :                   int t;</span>
-<span id="L201"><span class="lineNum">     201</span> <span class="tlaUNC">           0 :                   iss &gt;&gt; t;</span></span>
+<span id="L201"><span class="lineNum">     201</span> <span class="tlaUNC tlaBgUNC">           0 :                   iss &gt;&gt; t;</span></span>
 <span id="L202"><span class="lineNum">     202</span> <span class="tlaUNC">           0 :                   if (COM::position.c == Co_White) {</span></span>
 <span id="L203"><span class="lineNum">     203</span> <span class="tlaUNC">           0 :                      TimeMan::msecInc   = t;</span></span>
 <span id="L204"><span class="lineNum">     204</span> <span class="tlaUNC">           0 :                      TimeMan::isDynamic = true;</span></span>
 <span id="L205"><span class="lineNum">     205</span>              :                   }</span>
 <span id="L206"><span class="lineNum">     206</span>              :                }</span>
-<span id="L207"><span class="lineNum">     207</span> <span class="tlaUNC">           0 :                else if (param == &quot;binc&quot;) {</span></span>
+<span id="L207"><span class="lineNum">     207</span> <span class="tlaGNC tlaBgGNC">           1 :                else if (param == &quot;binc&quot;) {</span></span>
 <span id="L208"><span class="lineNum">     208</span>              :                   int t;</span>
-<span id="L209"><span class="lineNum">     209</span> <span class="tlaUNC">           0 :                   iss &gt;&gt; t;</span></span>
+<span id="L209"><span class="lineNum">     209</span> <span class="tlaUNC tlaBgUNC">           0 :                   iss &gt;&gt; t;</span></span>
 <span id="L210"><span class="lineNum">     210</span> <span class="tlaUNC">           0 :                   if (COM::position.c == Co_Black) {</span></span>
 <span id="L211"><span class="lineNum">     211</span> <span class="tlaUNC">           0 :                      TimeMan::msecInc   = t;</span></span>
 <span id="L212"><span class="lineNum">     212</span> <span class="tlaUNC">           0 :                      TimeMan::isDynamic = true;</span></span>
 <span id="L213"><span class="lineNum">     213</span>              :                   }</span>
 <span id="L214"><span class="lineNum">     214</span>              :                }</span>
-<span id="L215"><span class="lineNum">     215</span> <span class="tlaUNC">           0 :                else if (param == &quot;movestogo&quot;) {</span></span>
+<span id="L215"><span class="lineNum">     215</span> <span class="tlaGNC tlaBgGNC">           1 :                else if (param == &quot;movestogo&quot;) {</span></span>
 <span id="L216"><span class="lineNum">     216</span>              :                   noParam = false;</span>
 <span id="L217"><span class="lineNum">     217</span>              :                   int t;</span>
-<span id="L218"><span class="lineNum">     218</span> <span class="tlaUNC">           0 :                   iss &gt;&gt; t;</span></span>
+<span id="L218"><span class="lineNum">     218</span> <span class="tlaUNC tlaBgUNC">           0 :                   iss &gt;&gt; t;</span></span>
 <span id="L219"><span class="lineNum">     219</span> <span class="tlaUNC">           0 :                   TimeMan::moveToGo  = t;</span></span>
 <span id="L220"><span class="lineNum">     220</span> <span class="tlaUNC">           0 :                   TimeMan::isDynamic = true;</span></span>
 <span id="L221"><span class="lineNum">     221</span>              :                }</span>
-<span id="L222"><span class="lineNum">     222</span> <span class="tlaUNC">           0 :                else if (param == &quot;ponder&quot;) { state = COM::st_pondering; }</span></span>
-<span id="L223"><span class="lineNum">     223</span> <span class="tlaUNC">           0 :                else if (param == &quot;mate&quot;) {</span></span>
-<span id="L224"><span class="lineNum">     224</span> <span class="tlaUNC">           0 :                   int d = 0;</span></span>
+<span id="L222"><span class="lineNum">     222</span> <span class="tlaGNC tlaBgGNC">           1 :                else if (param == &quot;ponder&quot;) { state = COM::st_pondering; }</span></span>
+<span id="L223"><span class="lineNum">     223</span> <span class="tlaGNC">           1 :                else if (param == &quot;mate&quot;) {</span></span>
+<span id="L224"><span class="lineNum">     224</span> <span class="tlaUNC tlaBgUNC">           0 :                   int d = 0;</span></span>
 <span id="L225"><span class="lineNum">     225</span> <span class="tlaUNC">           0 :                   iss &gt;&gt; d;</span></span>
 <span id="L226"><span class="lineNum">     226</span> <span class="tlaUNC">           0 :                   COM::depth                = clampDepth(d);</span></span>
 <span id="L227"><span class="lineNum">     227</span> <span class="tlaUNC">           0 :                   DynamicConfig::mateFinder = true;</span></span>
 <span id="L228"><span class="lineNum">     228</span> <span class="tlaUNC">           0 :                   TimeMan::msecPerMove      = INFINITETIME;</span></span>
 <span id="L229"><span class="lineNum">     229</span>              :                }</span>
-<span id="L230"><span class="lineNum">     230</span> <span class="tlaUNC">           0 :                else { Logging::LogIt(Logging::logGUI) &lt;&lt; &quot;info string &quot; &lt;&lt; param &lt;&lt; &quot; not implemented&quot;; }</span></span>
+<span id="L230"><span class="lineNum">     230</span> <span class="tlaGNC tlaBgGNC">           1 :                else { Logging::LogIt(Logging::logGUI) &lt;&lt; &quot;info string &quot; &lt;&lt; param &lt;&lt; &quot; not implemented&quot;; }</span></span>
 <span id="L231"><span class="lineNum">     231</span>              :             }</span>
-<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC tlaBgGNC">           2 :             if (noParam) {</span></span>
+<span id="L232"><span class="lineNum">     232</span> <span class="tlaGNC">           4 :             if (noParam) {</span></span>
 <span id="L233"><span class="lineNum">     233</span> <span class="tlaUNC tlaBgUNC">           0 :                Logging::LogIt(Logging::logWarn) &lt;&lt; &quot;no parameters given for go command, going for a depth 10 search ...&quot;;</span></span>
 <span id="L234"><span class="lineNum">     234</span> <span class="tlaUNC">           0 :                COM::depth           = 10;</span></span>
 <span id="L235"><span class="lineNum">     235</span> <span class="tlaUNC">           0 :                TimeMan::msecPerMove = INFINITETIME;</span></span>
 <span id="L236"><span class="lineNum">     236</span>              :             }</span>
-<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC tlaBgGNC">           2 :             Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;uci search launched&quot;;</span></span>
-<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">           2 :             COM::thinkAsync(state);</span></span>
-<span id="L239"><span class="lineNum">     239</span> <span class="tlaGNC">           2 :             Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;uci async started&quot;;</span></span>
+<span id="L237"><span class="lineNum">     237</span> <span class="tlaGNC tlaBgGNC">           4 :             Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;uci search launched&quot;;</span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">           4 :             COM::thinkAsync(state);</span></span>
+<span id="L239"><span class="lineNum">     239</span> <span class="tlaGNC">           4 :             Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;uci async started&quot;;</span></span>
 <span id="L240"><span class="lineNum">     240</span>              :          }</span>
 <span id="L241"><span class="lineNum">     241</span> <span class="tlaUNC tlaBgUNC">           0 :          else { Logging::LogIt(Logging::logGUI) &lt;&lt; &quot;info string search command received, but no position specified&quot;; }</span></span>
 <span id="L242"><span class="lineNum">     242</span>              :       }</span>
@@ -333,8 +333,8 @@
 <span id="L271"><span class="lineNum">     271</span> <span class="tlaGNC">           9 :    else if (uciCommand == &quot;wait&quot;) { // only used for testing purpose</span></span>
 <span id="L272"><span class="lineNum">     272</span>              :       using namespace std::chrono_literals;</span>
 <span id="L273"><span class="lineNum">     273</span> <span class="tlaGNC">           9 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Start to wait&quot;;</span></span>
-<span id="L274"><span class="lineNum">     274</span> <span class="tlaGNC">          11 :       while (!ThreadPool::instance().main().stopFlag) { </span></span>
-<span id="L275"><span class="lineNum">     275</span> <span class="tlaGNC">           2 :          std::this_thread::sleep_for(10ms);</span></span>
+<span id="L274"><span class="lineNum">     274</span> <span class="tlaGNC">          13 :       while (!ThreadPool::instance().main().stopFlag) { </span></span>
+<span id="L275"><span class="lineNum">     275</span> <span class="tlaGNC">           4 :          std::this_thread::sleep_for(10ms);</span></span>
 <span id="L276"><span class="lineNum">     276</span>              :       }</span>
 <span id="L277"><span class="lineNum">     277</span> <span class="tlaGNC">           9 :       std::this_thread::sleep_for(200ms);</span></span>
 <span id="L278"><span class="lineNum">     278</span> <span class="tlaGNC">           9 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;End of wait&quot;;</span></span>
@@ -361,10 +361,10 @@
 <span id="L299"><span class="lineNum">     299</span> <span class="tlaUNC">           0 :    return ss.str();</span></span>
 <span id="L300"><span class="lineNum">     300</span> <span class="tlaUNC">           0 : }</span></span>
 <span id="L301"><span class="lineNum">     301</span>              : </span>
-<span id="L302"><span class="lineNum">     302</span> <span class="tlaGNC tlaBgGNC">         266 : std::string uciScore(const ScoreType score, const unsigned int ply) {</span></span>
-<span id="L303"><span class="lineNum">     303</span> <span class="tlaGNC">         266 :    if (isMatedScore(score)) return &quot;mate &quot; + std::to_string((-MATE - score) / 2);</span></span>
-<span id="L304"><span class="lineNum">     304</span> <span class="tlaGNC">         266 :    if (isMateScore(score)) return &quot;mate &quot; + std::to_string((MATE - score + 1) / 2);</span></span>
-<span id="L305"><span class="lineNum">     305</span> <span class="tlaGNC">         798 :    return &quot;cp &quot; + std::to_string(score) + (DynamicConfig::withWDL ? wdlStat(score, ply) : &quot;&quot;);</span></span>
+<span id="L302"><span class="lineNum">     302</span> <span class="tlaGNC tlaBgGNC">         274 : std::string uciScore(const ScoreType score, const unsigned int ply) {</span></span>
+<span id="L303"><span class="lineNum">     303</span> <span class="tlaGNC">         274 :    if (isMatedScore(score)) return &quot;mate &quot; + std::to_string((-MATE - score) / 2);</span></span>
+<span id="L304"><span class="lineNum">     304</span> <span class="tlaGNC">         274 :    if (isMateScore(score)) return &quot;mate &quot; + std::to_string((MATE - score + 1) / 2);</span></span>
+<span id="L305"><span class="lineNum">     305</span> <span class="tlaGNC">         822 :    return &quot;cp &quot; + std::to_string(score) + (DynamicConfig::withWDL ? wdlStat(score, ply) : &quot;&quot;);</span></span>
 <span id="L306"><span class="lineNum">     306</span>              : }</span>
 <span id="L307"><span class="lineNum">     307</span>              : </span>
 <span id="L308"><span class="lineNum">     308</span> <span class="tlaUNC tlaBgUNC">           0 : void handleVariant(){</span></span>

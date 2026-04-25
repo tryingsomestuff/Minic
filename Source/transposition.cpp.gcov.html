@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-04-16 14:22:47</td>
+            <td class="headerValue">2026-04-25 08:53:02</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">90.9&nbsp;%</td>
@@ -117,48 +117,48 @@
 <span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">          32 :    return static_cast&lt;int&gt;((count * 1000) / samples);</span></span>
 <span id="L56"><span class="lineNum">      56</span>              : }</span>
 <span id="L57"><span class="lineNum">      57</span>              : </span>
-<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">         205 : void age() {</span></span>
-<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">         205 :    TT::curGen = static_cast&lt;GenerationType&gt;((TT::curGen + 1) % 8); // see Bound::B_gen</span></span>
-<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">         205 : }</span></span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">         208 : void age() {</span></span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">         208 :    TT::curGen = static_cast&lt;GenerationType&gt;((TT::curGen + 1) % 8); // see Bound::B_gen</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">         208 : }</span></span>
 <span id="L61"><span class="lineNum">      61</span>              : </span>
-<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">    12830389 : void prefetch(Hash h) {</span></span>
-<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">    12830389 :    void *addr = (&amp;table[h &amp; (ttSize - 1)]);</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">    18232941 : void prefetch(Hash h) {</span></span>
+<span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">    18232941 :    void *addr = (&amp;table[h &amp; (ttSize - 1)]);</span></span>
 <span id="L64"><span class="lineNum">      64</span>              : #if defined(__INTEL_COMPILER)</span>
 <span id="L65"><span class="lineNum">      65</span>              :    __asm__(&quot;&quot;);</span>
 <span id="L66"><span class="lineNum">      66</span>              : #elif defined(_MSC_VER)</span>
 <span id="L67"><span class="lineNum">      67</span>              :    _mm_prefetch((char *)addr, _MM_HINT_T0);</span>
 <span id="L68"><span class="lineNum">      68</span>              : #else</span>
-<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC">    12830389 :    __builtin_prefetch(addr);</span></span>
+<span id="L69"><span class="lineNum">      69</span> <span class="tlaGNC">    18232941 :    __builtin_prefetch(addr);</span></span>
 <span id="L70"><span class="lineNum">      70</span>              : #endif</span>
-<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">    12830389 : }</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC">    18232941 : }</span></span>
 <span id="L72"><span class="lineNum">      72</span>              : </span>
 <span id="L73"><span class="lineNum">      73</span>              : // will return true only if depth is enough</span>
 <span id="L74"><span class="lineNum">      74</span>              : // e.h is nullHash if the TT entry is not usable</span>
-<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">     6728365 : bool getEntry(Searcher &amp;context, const Position &amp;p, Hash h, DepthType d, Entry &amp;e) {</span></span>
-<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">     6728365 :    assert(h != nullHash);</span></span>
-<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">     6728365 :    assert((h &amp; (ttSize - 1)) == (h % ttSize));</span></span>
-<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">     6728365 :    if (DynamicConfig::disableTT) return false;</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">     8807451 : bool getEntry(Searcher &amp;context, const Position &amp;p, Hash h, DepthType d, Entry &amp;e) {</span></span>
+<span id="L76"><span class="lineNum">      76</span> <span class="tlaGNC">     8807451 :    assert(h != nullHash);</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">     8807451 :    assert((h &amp; (ttSize - 1)) == (h % ttSize));</span></span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">     8807451 :    if (DynamicConfig::disableTT) return false;</span></span>
 <span id="L79"><span class="lineNum">      79</span>              :    // update entry immediatly to avoid further race condition and invalidate it later if needed</span>
-<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">     6728365 :    e = table[h &amp; (ttSize - 1)];</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">     8807451 :    e = table[h &amp; (ttSize - 1)];</span></span>
 <span id="L81"><span class="lineNum">      81</span>              : #ifdef DEBUG_HASH_ENTRY</span>
 <span id="L82"><span class="lineNum">      82</span>              :    e._data1 = randomInt&lt;uint32_t, 666&gt;(0, UINT32_MAX);</span>
 <span id="L83"><span class="lineNum">      83</span>              :    e._data2 = randomInt&lt;uint32_t, 666&gt;(0, UINT32_MAX);</span>
 <span id="L84"><span class="lineNum">      84</span>              : #endif</span>
-<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">     6728365 :    if (e.h == nullHash) return false; //early exit</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">     8807451 :    if (e.h == nullHash) return false; //early exit</span></span>
 <span id="L86"><span class="lineNum">      86</span>              :    if (</span>
 <span id="L87"><span class="lineNum">      87</span>              : #ifndef DEBUG_HASH_ENTRY</span>
-<span id="L88"><span class="lineNum">      88</span> <span class="tlaGNC">     3921377 :        ((e.h ^ e._data1 ^ e._data2) != Hash64to32(h)) ||</span></span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaGNC">     4768325 :        ((e.h ^ e._data1 ^ e._data2) != Hash64to32(h)) ||</span></span>
 <span id="L89"><span class="lineNum">      89</span>              : #endif</span>
-<span id="L90"><span class="lineNum">      90</span> <span class="tlaGNC">     1692659 :        (isValidMove(e.m) &amp;&amp; !isPseudoLegal(p, e.m))) {</span></span>
+<span id="L90"><span class="lineNum">      90</span> <span class="tlaGNC">     2047359 :        (isValidMove(e.m) &amp;&amp; !isPseudoLegal(p, e.m))) {</span></span>
 <span id="L91"><span class="lineNum">      91</span>              :       // move is filled, but wrong in this position, invalidate returned entry.</span>
-<span id="L92"><span class="lineNum">      92</span> <span class="tlaGNC">      664064 :       e.h = nullHash;</span></span>
-<span id="L93"><span class="lineNum">      93</span> <span class="tlaGNC">      664064 :       return false;</span></span>
+<span id="L92"><span class="lineNum">      92</span> <span class="tlaGNC">      774482 :       e.h = nullHash;</span></span>
+<span id="L93"><span class="lineNum">      93</span> <span class="tlaGNC">      774482 :       return false;</span></span>
 <span id="L94"><span class="lineNum">      94</span>              :    }</span>
 <span id="L95"><span class="lineNum">      95</span>              : </span>
-<span id="L96"><span class="lineNum">      96</span> <span class="tlaGNC">     3257313 :    if (e.d &gt;= d /*+ (e.b != B_exact)*/) {</span></span>
+<span id="L96"><span class="lineNum">      96</span> <span class="tlaGNC">     3993843 :    if (e.d &gt;= d /*+ (e.b != B_exact)*/) {</span></span>
 <span id="L97"><span class="lineNum">      97</span>              :       // valid entry only if depth is ok</span>
 <span id="L98"><span class="lineNum">      98</span>              :       context.stats.incr(Stats::sid_tthits);</span>
-<span id="L99"><span class="lineNum">      99</span> <span class="tlaGNC">     1822900 :       return true;</span></span>
+<span id="L99"><span class="lineNum">      99</span> <span class="tlaGNC">     2233072 :       return true;</span></span>
 <span id="L100"><span class="lineNum">     100</span>              :    }</span>
 <span id="L101"><span class="lineNum">     101</span>              :    else{</span>
 <span id="L102"><span class="lineNum">     102</span>              :       return false;</span>
@@ -166,66 +166,66 @@
 <span id="L104"><span class="lineNum">     104</span>              : }</span>
 <span id="L105"><span class="lineNum">     105</span>              : </span>
 <span id="L106"><span class="lineNum">     106</span>              : // always replace</span>
-<span id="L107"><span class="lineNum">     107</span> <span class="tlaGNC">     5706215 : void setEntry(Searcher &amp;context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d, bool distribute) {</span></span>
-<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC">     5706215 :    assert(h != nullHash); // can really happen in fact ... but rarely</span></span>
-<span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC">     5706215 :    if (DynamicConfig::disableTT) return;</span></span>
+<span id="L107"><span class="lineNum">     107</span> <span class="tlaGNC">     8017266 : void setEntry(Searcher &amp;context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d, bool distribute) {</span></span>
+<span id="L108"><span class="lineNum">     108</span> <span class="tlaGNC">     8017266 :    assert(h != nullHash); // can really happen in fact ... but rarely</span></span>
+<span id="L109"><span class="lineNum">     109</span> <span class="tlaGNC">     8017266 :    if (DynamicConfig::disableTT) return;</span></span>
 <span id="L110"><span class="lineNum">     110</span>              :    Entry e(h, m, s, eval, b, d);</span>
-<span id="L111"><span class="lineNum">     111</span> <span class="tlaGNC">     5706215 :    e.h ^= e._data1;</span></span>
-<span id="L112"><span class="lineNum">     112</span> <span class="tlaGNC">     5706215 :    e.h ^= e._data2;</span></span>
+<span id="L111"><span class="lineNum">     111</span> <span class="tlaGNC">     8017266 :    e.h ^= e._data1;</span></span>
+<span id="L112"><span class="lineNum">     112</span> <span class="tlaGNC">     8017266 :    e.h ^= e._data2;</span></span>
 <span id="L113"><span class="lineNum">     113</span>              :    context.stats.incr(Stats::sid_ttInsert);</span>
-<span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">     5706215 :    table[h &amp; (ttSize - 1)] = e; // always replace (favour leaf)</span></span>
+<span id="L114"><span class="lineNum">     114</span> <span class="tlaGNC">     8017266 :    table[h &amp; (ttSize - 1)] = e; // always replace (favour leaf)</span></span>
 <span id="L115"><span class="lineNum">     115</span>              :    // only update buffer for other process on main thread</span>
 <span id="L116"><span class="lineNum">     116</span>              :    if (distribute) Distributed::setEntry(h, e);</span>
 <span id="L117"><span class="lineNum">     117</span>              : }</span>
 <span id="L118"><span class="lineNum">     118</span>              : </span>
 <span id="L119"><span class="lineNum">     119</span> <span class="tlaUNC tlaBgUNC">           0 : void _setEntry(Hash h, const Entry &amp;e) { table[h &amp; (ttSize - 1)] = e; }</span></span>
 <span id="L120"><span class="lineNum">     120</span>              : </span>
-<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC tlaBgGNC">         277 : void getPV(const Position &amp;p, Searcher &amp;context, PVList &amp;pv) {</span></span>
+<span id="L121"><span class="lineNum">     121</span> <span class="tlaGNC tlaBgGNC">         299 : void getPV(const Position &amp;p, Searcher &amp;context, PVList &amp;pv) {</span></span>
 <span id="L122"><span class="lineNum">     122</span>              :    TT::Entry e;</span>
-<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">         277 :    array1d&lt;Hash,MAX_PLY&gt; hashStack = {nullHash};</span></span>
-<span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">         277 :    Position  p2 = p;</span></span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">         299 :    array1d&lt;Hash,MAX_PLY&gt; hashStack = {nullHash};</span></span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">         299 :    Position  p2 = p;</span></span>
 <span id="L125"><span class="lineNum">     125</span>              : #ifdef WITH_NNUE</span>
-<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">         277 :    NNUEEvaluator evaluator;</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">         299 :    NNUEEvaluator evaluator;</span></span>
 <span id="L127"><span class="lineNum">     127</span>              :    p2.associateEvaluator(evaluator);</span>
-<span id="L128"><span class="lineNum">     128</span> <span class="tlaGNC">         277 :    p2.resetNNUEEvaluator(p2.evaluator());</span></span>
+<span id="L128"><span class="lineNum">     128</span> <span class="tlaGNC">         299 :    p2.resetNNUEEvaluator(p2.evaluator());</span></span>
 <span id="L129"><span class="lineNum">     129</span>              : #endif</span>
 <span id="L130"><span class="lineNum">     130</span>              :    bool stop = false;</span>
-<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">        2914 :    for (int k = 0; k &lt; MAX_PLY &amp;&amp; !stop; ++k) {</span></span>
-<span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC">        2897 :       if (!TT::getEntry(context, p2, computeHash(p2), 0, e)) break;</span></span>
-<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">        2737 :       if (e.h != nullHash) {</span></span>
-<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">        2737 :          hashStack[k] = computeHash(p2);</span></span>
+<span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">        3214 :    for (int k = 0; k &lt; MAX_PLY &amp;&amp; !stop; ++k) {</span></span>
+<span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC">        3197 :       if (!TT::getEntry(context, p2, computeHash(p2), 0, e)) break;</span></span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">        3021 :       if (e.h != nullHash) {</span></span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">        3021 :          hashStack[k] = computeHash(p2);</span></span>
 <span id="L135"><span class="lineNum">     135</span>              :          if (!isValidMove(e.m)) break;</span>
-<span id="L136"><span class="lineNum">     136</span> <span class="tlaGNC">        2637 :          if (const MoveInfo moveInfo(p2,e.m); !applyMove(p2, moveInfo)) break;</span></span>
-<span id="L137"><span class="lineNum">     137</span> <span class="tlaGNC">        2637 :          pv.emplace_back(e.m);</span></span>
-<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">        2637 :          const Hash h = computeHash(p2);</span></span>
+<span id="L136"><span class="lineNum">     136</span> <span class="tlaGNC">        2915 :          if (const MoveInfo moveInfo(p2,e.m); !applyMove(p2, moveInfo)) break;</span></span>
+<span id="L137"><span class="lineNum">     137</span> <span class="tlaGNC">        2915 :          pv.emplace_back(e.m);</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">        2915 :          const Hash h = computeHash(p2);</span></span>
 <span id="L139"><span class="lineNum">     139</span>              :          // stop at first repetition</span>
-<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">       21084 :          for (int i = k - 1; i &gt;= 0; --i)</span></span>
-<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">       18464 :             if (hashStack[i] == h) {</span></span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">       23140 :          for (int i = k - 1; i &gt;= 0; --i)</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">       20242 :             if (hashStack[i] == h) {</span></span>
 <span id="L142"><span class="lineNum">     142</span>              :                stop = true;</span>
 <span id="L143"><span class="lineNum">     143</span>              :                break;</span>
 <span id="L144"><span class="lineNum">     144</span>              :             }</span>
 <span id="L145"><span class="lineNum">     145</span>              :       }</span>
 <span id="L146"><span class="lineNum">     146</span>              :    }</span>
-<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">         277 : }</span></span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">         299 : }</span></span>
 <span id="L148"><span class="lineNum">     148</span>              : </span>
-<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">    11412430 : ScoreType createHashScore(ScoreType score, DepthType height) {</span></span>
-<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">    11412430 :    if (isMatingScore(score))</span></span>
-<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">        9132 :       score += height;</span></span>
-<span id="L152"><span class="lineNum">     152</span> <span class="tlaGNC">    11403298 :    else if (isMatedScore(score))</span></span>
-<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">     1094907 :       score -= height;</span></span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">    16034532 : ScoreType createHashScore(ScoreType score, DepthType height) {</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">    16034532 :    if (isMatingScore(score))</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">        9760 :       score += height;</span></span>
+<span id="L152"><span class="lineNum">     152</span> <span class="tlaGNC">    16024772 :    else if (isMatedScore(score))</span></span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">     1229657 :       score -= height;</span></span>
 <span id="L154"><span class="lineNum">     154</span>              :    //else</span>
 <span id="L155"><span class="lineNum">     155</span>              :    //   score *= 0.999f;</span>
-<span id="L156"><span class="lineNum">     156</span> <span class="tlaGNC">    11412430 :    return score;</span></span>
+<span id="L156"><span class="lineNum">     156</span> <span class="tlaGNC">    16034532 :    return score;</span></span>
 <span id="L157"><span class="lineNum">     157</span>              : }</span>
 <span id="L158"><span class="lineNum">     158</span>              : </span>
-<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">     1052205 : ScoreType adjustHashScore(ScoreType score, DepthType height) {</span></span>
-<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">     1052205 :    if (isMatingScore(score))</span></span>
-<span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">        4640 :       score -= height;</span></span>
-<span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">     1047565 :    else if (isMatedScore(score))</span></span>
-<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC">         509 :       score += height;</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">     1284898 : ScoreType adjustHashScore(ScoreType score, DepthType height) {</span></span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">     1284898 :    if (isMatingScore(score))</span></span>
+<span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">        4727 :       score -= height;</span></span>
+<span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">     1280171 :    else if (isMatedScore(score))</span></span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC">         540 :       score += height;</span></span>
 <span id="L164"><span class="lineNum">     164</span>              :    //else</span>
 <span id="L165"><span class="lineNum">     165</span>              :    //   score *= 0.999f;</span>
-<span id="L166"><span class="lineNum">     166</span> <span class="tlaGNC">     1052205 :    return score;</span></span>
+<span id="L166"><span class="lineNum">     166</span> <span class="tlaGNC">     1284898 :    return score;</span></span>
 <span id="L167"><span class="lineNum">     167</span>              : }</span>
 <span id="L168"><span class="lineNum">     168</span>              : </span>
 <span id="L169"><span class="lineNum">     169</span>              : } // namespace TT</span>
