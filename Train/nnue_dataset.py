@@ -39,10 +39,8 @@ class SparseBatch(ctypes.Structure):
         outcome = torch.from_numpy(np.ctypeslib.as_array(self.outcome, shape=(self.size, 1))).pin_memory().to(device=device, non_blocking=True)
         score = torch.from_numpy(np.ctypeslib.as_array(self.score, shape=(self.size, 1))).pin_memory().to(device=device, non_blocking=True)
         bucket = torch.from_numpy(np.ctypeslib.as_array(self.bucket, shape=(self.size, 1))).pin_memory().to(device=device, non_blocking=True)
-        white = torch._sparse_coo_tensor_unsafe(iw, white_values, (self.size, self.num_inputs))
-        black = torch._sparse_coo_tensor_unsafe(ib, black_values, (self.size, self.num_inputs))
-        white._coalesced_(True)
-        black._coalesced_(True)
+        white = torch.sparse_coo_tensor(iw, white_values, (self.size, self.num_inputs), is_coalesced=True)
+        black = torch.sparse_coo_tensor(ib, black_values, (self.size, self.num_inputs), is_coalesced=True)
         #print("#####", us.size(), them.size(), white.size(), black.size())
         return us, them, white, black, outcome, score, bucket
 

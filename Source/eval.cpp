@@ -153,7 +153,9 @@ ScoreType NNUEEVal(const Position & p, EvalData &data, Searcher &context, EvalFe
       bucket = 1;
    
    // call the net
-   ScoreType nnueScore = static_cast<ScoreType>(p.evaluator().propagate(p.c, bucket));
+   const auto evalResult = p.evaluator().propagate(p.c, bucket);
+   ScoreType nnueScore = static_cast<ScoreType>(evalResult.evaluation);
+   data.uncertainty = evalResult.uncertainty;
 
    // fuse MG and EG score applying the EG scaling factor ///@todo, doesn't the net already learned that ????
    nnueScore = ScaleScore({nnueScore, nnueScore}, data.gp, features.scalingFactor);
