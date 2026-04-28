@@ -78,9 +78,11 @@ class NNUE(pl.LightningModule):
   lambda_ = 0.0 - purely based on game results
   lambda_ = 1.0 - purely based on search scores
   """
-  def __init__(self, lambda_=1.0, dropout_rate=0.05):
+  def __init__(self, lambda_=1.0, dropout_rate=0.05, uncertainty_weight=0.0):
     super(NNUE, self).__init__()
     funcs = [piece_position,]
+
+    self.uncertainty_weight = uncertainty_weight
 
     if withFactorizer:
       # with factorization
@@ -102,6 +104,7 @@ class NNUE(pl.LightningModule):
     
     #self.d3 = nn.Dropout(p=dropout_rate)
     self.fc3 = nn.Linear(L3 + L2 + L1,  1 * nbucket)
+    self.fc3_uncertainty = nn.Linear(L3 + L2 + L1,  1 * nbucket)
 
     self.lambda_ = lambda_
 
@@ -161,10 +164,14 @@ class NNUE(pl.LightningModule):
     
     #if withFactorizer:
     #  y2 = self.d3(y2)
-    y3 = self.fc3(y2)
-    y3 = y3.view(-1, 1)[indices]
+    y3_eval = self.fc3(y2)
+    y3_eval = y3_eval.view(-1, 1)[indices]
+    
+    y3_log_var = self.fc3_uncertainty(y2)
+    y3_log_var = y3_log_var.view(-1, 1)[indices]
+    y3_var = torch.exp(torch.clamp(y3_log_var, -10, 10))
 
-    return y3
+    return y3_eval, y3_var
 
   def step_(self, batch, batch_idx, loss_type):
     us, them, white, black, outcome, score, bucket = batch
@@ -176,7 +183,8 @@ class NNUE(pl.LightningModule):
 
     t = outcome
 
-    scorenet = self(us, them, white, black, bucket) * net2score
+    scorenet, uncertainty = self(us, them, white, black, bucket)
+    scorenet = scorenet * net2score
 
     # simple Minic stuff
     q = (scorenet / out_scaling).sigmoid()
@@ -238,9 +246,26 @@ class NNUE(pl.LightningModule):
     #weights = zone_weights * surprise_weight
     weights = surprise_weight
     weights = weights / weights.mean()
-    loss = (weights * torch.pow(torch.abs(pt - q), 2.4)).mean()
-
+    
+    mse = torch.pow(torch.abs(pt - q), 2.4)
+    
+    if self.uncertainty_weight > 0:
+      uncertainty_penalty = 0.01 * torch.mean(uncertainty)
+      
+      uncertainty_clamped = torch.clamp(uncertainty, 0.1, 10.0)
+      nll_loss = 0.5 * torch.log(2 * 3.14159 * uncertainty_clamped) + mse / (2 * uncertainty_clamped)
+      
+      classical_loss = mse
+      loss_combined = (1.0 - self.uncertainty_weight) * classical_loss + self.uncertainty_weight * nll_loss
+      loss = (weights * loss_combined).mean() + uncertainty_penalty
+      
+      self.log(f'{loss_type}_mean_uncertainty', uncertainty.mean())
+      self.log(f'{loss_type}_std_uncertainty', uncertainty.std())
+    else:
+      loss = (weights * mse).mean()
+    
     self.log(loss_type, loss)
+    self.log(f'{loss_type}_mse', mse.mean())
 
     return loss
 
@@ -268,7 +293,7 @@ class NNUE(pl.LightningModule):
     # Strategy 3: Adadelta with ReduceLROnPlateau
     optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-13)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', factor=0.5, patience=15, verbose=True
+        optimizer, mode='min', factor=0.5, patience=15
     )
     return {
         'optimizer': optimizer,
@@ -276,7 +301,6 @@ class NNUE(pl.LightningModule):
             'scheduler': scheduler,
             'monitor': 'val_loss',
         },
-        'gradient_clip_val': 1.0,
     }
     
     #return [optimizer], [scheduler]
@@ -360,7 +384,7 @@ class NNUE(pl.LightningModule):
 
     # fc3
     print("=================")
-    print("Output layer")
+    print("Output layer (evaluation)")
     print("In :", L3 + L2 + L1)
     print("Out :", 1)
     for i in range(nbucket):
@@ -369,6 +393,18 @@ class NNUE(pl.LightningModule):
       if not only_weight:
         joined = join_param(joined, self.fc3.bias[i:(i+1)].data)
         print("Nb bias: ", len(self.fc3.bias[i:(i+1)].data))
+
+    # fc3_uncertainty
+    print("=================")
+    print("Output layer (uncertainty)")
+    print("In :", L3 + L2 + L1)
+    print("Out :", 1)
+    for i in range(nbucket):
+      joined = join_param(joined, self.fc3_uncertainty.weight[i:(i+1), :].data.t())
+      print("Nb weight: ", len(self.fc3_uncertainty.weight[i:(i+1), :].data.t()))
+      if not only_weight:
+        joined = join_param(joined, self.fc3_uncertainty.bias[i:(i+1)].data)
+        print("Nb bias: ", len(self.fc3_uncertainty.bias[i:(i+1)].data))
 
     print("=================")
     print(joined.shape)

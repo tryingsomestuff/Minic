@@ -231,6 +231,7 @@ struct EvalData {
    float gp = 0;
    colored<ScoreType> danger   = {0, 0};
    colored<uint16_t>  mobility = {0, 0};
+   float uncertainty = 0.f; // NNUE uncertainty (variance)
    colored<bool>      haveThreats = {false, false};
    colored<bool>      goodThreats = {false, false};
    bool evalDone = false; // will tell if phase, danger and mobility are filleds or not

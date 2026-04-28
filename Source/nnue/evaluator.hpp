@@ -9,6 +9,11 @@
 #include "sided.hpp"
 #include "weight.hpp"
 
+struct EvalWithUncertainty {
+   float evaluation;
+   float uncertainty;
+};
+
 template<typename NT, bool Q> 
 struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
    // common data (weights and bias)
@@ -38,7 +43,7 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
 
    using BT = typename Quantization<Q>::BT;
    
-   float propagate(Color c, const int bucket) const {
+   EvalWithUncertainty propagate(Color c, const int bucket) const {
       assert(!dirty);
       assert(bucket >= 0);
       assert(bucket < (NNUEWeights<NT, Q>::nbuckets));
@@ -69,7 +74,10 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
       layer.fc2.forwardTo(x2, x3.data + 16);
       simdActivation<8, Q>(x3.data + 16);
 
-      const float val = layer.fc3.forward(x3).data[0];
+      const float eval = layer.fc3.forward(x3).data[0];
+      const float log_var = layer.fc3_uncertainty.forward(x3).data[0];
+      const float variance = std::exp(std::clamp(log_var, -10.0f, 10.0f));
+      
 #if defined(__AVX2__)
       _mm256_zeroupper();
 #endif
@@ -90,9 +98,11 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
                                       .apply_(activation<BT, Q>));
       const auto x3 = splice(x2, layer.fc2.forward(x2)
                                       .apply_(activation<BT, Q>));
-      const float val = layer.fc3.forward(x3).data[0];
+      const float eval = layer.fc3.forward(x3).data[0];
+      const float log_var = layer.fc3_uncertainty.forward(x3).data[0];
+      const float variance = std::exp(std::clamp(log_var, -10.0f, 10.0f));
 #endif
-      return val * Quantization<Q>::outFactor;
+      return {eval * Quantization<Q>::outFactor, variance};
    }
 
 #ifdef DEBUG_NNUE_UPDATE

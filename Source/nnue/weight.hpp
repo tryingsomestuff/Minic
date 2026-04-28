@@ -19,7 +19,8 @@ template<typename NT, bool Q> struct NNUEWeights {
      Layer<NT,  2 * firstInnerLayerSize, 8, Q> fc0;
      Layer<NT,  8, 8, Q>                       fc1;
      Layer<NT, 16, 8, Q>                       fc2;
-     Layer<NT, 24, 1, Q>                       fc3;
+     Layer<NT, 24, 1, Q>                       fc3;             // evaluation
+     Layer<NT, 24, 1, Q>                       fc3_uncertainty; // uncertainty (log-variance)
    };
 
    array1d<InnerLayer, nbuckets> innerLayer;
@@ -35,12 +36,13 @@ template<typename NT, bool Q> struct NNUEWeights {
       for (auto & l : innerLayer) l.fc1.load_(ws);
       for (auto & l : innerLayer) l.fc2.load_(ws);
       for (auto & l : innerLayer) l.fc3.load_(ws);
+      for (auto & l : innerLayer) l.fc3_uncertainty.load_(ws);
       return *this;
    }
 
    static bool load(const std::string& path, NNUEWeights<NT, Q>& loadedWeights) {
       [[maybe_unused]] constexpr uint32_t expectedVersion {0xc0ffee03};
-      [[maybe_unused]] constexpr int      expectedSize    {151049100}; // net size + 4 for version
+      [[maybe_unused]] constexpr int      expectedSize    {151049300}; // net size + 4 for version (with uncertainty layer)
       [[maybe_unused]] constexpr bool     withVersion     {true}; // used for backward compatiblity and debug
 
       if (path != "embedded") { // read from disk
