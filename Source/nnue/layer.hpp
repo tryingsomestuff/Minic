@@ -22,7 +22,7 @@ struct Layer {
    alignas(NNUEALIGNMENT) BT b[nbB];
 
    template<typename T> 
-   CONSTEXPR StackVector<BT, dim1, Q> forward(const StackVector<T, dim0, Q>& x) const {
+   FORCE_FINLINE StackVector<BT, dim1, Q> forward(const StackVector<T, dim0, Q>& x) const {
       StackVector<BT, dim1, Q> result;
       result.from(b);
 #ifdef USE_SIMD_INTRIN
