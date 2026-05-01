@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-05-01 18:28:05</td>
+            <td class="headerValue">2026-05-01 18:59:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
@@ -111,9 +111,9 @@
 <span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">         201 :    const bool b = readFEN(fen, COM::position, true, true);</span></span>
 <span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">         201 :    if (!b) Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;Illegal FEN &quot; &lt;&lt; fen;</span></span>
 <span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">         201 :    COM::thinkAsync(COM::st_searching);</span></span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">        4376 :    while(ThreadPool::instance().main().searching()){</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">        4418 :    while(ThreadPool::instance().main().searching()){</span></span>
 <span id="L53"><span class="lineNum">      53</span>              :       using namespace std::chrono_literals;</span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">        4175 :       std::this_thread::sleep_for(10ms);</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">        4217 :       std::this_thread::sleep_for(10ms);</span></span>
 <span id="L55"><span class="lineNum">      55</span>              :    }</span>
 <span id="L56"><span class="lineNum">      56</span>              : #else</span>
 <span id="L57"><span class="lineNum">      57</span>              :    d.p     = p;</span>

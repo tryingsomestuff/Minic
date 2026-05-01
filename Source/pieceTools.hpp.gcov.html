@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-05-01 18:28:05</td>
+            <td class="headerValue">2026-05-01 18:59:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -67,19 +67,19 @@
 <span id="L5"><span class="lineNum">       5</span>              : namespace PieceTools {</span>
 <span id="L6"><span class="lineNum">       6</span>              : [[nodiscard]] FORCE_FINLINE Piece getPieceIndex_(const Position &amp;p, const Square k) {</span>
 <span id="L7"><span class="lineNum">       7</span>              :    assert(isValidSquare(k));</span>
-<span id="L8"><span class="lineNum">       8</span> <span class="tlaGNC tlaBgGNC">       39876 :    const Piece pp = p.board_const(k);</span></span>
-<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC">       39876 :    assert(isValidPiece(pp));</span></span>
+<span id="L8"><span class="lineNum">       8</span> <span class="tlaGNC tlaBgGNC">       39856 :    const Piece pp = p.board_const(k);</span></span>
+<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC">       39856 :    assert(isValidPiece(pp));</span></span>
 <span id="L10"><span class="lineNum">      10</span>              :    return (Piece)PieceIdx(pp);</span>
 <span id="L11"><span class="lineNum">      11</span>              : }</span>
 <span id="L12"><span class="lineNum">      12</span>              : [[nodiscard]] FORCE_FINLINE Piece getPieceType(const Position &amp;p, const Square k) {</span>
-<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">    19430351 :    assert(isValidSquare(k));</span></span>
-<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">    39175050 :    const Piece pp = p.board_const(k);</span></span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">    39175050 :    assert(isValidPiece(pp));</span></span>
-<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">    39175050 :    return Abs(pp);</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">    19429691 :    assert(isValidSquare(k));</span></span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaGNC">    39173060 :    const Piece pp = p.board_const(k);</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">    39173060 :    assert(isValidPiece(pp));</span></span>
+<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">    39173060 :    return Abs(pp);</span></span>
 <span id="L17"><span class="lineNum">      17</span>              : }</span>
 <span id="L18"><span class="lineNum">      18</span>              : [[nodiscard]] FORCE_FINLINE std::string_view getName(const Position &amp;p, const Square k) {</span>
 <span id="L19"><span class="lineNum">      19</span>              :    assert(isValidSquare(k));</span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">       39876 :    return PieceNames[getPieceIndex_(p, k)];</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">       39856 :    return PieceNames[getPieceIndex_(p, k)];</span></span>
 <span id="L21"><span class="lineNum">      21</span>              : }</span>
 <span id="L22"><span class="lineNum">      22</span>              : [[nodiscard]] FORCE_FINLINE std::string_view getNameUTF(const Position &amp;p, const Square k) {</span>
 <span id="L23"><span class="lineNum">      23</span>              :    assert(isValidSquare(k));</span>

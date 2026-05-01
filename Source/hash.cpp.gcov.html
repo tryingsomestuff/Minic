@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-05-01 18:28:05</td>
+            <td class="headerValue">2026-05-01 18:59:31</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -192,44 +192,44 @@
 <span id="L130"><span class="lineNum">     130</span> <span class="tlaGNC">          22 : }</span></span>
 <span id="L131"><span class="lineNum">     131</span>              : } // namespace Zobrist</span>
 <span id="L132"><span class="lineNum">     132</span>              : </span>
-<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">    23448507 : Hash computeHash(const Position &amp;p) {</span></span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">    23447104 : Hash computeHash(const Position &amp;p) {</span></span>
 <span id="L134"><span class="lineNum">     134</span>              : #ifdef DEBUG_HASH</span>
 <span id="L135"><span class="lineNum">     135</span>              :    Hash h = p.h;</span>
 <span id="L136"><span class="lineNum">     136</span>              :    p.h    = nullHash;</span>
 <span id="L137"><span class="lineNum">     137</span>              : #endif</span>
-<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">    23448507 :    if (p.h != nullHash) return p.h;</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">    23447104 :    if (p.h != nullHash) return p.h;</span></span>
 <span id="L139"><span class="lineNum">     139</span>              :    //++ThreadPool::instance().main().stats.counters[Stats::sid_hashComputed]; // shall of course never happend !</span>
-<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">       20085 :    for (Square k = 0; k &lt; NbSquare; ++k) { ///todo try if BB is faster here ?</span></span>
-<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">       19776 :       const Piece pp = p.board_const(k);</span></span>
-<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">       19776 :       if (pp != P_none) p.h ^= Zobrist::ZT[k][PieceIdx(pp)];</span></span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">       20020 :    for (Square k = 0; k &lt; NbSquare; ++k) { ///todo try if BB is faster here ?</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">       19712 :       const Piece pp = p.board_const(k);</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">       19712 :       if (pp != P_none) p.h ^= Zobrist::ZT[k][PieceIdx(pp)];</span></span>
 <span id="L143"><span class="lineNum">     143</span>              :    }</span>
-<span id="L144"><span class="lineNum">     144</span> <span class="tlaGNC">         309 :    if (p.ep != INVALIDSQUARE) p.h ^= Zobrist::ZT[p.ep][NbPiece];</span></span>
-<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">         309 :    p.h ^= Zobrist::ZTCastling[p.castling];</span></span>
-<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">         309 :    if (p.c == Co_White) p.h ^= Zobrist::ZT[3][NbPiece];</span></span>
-<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">         309 :    if (p.c == Co_Black) p.h ^= Zobrist::ZT[4][NbPiece];</span></span>
+<span id="L144"><span class="lineNum">     144</span> <span class="tlaGNC">         308 :    if (p.ep != INVALIDSQUARE) p.h ^= Zobrist::ZT[p.ep][NbPiece];</span></span>
+<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">         308 :    p.h ^= Zobrist::ZTCastling[p.castling];</span></span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">         308 :    if (p.c == Co_White) p.h ^= Zobrist::ZT[3][NbPiece];</span></span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">         308 :    if (p.c == Co_Black) p.h ^= Zobrist::ZT[4][NbPiece];</span></span>
 <span id="L148"><span class="lineNum">     148</span>              : #ifdef DEBUG_HASH</span>
 <span id="L149"><span class="lineNum">     149</span>              :    if (h != nullHash &amp;&amp; h != p.h) { Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;Hash error &quot; &lt;&lt; ToString(p.lastMove) &lt;&lt; ToString(p, true); }</span>
 <span id="L150"><span class="lineNum">     150</span>              : #endif</span>
-<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">         309 :    return p.h;</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">         308 :    return p.h;</span></span>
 <span id="L152"><span class="lineNum">     152</span>              : }</span>
 <span id="L153"><span class="lineNum">     153</span>              : </span>
-<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">      946037 : Hash computePHash(const Position &amp;p) {</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">      946034 : Hash computePHash(const Position &amp;p) {</span></span>
 <span id="L155"><span class="lineNum">     155</span>              : #ifdef DEBUG_PHASH</span>
 <span id="L156"><span class="lineNum">     156</span>              :    Hash h = p.ph;</span>
 <span id="L157"><span class="lineNum">     157</span>              :    p.ph   = nullHash;</span>
 <span id="L158"><span class="lineNum">     158</span>              : #endif</span>
-<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">      946037 :    if (p.ph != nullHash) return p.ph;</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">      946034 :    if (p.ph != nullHash) return p.ph;</span></span>
 <span id="L160"><span class="lineNum">     160</span>              :    //++ThreadPool::instance().main().stats.counters[Stats::sid_hashComputed]; // shall of course never happend !</span>
-<span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">        1387 :    BB::applyOn(p.whitePawn(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_wp)]; });</span></span>
-<span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">        1321 :    BB::applyOn(p.blackPawn(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_bp)]; });</span></span>
-<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC">         309 :    BB::applyOn(p.whiteKing(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_wk)]; });</span></span>
-<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">         309 :    BB::applyOn(p.blackKing(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_bk)]; });</span></span>
+<span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">        1379 :    BB::applyOn(p.whitePawn(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_wp)]; });</span></span>
+<span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">        1313 :    BB::applyOn(p.blackPawn(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_bp)]; });</span></span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC">         308 :    BB::applyOn(p.whiteKing(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_wk)]; });</span></span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">         308 :    BB::applyOn(p.blackKing(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_bk)]; });</span></span>
 <span id="L165"><span class="lineNum">     165</span>              : #ifdef DEBUG_PHASH</span>
 <span id="L166"><span class="lineNum">     166</span>              :    if (h != nullHash &amp;&amp; h != p.ph) {</span>
 <span id="L167"><span class="lineNum">     167</span>              :       Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;Pawn Hash error &quot; &lt;&lt; ToString(p.lastMove) &lt;&lt; ToString(p, true) &lt;&lt; p.ph &lt;&lt; &quot; != &quot; &lt;&lt; h;</span>
 <span id="L168"><span class="lineNum">     168</span>              :    }</span>
 <span id="L169"><span class="lineNum">     169</span>              : #endif</span>
-<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">         309 :    return p.ph;</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">         308 :    return p.ph;</span></span>
 <span id="L171"><span class="lineNum">     171</span>              : }</span>
         </pre>
               </td>
