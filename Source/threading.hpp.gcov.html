@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-05-01 18:59:31</td>
+            <td class="headerValue">2026-05-03 09:36:19</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -69,12 +69,12 @@
 <span id="L7"><span class="lineNum">       7</span>              : struct Searcher; // forward decl</span>
 <span id="L8"><span class="lineNum">       8</span>              : </span>
 <span id="L9"><span class="lineNum">       9</span>              : struct SearchData {</span>
-<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC tlaBgGNC">         480 :    SearchData() {</span></span>
+<span id="L10"><span class="lineNum">      10</span> <span class="tlaGNC tlaBgGNC">         477 :    SearchData() {</span></span>
 <span id="L11"><span class="lineNum">      11</span>              :       scores.fill(0);</span>
 <span id="L12"><span class="lineNum">      12</span>              :       moves.fill(INVALIDMINIMOVE);</span>
 <span id="L13"><span class="lineNum">      13</span>              :       nodes.fill(0ull);</span>
 <span id="L14"><span class="lineNum">      14</span>              :       times.fill(0ull);</span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">         480 :    }</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">         477 :    }</span></span>
 <span id="L16"><span class="lineNum">      16</span>              :    array1d&lt;ScoreType, MAX_DEPTH&gt; scores;</span>
 <span id="L17"><span class="lineNum">      17</span>              :    array1d&lt;MiniMove, MAX_DEPTH&gt;  moves;</span>
 <span id="L18"><span class="lineNum">      18</span>              :    array1d&lt;Counter, MAX_DEPTH&gt;   nodes;</span>
@@ -82,7 +82,7 @@
 <span id="L20"><span class="lineNum">      20</span>              : };</span>
 <span id="L21"><span class="lineNum">      21</span>              : </span>
 <span id="L22"><span class="lineNum">      22</span>              : // an little input/output structure for each thread</span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">         480 : struct ThreadData {</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC">         477 : struct ThreadData {</span></span>
 <span id="L24"><span class="lineNum">      24</span>              :    DepthType  depth = MAX_DEPTH, seldepth = 0;</span>
 <span id="L25"><span class="lineNum">      25</span>              :    ScoreType  score = 0;</span>
 <span id="L26"><span class="lineNum">      26</span>              :    Position   p;</span>
@@ -92,10 +92,10 @@
 <span id="L30"><span class="lineNum">      30</span>              :    bool       isPondering = false;</span>
 <span id="L31"><span class="lineNum">      31</span>              :    bool       isAnalysis  = false;</span>
 <span id="L32"><span class="lineNum">      32</span>              :    void reset(){</span>
-<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">         219 :       score    = 0;</span></span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">         219 :       best     = INVALIDMOVE;</span></span>
-<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">         219 :       seldepth = 0;</span></span>
-<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">         219 :       depth    = 0;</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">         210 :       score    = 0;</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">         210 :       best     = INVALIDMOVE;</span></span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaGNC">         210 :       seldepth = 0;</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">         210 :       depth    = 0;</span></span>
 <span id="L37"><span class="lineNum">      37</span>              :       pv.clear();</span>
 <span id="L38"><span class="lineNum">      38</span>              :    }</span>
 <span id="L39"><span class="lineNum">      39</span>              : };</span>
