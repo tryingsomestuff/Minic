@@ -435,20 +435,37 @@ pvsout:
          // !!! warning: when skill uses multiPV, returned move shall be used and not first move of pv in receiveMoves !!!
          if (Skill::enabled() && !DynamicConfig::nodesBasedLevel) { _data.best = Skill::pick(multiPVMoves); }
          else {
-            // get pv from best (deepest) threads
-            DepthType bestDepth    = _data.depth;
+            // Vote-based thread selection:
+            // Each thread casts depth-weighted votes for its best move.
+            // The move with the most votes wins; among its supporters, the deepest thread provides the PV.
+            std::map<MiniMove, int> voteCount;
+            for (const auto& s : ThreadPool::instance()) {
+               const auto& d = s->getData();
+               if (!d.pv.empty()) {
+                  const int w = static_cast<int>(d.depth);
+                  voteCount[Move2MiniMove(d.pv[0])] += w;
+               }
+            }
+            MiniMove winMove  = _data.pv.empty() ? INVALIDMINIMOVE : Move2MiniMove(_data.pv[0]);
+            int      topVotes = 0;
+            for (const auto& [m, v] : voteCount) {
+               if (v > topVotes) { topVotes = v; winMove = m; }
+            }
+            Logging::LogIt(Logging::logInfo) << "Voted best move: " << ToString(winMove) << " with " << topVotes << " depth-weighted votes";
+            DepthType bestDepth    = 0;
             size_t    bestThreadId = 0;
             for (const auto& s : ThreadPool::instance()) {
                std::unique_lock lock(_mutexPV);
-               if (s->getData().depth > bestDepth) {
+               const auto& d = s->getData();
+               if (!d.pv.empty() && Move2MiniMove(d.pv[0]) == winMove && d.depth > bestDepth) {
                   bestThreadId = s->id();
-                  bestDepth    = s->getData().depth;
-                  Logging::LogIt(Logging::logInfo) << "Better thread ! " << bestThreadId << ", depth " << static_cast<int>(bestDepth);
+                  bestDepth    = d.depth;
+                  Logging::LogIt(Logging::logInfoPrio) << "Better thread (voted) ! " << bestThreadId << ", depth " << static_cast<int>(bestDepth);
                }
             }
-            // update data with best data available
+            // update data with best thread
             _data      = ThreadPool::instance()[bestThreadId]->getData();
-            _data.best = _data.pv[0]; ///@todo this can lead to best move not being coherent with last reported PV
+            _data.best = _data.pv[0];
          }
          // update stack data on all searcher with "real" score
          // this way all stack[k (with k < p.halfmove)] will be "history" of the game accessible to searcher
@@ -486,6 +503,9 @@ pvsout:
          monitor->reportEnergy(searchDuration, Logging::logInfoPrio);
          monitor->reportCost(searchDuration, Logging::logInfoPrio);
       }
+
+      // _data has been updated early with best thread results
+      displayGUI(_data.depth, _data.seldepth, _data.score, p.halfmoves, _data.pv, 1);
 
       if (postMove) {
          // send move and ponder move to GUI

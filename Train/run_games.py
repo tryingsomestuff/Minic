@@ -102,7 +102,7 @@ def run_match(best, root_dir, c_chess_exe, concurrency, book_file_name, engine):
             book_file_name
         )
     )
-    command = command + " -engine cmd=/home/vivien/Minic/Dist/Minic3/3.41/minic_3.41_linux_x64_skylake name=master"
+    command = command + " -engine cmd=/home/vivien/Minic/Dist/Minic3/3.46/minic_3.46_linux_x64_skylake name=master"
 
     count = 0
     for net in best:
@@ -131,7 +131,7 @@ def run_ordo(root_dir, ordo_exe, concurrency):
     """ run an ordo calculation on an existing pgn file """
     pgn_file_name = os.path.join(root_dir, "out.pgn")
     ordo_file_name = os.path.join(root_dir, "ordo.out")
-    command = "{} -q -G -J -p {} -a 0.0 --anchor=master --draw-auto --white-auto -s 4 --cpus={} -o {}".format(
+    command = "{} -q -G -J -p {} -a 0.0 --anchor=master --draw-auto --white-auto -s 6 --cpus={} -o {}".format(
         ordo_exe, pgn_file_name, concurrency, ordo_file_name
     )
 
