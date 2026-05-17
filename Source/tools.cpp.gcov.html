@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-05-17 14:56:27</td>
+            <td class="headerValue">2026-05-17 16:03:16</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">53.8&nbsp;%</td>
@@ -109,19 +109,19 @@
 <span id="L47"><span class="lineNum">      47</span>              :    }</span>
 <span id="L48"><span class="lineNum">      48</span>              : }</span>
 <span id="L49"><span class="lineNum">      49</span>              : #else</span>
-<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC tlaBgGNC">     8064490 : void debug_king_cap(const Position&amp;) { ; }</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC tlaBgGNC">     8064417 : void debug_king_cap(const Position&amp;) { ; }</span></span>
 <span id="L51"><span class="lineNum">      51</span>              : #endif</span>
 <span id="L52"><span class="lineNum">      52</span>              : </span>
 <span id="L53"><span class="lineNum">      53</span> <span class="tlaUNC tlaBgUNC">           0 : std::string ToString(const MiniMove&amp; m) { return ToString(static_cast&lt;Move&gt;(m), false); }</span></span>
 <span id="L54"><span class="lineNum">      54</span>              : </span>
-<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC tlaBgGNC">        5382 : std::string ToString(const Move&amp; m, bool withScore) {</span></span>
-<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">        5382 :    if (sameMove(m, INVALIDMOVE)) return &quot;invalid move&quot;; ///@todo 0000 ?</span></span>
-<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">        5365 :    if (sameMove(m, NULLMOVE)) return &quot;null move&quot;; ///@todo 0000 ?</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC tlaBgGNC">        5380 : std::string ToString(const Move&amp; m, bool withScore) {</span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">        5380 :    if (sameMove(m, INVALIDMOVE)) return &quot;invalid move&quot;; ///@todo 0000 ?</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">        5368 :    if (sameMove(m, NULLMOVE)) return &quot;null move&quot;; ///@todo 0000 ?</span></span>
 <span id="L58"><span class="lineNum">      58</span>              : </span>
-<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">        5405 :    const std::string score = (withScore ? &quot; (&quot; + std::to_string(Move2Score(m)) + &quot;)&quot; : &quot;&quot;);</span></span>
+<span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">        5408 :    const std::string score = (withScore ? &quot; (&quot; + std::to_string(Move2Score(m)) + &quot;)&quot; : &quot;&quot;);</span></span>
 <span id="L60"><span class="lineNum">      60</span>              :    // FRC castling is encoded king takes rook</span>
 <span id="L61"><span class="lineNum">      61</span>              :    // standard chess castling is encoded with Smith notation</span>
-<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">        5365 :    if (!DynamicConfig::FRC) { </span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">        5368 :    if (!DynamicConfig::FRC) { </span></span>
 <span id="L63"><span class="lineNum">      63</span> <span class="tlaGNC">       10724 :       switch (Move2Type(m)) {</span></span>
 <span id="L64"><span class="lineNum">      64</span> <span class="tlaGNC">          10 :          case T_bks: return &quot;e8g8&quot; + score;</span></span>
 <span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">          18 :          case T_wks: return &quot;e1g1&quot; + score;</span></span>
@@ -132,9 +132,9 @@
 <span id="L70"><span class="lineNum">      70</span>              :       }</span>
 <span id="L71"><span class="lineNum">      71</span>              :    }</span>
 <span id="L72"><span class="lineNum">      72</span>              :    static constexpr array1d&lt;std::string_view,T_max&gt; promSuffixe = {&quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;q&quot;, &quot;r&quot;, &quot;b&quot;, &quot;n&quot;, &quot;q&quot;, &quot;r&quot;, &quot;b&quot;, &quot;n&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;};</span>
-<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC tlaBgGNC">       10674 :    const std::string_view &amp; prom = promSuffixe[Move2Type(m)];</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC tlaBgGNC">       10680 :    const std::string_view &amp; prom = promSuffixe[Move2Type(m)];</span></span>
 <span id="L74"><span class="lineNum">      74</span>              :    ///@todo remove string CTOR here in C++26 ;-)</span>
-<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">       21348 :    return std::string(SquareNames[Move2From(m)]) + std::string(SquareNames[Move2To(m)]) + std::string(prom) + score; </span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">       21360 :    return std::string(SquareNames[Move2From(m)]) + std::string(SquareNames[Move2To(m)]) + std::string(prom) + score; </span></span>
 <span id="L76"><span class="lineNum">      76</span>              : }</span>
 <span id="L77"><span class="lineNum">      77</span>              : </span>
 <span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">         471 : std::string ToString(const PVList&amp; moves) {</span></span>
@@ -188,7 +188,7 @@
 <span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">         437 :    if (p.ep &gt;= 0) ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; ep &quot; &lt;&lt; SquareNames[p.ep] &lt;&lt; std::endl;</span></span>
 <span id="L127"><span class="lineNum">     127</span>              :    //ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; wk &quot; &lt;&lt; (p.king[Co_White]!=INVALIDSQUARE?SquareNames[p.king[Co_White]]:&quot;none&quot;) &lt;&lt; std::endl;</span>
 <span id="L128"><span class="lineNum">     128</span>              :    //ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; bk &quot; &lt;&lt; (p.king[Co_Black]!=INVALIDSQUARE?SquareNames[p.king[Co_Black]]:&quot;none&quot;) &lt;&lt; std::endl;</span>
-<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">        1085 :    ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; Turn &quot; &lt;&lt; (p.c == Co_White ? &quot;white&quot; : &quot;black&quot;) &lt;&lt; std::endl;</span></span>
+<span id="L129"><span class="lineNum">     129</span> <span class="tlaGNC">        1083 :    ss &lt;&lt; Logging::_protocolComment[Logging::ct] &lt;&lt; &quot; Turn &quot; &lt;&lt; (p.c == Co_White ? &quot;white&quot; : &quot;black&quot;) &lt;&lt; std::endl;</span></span>
 <span id="L130"><span class="lineNum">     130</span>              :    ScoreType sc = 0;</span>
 <span id="L131"><span class="lineNum">     131</span> <span class="tlaGNC">         437 :    if (!noEval) {</span></span>
 <span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC">         437 :       EvalData data;</span></span>
