@@ -400,7 +400,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
 
          DynamicConfig::disableTT = false; // use TT here
          if (Abs(e) < 1000) {
-            const Hash matHash = MaterialHash::getMaterialHash(p.mat);
+            const Hash matHash = MaterialHash::getMaterialHash(pLeaf.mat);
             float gp = 1;
             if (matHash != nullHash) {
                const MaterialHash::MaterialHashEntry& MEntry = MaterialHash::materialHashTable[matHash];
