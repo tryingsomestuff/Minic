@@ -73,16 +73,93 @@ class FeatureTransformer(nn.Module):
     return self.affine(x) + sum([block(x) for block in self.factored_blocks])
 
 
+class ReduceLROnPlateauWithWarmRestarts(torch.optim.lr_scheduler.ReduceLROnPlateau):
+  """
+  Extends ReduceLROnPlateau with periodic warm restarts.
+
+  After `reductions_before_restart` consecutive LR reductions the scheduler
+  multiplies the current LR by `restart_factor` (capped at the LR that was
+  active *before* the current reduction sequence began), then starts a fresh
+  reduction cycle from there.
+
+  Example with factor=0.5, restart_factor=2.0, reductions_before_restart=2:
+    LR: 1.0 -> 0.5 -> 0.25 --(restart)--> 0.5 -> 0.25 -> 0.125 --(restart)--> 0.25 ...
+  The envelope slowly drifts down while the periodic bumps keep learning alive.
+  """
+
+  def __init__(self, optimizer, mode='min', factor=0.5, patience=15,
+               restart_lr=None, restart_factor=2.0, reductions_before_restart=2, **kwargs):
+    """
+    restart_lr: if set, jump to exactly this LR on each restart (takes priority over restart_factor).
+    restart_factor: multiplicative boost applied to the post-reduction LR when restart_lr is None.
+    reductions_before_restart: how many consecutive reductions trigger a restart.
+    """
+    if restart_lr is None and restart_factor <= 1.0:
+      raise ValueError('restart_factor must be > 1.0 to actually boost the LR')
+    self.restart_lr = restart_lr
+    self.restart_factor = restart_factor
+    self.reductions_before_restart = reductions_before_restart
+    self._reduction_count = 0
+    self._pre_reduction_lr = [pg['lr'] for pg in optimizer.param_groups]
+    super().__init__(optimizer, mode=mode, factor=factor, patience=patience, **kwargs)
+
+  def _target_lr(self, current_lr):
+    """Return the LR to set on restart."""
+    if self.restart_lr is not None:
+      return self.restart_lr
+    # multiplicative boost, capped at the pre-reduction reference
+    return current_lr * self.restart_factor  # caller applies the cap
+
+  def step(self, metrics):
+    old_lrs = [pg['lr'] for pg in self.optimizer.param_groups]
+    super().step(metrics)
+    new_lrs = [pg['lr'] for pg in self.optimizer.param_groups]
+
+    reduced = any(new < old * 0.9999 for new, old in zip(new_lrs, old_lrs))
+    if reduced:
+      if self._reduction_count == 0:
+        # Remember LR at the start of this reduction sequence
+        self._pre_reduction_lr = old_lrs
+      self._reduction_count += 1
+
+      if self._reduction_count >= self.reductions_before_restart:
+        # Warm restart
+        for pg, cap in zip(self.optimizer.param_groups, self._pre_reduction_lr):
+          if self.restart_lr is not None:
+            pg['lr'] = self.restart_lr
+          else:
+            pg['lr'] = min(pg['lr'] * self.restart_factor, cap)
+        self._reduction_count = 0
+    else:
+      # No reduction this step - if we are not mid-sequence, keep updating
+      # the reference so a future sequence starts from the current LR.
+      if self._reduction_count == 0:
+        self._pre_reduction_lr = new_lrs
+
+  def state_dict(self):
+    sd = super().state_dict()
+    sd['_reduction_count'] = self._reduction_count
+    sd['_pre_reduction_lr'] = self._pre_reduction_lr
+    return sd
+
+  def load_state_dict(self, state_dict):
+    self._reduction_count = state_dict.pop('_reduction_count', 0)
+    self._pre_reduction_lr = state_dict.pop('_pre_reduction_lr',
+                                             [pg['lr'] for pg in self.optimizer.param_groups])
+    super().load_state_dict(state_dict)
+
+
 class NNUE(pl.LightningModule):
   """
   lambda_ = 0.0 - purely based on game results
   lambda_ = 1.0 - purely based on search scores
   """
-  def __init__(self, lambda_=1.0, dropout_rate=0.05, uncertainty_weight=0.0):
+  def __init__(self, lambda_=1.0, dropout_rate=0.05, uncertainty_weight=0.0, restart_lr=None):
     super(NNUE, self).__init__()
     funcs = [piece_position,]
 
     self.uncertainty_weight = uncertainty_weight
+    self.restart_lr = restart_lr
 
     if withFactorizer:
       # with factorization
@@ -270,7 +347,10 @@ class NNUE(pl.LightningModule):
     return loss
 
   def training_step(self, batch, batch_idx):
-    return self.step_(batch, batch_idx, 'train_loss')
+    loss = self.step_(batch, batch_idx, 'train_loss')
+    lr = self.optimizers().param_groups[0]['lr']
+    self.log('lr', lr, prog_bar=True)
+    return loss
 
   def validation_step(self, batch, batch_idx):
     self.step_(batch, batch_idx, 'val_loss')
@@ -290,10 +370,14 @@ class NNUE(pl.LightningModule):
     # optimizer = torch.optim.AdamW(self.parameters(), lr=1e-3, weight_decay=1e-4)
     # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100, eta_min=1e-6)
     
-    # Strategy 3: Adadelta with ReduceLROnPlateau
+    # Strategy 3: Adadelta with ReduceLROnPlateau + warm restarts
+    # After reductions_before_restart consecutive reductions the LR is boosted
+    # by restart_factor (capped at the pre-reduction level) so training can
+    # escape flat regions rather than stalling at a tiny LR.
     optimizer = torch.optim.Adadelta(self.parameters(), lr=1, weight_decay=1e-13)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', factor=0.5, patience=15
+    scheduler = ReduceLROnPlateauWithWarmRestarts(
+        optimizer, mode='min', factor=0.5, patience=15,
+        restart_lr=self.restart_lr, restart_factor=2.0, reductions_before_restart=2
     )
     return {
         'optimizer': optimizer,

@@ -44,6 +44,7 @@ def main():
   
   parser.add_argument("--lambda", default=1.0, type=float, dest='lambda_', help="lambda=1.0 = train on evaluations, lambda=0.0 = train on game results, interpolates between (default=1.0).")
   parser.add_argument("--uncertainty-weight", default=0.0, type=float, dest='uncertainty_weight', help="Weight of uncertainty loss: 0.0=classical MSE, 1.0=full NLL with uncertainty, 0.5=hybrid (default=0.0)")
+  parser.add_argument("--restart-lr", default=None, type=float, dest='restart_lr', help="On LR warm restart, jump to exactly this LR value. If not set, the scheduler uses restart_factor * current_lr instead (default=None)")
   parser.add_argument("--num-workers", default=1, type=int, dest='num_workers', help="Number of worker threads to use for data loading. Currently only works well for binpack.")
   parser.add_argument("--batch-size", default=-1, type=int, dest='batch_size', help="Number of positions per batch / per iteration. Default on GPU = 8192 on CPU = 128.")
   parser.add_argument("--threads", default=-1, type=int, dest='threads', help="Number of torch threads to use. Default automatic (cores) .")
@@ -52,7 +53,7 @@ def main():
   parser.add_argument("--ckpt-path", default=None, type=str, dest='ckpt_path', help="Path to checkpoint to resume training from (e.g., logs/lightning_logs/version_0/checkpoints/epoch=33.ckpt)")
   args = parser.parse_args()
 
-  nnue = M.NNUE(lambda_=args.lambda_, uncertainty_weight=args.uncertainty_weight)
+  nnue = M.NNUE(lambda_=args.lambda_, uncertainty_weight=args.uncertainty_weight, restart_lr=args.restart_lr)
 
   print("Training with {} validating with {}".format(args.train, args.val))
 
