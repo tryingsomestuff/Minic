@@ -73,6 +73,7 @@ void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
       DynamicConfig::minOutputLevel = oldOutLvl;
       std::cerr << "NODES " << benchNodes << std::endl;
       std::cerr << "NPS " << static_cast<int>(static_cast<decltype(benchms)>(benchNodes) / benchms) << std::endl;
+      ThreadPool::instance().displayStats();
    }
 }
 
