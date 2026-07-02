@@ -20,6 +20,9 @@ struct Searcher {
 
    struct StackData {
       Position  p;
+#ifdef WITH_NNUE
+      NNUEEvaluator evaluator;
+#endif
       Hash      h      = nullHash;
       //EvalData  data;
       ScoreType eval   = 0;
@@ -112,6 +115,28 @@ struct Searcher {
       pv.clear();
       pv.emplace_back(m);
       std::ranges::copy(childPV, std::back_inserter(pv));
+   }
+
+   FORCE_FINLINE Position& initRootPositionOnStack(const Position& rootPosition) {
+      assert(rootPosition.halfmoves < MAX_PLY);
+      auto& rootData = stack[rootPosition.halfmoves];
+      rootData.p = rootPosition;
+#ifdef WITH_NNUE
+      rootData.p.associateEvaluator(rootData.evaluator); // stole the evaluator
+      rootData.p.resetNNUEEvaluator(rootData.evaluator);
+#endif
+      return rootData.p;
+   }
+
+   FORCE_FINLINE Position& initChildPositionOnStack(const Position& parentPosition) {
+      assert(parentPosition.halfmoves + 1 < MAX_PLY);
+      auto& childData = stack[parentPosition.halfmoves + 1];
+      childData.p = parentPosition;
+#ifdef WITH_NNUE
+      childData.evaluator = parentPosition.evaluator(); // copy the evaluator
+      childData.p.associateEvaluator(childData.evaluator); // always dirty
+#endif
+      return childData.p;
    }
 
    void displayStats() const {

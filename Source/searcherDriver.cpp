@@ -85,17 +85,6 @@ void Searcher::searchDriver(bool postMove) {
 
    if (isMainThread()) Distributed::sync(Distributed::_commStat2, "start of search driver");
 
-   // we start by a copy, because position object must be mutable here.
-   Position p(_data.p);
-#ifdef WITH_NNUE
-   // Create an evaluator and reset it with the current position
-   NNUEEvaluator nnueEvaluator;
-   p.associateEvaluator(nnueEvaluator);
-   p.resetNNUEEvaluator(nnueEvaluator);
-#endif
-
-   //if (isMainThread()) p.initCaslingPermHashTable(); // let's be sure ...
-
    // requested depth can be changed according to level or skill parameter
    DynamicConfig::level = DynamicConfig::limitStrength ? Skill::convertElo2Level() : DynamicConfig::level;
    DepthType maxDepth   = _data.depth; // _data.depth will be reset to zero later
@@ -123,6 +112,25 @@ void Searcher::searchDriver(bool postMove) {
    positionEvolution = MoveDifficultyUtil::PE_std;
    startTime      = Clock::now();
 
+   // Main thread only will reset tables
+   if (isMainThread()) {
+      TT::age();
+      MoveDifficultyUtil::variability = 1.f; // not usefull for co-searcher threads that won't depend on time
+      ThreadPool::instance().clearSearch();  // reset tables for all threads !
+   }
+
+   // fill "root" position stack data
+   Position& p = initRootPositionOnStack(_data.p);
+   //if (isMainThread()) p.initCaslingPermHashTable(); // let's be sure ...
+   {
+      EvalData  eData;
+      ScoreType e = eval(p, eData, *this, true);
+      assert(p.halfmoves < MAX_PLY && p.halfmoves >= 0);
+      stack[p.halfmoves].h = computeHash(p);
+      stack[p.halfmoves].eval = e;
+      stack[p.halfmoves].threat = INVALIDMINIMOVE;
+   }
+
    // check game history for potential situations (boom/moob)
    if (isMainThread()) {
       if (isBooming(p.halfmoves)) 
@@ -133,12 +141,6 @@ void Searcher::searchDriver(bool postMove) {
                                                                                                         MoveDifficultyUtil::PE_moobingDefence;
    }
 
-   // Main thread only will reset tables
-   if (isMainThread()) {
-      TT::age();
-      MoveDifficultyUtil::variability = 1.f; // not usefull for co-searcher threads that won't depend on time
-      ThreadPool::instance().clearSearch();  // reset tables for all threads !
-   }
    if (isMainThread() || id() >= MAX_THREADS) {
       Logging::LogIt(Logging::logInfo) << "Search params :";
       Logging::LogIt(Logging::logInfo) << "requested time  " << getCurrentMoveMs() << " (" << currentMoveMs << ")"; // won't exceed TimeMan::maxTime
@@ -149,14 +151,6 @@ void Searcher::searchDriver(bool postMove) {
       Logging::LogIt(Logging::logInfo) << "helper thread waiting ... " << id();
       while (startLock.load()) { ; }
       Logging::LogIt(Logging::logInfo) << "... go for id " << id();
-   }
-
-   // fill "root" position stack data
-   {
-      EvalData  eData;
-      ScoreType e = eval(p, eData, *this, true);
-      assert(p.halfmoves < MAX_PLY && p.halfmoves >= 0);
-      stack[p.halfmoves] = {p, computeHash(p), /*eData,*/ e, INVALIDMINIMOVE};
    }
 
    // reset output search results
