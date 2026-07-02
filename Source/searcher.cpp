@@ -223,7 +223,7 @@ void Searcher::clearGame() {
 
    // clear stack data
    for (auto & d : stack){
-      d = {Position(), nullHash, 0, INVALIDMINIMOVE};
+      d = StackData{};
    }
 }
 

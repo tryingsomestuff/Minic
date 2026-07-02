@@ -25,12 +25,11 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
    MoveSorter::scoreAndSort(*this, moves, p, evalData.gp, height, cmhPtr, false, isInCheck);
 
    for (const auto & it : moves) {
-      Position p2 = p;
+      Position& p2 = initChildPositionOnStack(p);
       const MoveInfo moveInfo(p2,it);
       if (!applyMove(p2, moveInfo, true)) continue;
+      stack[p2.halfmoves].h = p2.h;
 #ifdef WITH_NNUE
-      NNUEEvaluator newEvaluator = p.evaluator();
-      p2.associateEvaluator(newEvaluator);
       applyMoveNNUEUpdate(p2, moveInfo);
 #endif      
       PVList childPV;
@@ -193,11 +192,10 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
 
    // we try the tt move before move generation
    if (usableTTmove) {
-      Position p2 = p;
+      Position& p2 = initChildPositionOnStack(p);
       if (const MoveInfo moveInfo(p2,e.m); applyMove(p2, moveInfo, true)) {
+         stack[p2.halfmoves].h = p2.h;
 #ifdef WITH_NNUE
-         NNUEEvaluator newEvaluator = p.evaluator();
-         p2.associateEvaluator(newEvaluator);
          applyMoveNNUEUpdate(p2, moveInfo);
 #endif         
          ++validMoveCount;
@@ -282,15 +280,14 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
             return beta;
          }
       }
-      Position p2 = p;
+      Position& p2 = initChildPositionOnStack(p);
       const MoveInfo moveInfo(p2,*it);
       if (!applyMove(p2, moveInfo, true)) continue;
+      stack[p2.halfmoves].h = p2.h;
       // prefetch as soon as possible
       TT::prefetch(computeHash(p2));
       ++validMoveCount;
 #ifdef WITH_NNUE
-      NNUEEvaluator newEvaluator = p.evaluator();
-      p2.associateEvaluator(newEvaluator);
       applyMoveNNUEUpdate(p2, moveInfo);
 #endif      
       //stack[p2.halfmoves].p = p2;
