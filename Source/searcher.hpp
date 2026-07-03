@@ -132,11 +132,18 @@ struct Searcher {
       assert(parentPosition.halfmoves + 1 < MAX_PLY);
       auto& childData = stack[parentPosition.halfmoves + 1];
       childData.p = parentPosition;
-#ifdef WITH_NNUE
-      childData.evaluator = parentPosition.evaluator(); // copy the evaluator
-      childData.p.associateEvaluator(childData.evaluator); // always dirty
-#endif
       return childData.p;
+   }
+
+   FORCE_FINLINE void initChildEvaluatorOnStack(const Position& parentPosition, Position& childPosition) {
+#ifdef WITH_NNUE
+      auto& childData = stack[childPosition.halfmoves];
+      childData.evaluator = parentPosition.evaluator();
+      childPosition.associateEvaluator(childData.evaluator);
+#else
+      (void)parentPosition;
+      (void)childPosition;
+#endif
    }
 
    void displayStats() const {

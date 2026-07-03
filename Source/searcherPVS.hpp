@@ -913,6 +913,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                if (!applyMove(p2, moveInfo, true)) continue;
                stack[p2.halfmoves].h = p2.h;
 #ifdef WITH_NNUE
+               initChildEvaluatorOnStack(p, p2);
                applyMoveNNUEUpdate(p2, moveInfo);
 #endif
                ++probCutCount;
@@ -1117,6 +1118,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          TT::prefetch(computeHash(p2));
 
 #ifdef WITH_NNUE
+         initChildEvaluatorOnStack(p, p2);
          applyMoveNNUEUpdate(p2, moveInfo);
 #endif
 
@@ -1249,6 +1251,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       // PVS
       if (pvsData.earlyMove || !SearchConfig::doPVS){
 #ifdef WITH_NNUE
+         initChildEvaluatorOnStack(p, child);
          applyMoveNNUEUpdate(child, moveInfo);
 #endif
          stack[child.halfmoves].h = child.h;         
@@ -1353,6 +1356,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
          // PVS
 #ifdef WITH_NNUE
+         initChildEvaluatorOnStack(p, child);
          applyMoveNNUEUpdate(child, moveInfo);
 #endif
          stack[child.halfmoves].h = child.h;         
