@@ -30,6 +30,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
       if (!applyMove(p2, moveInfo, true)) continue;
       stack[p2.halfmoves].h = p2.h;
 #ifdef WITH_NNUE
+      initChildEvaluatorOnStack(p, p2);
       applyMoveNNUEUpdate(p2, moveInfo);
 #endif      
       PVList childPV;
@@ -196,6 +197,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
       if (const MoveInfo moveInfo(p2,e.m); applyMove(p2, moveInfo, true)) {
          stack[p2.halfmoves].h = p2.h;
 #ifdef WITH_NNUE
+         initChildEvaluatorOnStack(p, p2);
          applyMoveNNUEUpdate(p2, moveInfo);
 #endif         
          ++validMoveCount;
@@ -288,6 +290,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
       TT::prefetch(computeHash(p2));
       ++validMoveCount;
 #ifdef WITH_NNUE
+      initChildEvaluatorOnStack(p, p2);
       applyMoveNNUEUpdate(p2, moveInfo);
 #endif      
       //stack[p2.halfmoves].p = p2;
