@@ -8,7 +8,7 @@ ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Posi
 
    EvalData evalData;
    ++stats.counters[Stats::sid_qnodes];
-   const ScoreType evalScore = eval(p, evalData, *this);
+   const ScoreType evalScore = eval(p, evalData, *this, true);
 
    if (evalScore >= beta) return evalScore;
    if (evalScore > alpha) alpha = evalScore;
@@ -157,7 +157,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
       else {
          // we tried everthing ... now this position must be evaluated
          stats.incr(Stats::sid_ttscmiss);
-         evalScore = eval(p, evalData, *this);
+         evalScore = eval(p, evalData, *this, true);
 #ifdef DEBUG_STATICEVAL
          checkEval(p,evalScore,*this,"from eval (qsearch)");
 #endif

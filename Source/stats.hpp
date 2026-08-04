@@ -120,6 +120,14 @@ struct Stats {
       sid_evalStd,
       sid_evalNNUE,
       sid_evalNNUE2,
+      sid_evalStdGp0,
+      sid_evalStdGp1,
+      sid_evalStdGp2,
+      sid_evalStdGp3,
+      sid_evalNNUE2Gp0,
+      sid_evalNNUE2Gp1,
+      sid_evalNNUE2Gp2,
+      sid_evalNNUE2Gp3,
       sid_PVupdate,
       sid_maxid
    };
@@ -236,6 +244,14 @@ struct Stats {
       "evalStd",
       "evalNNUE",
       "evalNNUE2",
+      "evalStdGp0",
+      "evalStdGp1",
+      "evalStdGp2",
+      "evalStdGp3",
+      "evalNNUE2Gp0",
+      "evalNNUE2Gp1",
+      "evalNNUE2Gp2",
+      "evalNNUE2Gp3",
       "PVupdate"};
 
    array1d<Counter, sid_maxid> counters;

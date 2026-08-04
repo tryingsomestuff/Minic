@@ -124,7 +124,7 @@ void Searcher::searchDriver(bool postMove) {
    //if (isMainThread()) p.initCaslingPermHashTable(); // let's be sure ...
    {
       EvalData  eData;
-      ScoreType e = eval(p, eData, *this, true);
+      ScoreType e = eval(p, eData, *this);
       assert(p.halfmoves < MAX_PLY && p.halfmoves >= 0);
       stack[p.halfmoves].h = computeHash(p);
       stack[p.halfmoves].eval = e;

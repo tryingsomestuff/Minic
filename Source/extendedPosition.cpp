@@ -303,7 +303,7 @@ void ExtendedPosition::testStatic(const std::vector<std::string> &positions, boo
       ExtendedPosition extP(positions[k], withMoveCount);
       //std::cout << " " << t << std::endl;
       EvalData  data;
-      ScoreType ret = eval(extP, data, ThreadPool::instance().main(), true, true);
+      ScoreType ret = eval(extP, data, ThreadPool::instance().main(), false, true, true);
 
       results[k].name  = extP.id();
       results[k].k     = static_cast<int>(k);

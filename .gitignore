@@ -1,3 +1,23 @@
 *.gcda
 TB/*
 android/*
+
+# Tools/fit/sprt_tune.py runtime artifacts
+Tools/fit/sprt_tune_state.json
+Tools/fit/sprt_tune_best.json
+Tools/fit/sprt_tune.log
+Tools/fit/sprt_tune_last.pgn
+Tools/fit/sprt_tune_status.json
+
+# Tools/fit/ax_tune.py runtime artifacts
+Tools/fit/ax_tune_state.json
+Tools/fit/ax_tune_best.json
+Tools/fit/ax_tune.log
+Tools/fit/ax_tune_last.pgn
+Tools/fit/ax_tune_status.json
+
+# Tools/fit/ax_plot.py output
+Tools/fit/ax_tune_landscape.png
+
+# Tools/fit/*.py --executor slurm runtime artifacts (sbatch scripts + job output)
+Tools/fit/slurm_jobs/
