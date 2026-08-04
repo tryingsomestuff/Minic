@@ -76,6 +76,21 @@ bool isLazyHigh(ScoreType lazyThreshold, const EvalFeatures &features, EvalScore
    return Abs(score[MG] + score[EG]) / 2 > lazyThreshold;
 }
 
+// bucket game phase (gp : 1 = opening/full material ... 0 = deep endgame) into 4 buckets,
+// used to gather bucketed evalStd -> evalNNUE2 reversal statistics (see Gate 1 / Gate 2 in eval()).
+FORCE_FINLINE Stats::StatId evalStdGpBucket(float gp) {
+   if (gp >= 0.75f) return Stats::sid_evalStdGp0;
+   if (gp >= 0.5f)  return Stats::sid_evalStdGp1;
+   if (gp >= 0.25f) return Stats::sid_evalStdGp2;
+   return Stats::sid_evalStdGp3;
+}
+FORCE_FINLINE Stats::StatId evalNNUE2GpBucket(float gp) {
+   if (gp >= 0.75f) return Stats::sid_evalNNUE2Gp0;
+   if (gp >= 0.5f)  return Stats::sid_evalNNUE2Gp1;
+   if (gp >= 0.25f) return Stats::sid_evalNNUE2Gp2;
+   return Stats::sid_evalNNUE2Gp3;
+}
+
 bool forbidNNUE([[maybe_unused]] const Position &p){
    /*
    // for opposite colored bishop alone (with pawns)
@@ -177,7 +192,7 @@ ScoreType NNUEEVal(const Position & p, EvalData &data, Searcher &context, EvalFe
 }
 #endif
 
-ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowEGEvaluation, bool display) {
+ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool forceNNUE, bool allowEGEvaluation, bool display) {
    START_TIMER
 
    if (DynamicConfig::antichess) return evalAntiChess(p, data, context, allowEGEvaluation, display);
@@ -355,10 +370,11 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
 #ifdef WITH_NNUE
    const bool forbiddenNNUE = forbidNNUE(p) && !DynamicConfig::forceNNUE;
    if (DynamicConfig::useNNUE && !forbiddenNNUE) {
+   const ScoreType nnueThreshold = ScaleScore(EvalScore(DynamicConfig::NNUEThreshold, DynamicConfig::NNUEThresholdEG), data.gp);
       // we will stay to classic eval when the game is already decided (to gain some nps)
       ///@todo use data.gp inside NNUE condition ?
-      if (EvalScore score; DynamicConfig::forceNNUE ||
-          !isLazyHigh(static_cast<ScoreType>(DynamicConfig::NNUEThreshold), features, score)) {
+      if (EvalScore score; DynamicConfig::forceNNUE || forceNNUE ||
+        !isLazyHigh(nnueThreshold, features, score)) {
          STOP_AND_SUM_TIMER(Eval)
          ScoreType nnueEval = NNUEEVal(p, data, context, features);
 
@@ -370,6 +386,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
       }
       // fall back to classic eval
       context.stats.incr(Stats::sid_evalStd);
+      context.stats.incr(evalStdGpBucket(data.gp));
    }
 #endif
 
@@ -954,8 +971,10 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool allowE
    const ScoreType hceScore = variantScore(ret, p.halfmoves, context.height_, p.c);
 
 #ifdef WITH_NNUE
-   if ( DynamicConfig::useNNUE && !forbiddenNNUE && Abs(hceScore) <= DynamicConfig::NNUEThreshold2 ){
+   const ScoreType nnueThreshold2 = ScaleScore(EvalScore(DynamicConfig::NNUEThreshold2, DynamicConfig::NNUEThreshold2EG), data.gp);
+   if ( DynamicConfig::useNNUE && !forbiddenNNUE && Abs(hceScore) <= nnueThreshold2 ){
       // if HCE is small (there is something more than just material value going on ...), fall back to NNUE;
+      context.stats.incr(evalNNUE2GpBucket(data.gp));
       const ScoreType nnueScore = NNUEEVal(p, data, context, features, true);
       STOP_AND_SUM_TIMER(Eval)
       return nnueScore;

@@ -139,7 +139,7 @@ std::string ToString(const Position& p, bool noEval) {
 #endif
       const bool tmp = DynamicConfig::forceNNUE;
       if (DynamicConfig::useNNUE) DynamicConfig::forceNNUE = true;
-      sc = eval(p, data, ThreadPool::instance().main(), true);
+      sc = eval(p, data, ThreadPool::instance().main());
       if (DynamicConfig::useNNUE) DynamicConfig::forceNNUE = tmp;
       ss << Logging::_protocolComment[Logging::ct] << " Phase " << data.gp << std::endl;
       ss << Logging::_protocolComment[Logging::ct] << " Static score " << sc << std::endl;
@@ -167,11 +167,11 @@ std::string ToString(const BitBoard& b) {
 
 bool checkEval(const Position & p, ScoreType e, Searcher & context, const std::string & txt){
    EvalData data;
-   const ScoreType f = eval(p, data, context, true, true);
+   const ScoreType f = eval(p, data, context, false, true, true);
 #ifdef DEBUG_EVALSYM
    Position p2 = p;
    p2.c = ~p2.c;
-   const ScoreType g = eval(p2, data, context, true, false);
+   const ScoreType g = eval(p2, data, context);
    if ( Abs(f + g - 2*EvalConfig::tempo) > 2){
       std::cout << "*********************" << std::endl;
       std::cout << ToString(p) << std::endl;

@@ -75,8 +75,12 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
       simdActivation<8, Q>(x3.data + 16);
 
       const float eval = layer.fc3.forward(x3).data[0];
+#ifdef WITH_NNUE_UNCERTAINTY
       const float log_var = layer.fc3_uncertainty.forward(x3).data[0];
       const float variance = std::exp(std::clamp(log_var, -10.0f, 10.0f));
+#else
+      constexpr float variance = 1.0f;
+#endif
       
 #if defined(__AVX2__)
       _mm256_zeroupper();
@@ -99,8 +103,12 @@ struct NNUEEval : Sided<NNUEEval<NT, Q>, FeatureTransformer<NT, Q>> {
       const auto x3 = splice(x2, layer.fc2.forward(x2)
                                       .apply_(activation<BT, Q>));
       const float eval = layer.fc3.forward(x3).data[0];
+#ifdef WITH_NNUE_UNCERTAINTY
       const float log_var = layer.fc3_uncertainty.forward(x3).data[0];
       const float variance = std::exp(std::clamp(log_var, -10.0f, 10.0f));
+#else
+      constexpr float variance = 1.0f;
+#endif
 #endif
       return {eval * Quantization<Q>::outFactor, variance};
    }

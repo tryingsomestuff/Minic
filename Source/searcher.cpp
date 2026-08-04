@@ -396,7 +396,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
 #endif
          // evaluate quiet leaf position
          EvalData eData;
-         e = eval(pLeaf, eData, cos, true, false);
+         e = eval(pLeaf, eData, cos);
 
          DynamicConfig::disableTT = false; // use TT here
          if (Abs(e) < 1000) {

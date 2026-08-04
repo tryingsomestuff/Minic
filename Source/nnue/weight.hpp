@@ -20,7 +20,9 @@ template<typename NT, bool Q> struct NNUEWeights {
      Layer<NT,  8, 8, Q>                       fc1;
      Layer<NT, 16, 8, Q>                       fc2;
      Layer<NT, 24, 1, Q>                       fc3;             // evaluation
+#ifdef WITH_NNUE_UNCERTAINTY
      Layer<NT, 24, 1, Q>                       fc3_uncertainty; // uncertainty (log-variance)
+#endif
    };
 
    array1d<InnerLayer, nbuckets> innerLayer;
@@ -36,13 +38,21 @@ template<typename NT, bool Q> struct NNUEWeights {
       for (auto & l : innerLayer) l.fc1.load_(ws);
       for (auto & l : innerLayer) l.fc2.load_(ws);
       for (auto & l : innerLayer) l.fc3.load_(ws);
+#ifdef WITH_NNUE_UNCERTAINTY
       for (auto & l : innerLayer) l.fc3_uncertainty.load_(ws);
+#endif
       return *this;
    }
 
    static bool load(const std::string& path, NNUEWeights<NT, Q>& loadedWeights) {
       [[maybe_unused]] constexpr uint32_t expectedVersion {0xc0ffee03};
-      [[maybe_unused]] constexpr int      expectedSize    {151049300}; // net size + 4 for version (with uncertainty layer)
+#ifdef WITH_NNUE_UNCERTAINTY
+      [[maybe_unused]] constexpr int      expectedSizeA   {151049300}; // net size + 4 for version (with uncertainty layer)
+      [[maybe_unused]] constexpr int      expectedSizeB   {151049300};
+#else
+      [[maybe_unused]] constexpr int      expectedSizeA   {151049100}; // net size + 4 for version (without uncertainty layer)
+      [[maybe_unused]] constexpr int      expectedSizeB   {151049300}; // also accept uncertainty nets and ignore extra tail bytes
+#endif
       [[maybe_unused]] constexpr bool     withVersion     {true}; // used for backward compatiblity and debug
 
       if (path != "embedded") { // read from disk
@@ -53,7 +63,7 @@ template<typename NT, bool Q> struct NNUEWeights {
             Logging::LogIt(Logging::logError) << "File " << path << " is not accessible";
             return false;
          }
-         if (fsize != expectedSize) { // with or without version
+         if (fsize != expectedSizeA && fsize != expectedSizeB) { // with or without version
             Logging::LogIt(Logging::logError) << "File " << path << " does not look like a compatible net";
             return false;
          }
@@ -64,7 +74,7 @@ template<typename NT, bool Q> struct NNUEWeights {
       }
 #ifdef EMBEDDEDNNUEPATH
       else {                                             // read from embedded data
-         if (embedded::weightsFileSize != expectedSize) { // with or without version
+         if (embedded::weightsFileSize != expectedSizeA && embedded::weightsFileSize != expectedSizeB) { // with or without version
             Logging::LogIt(Logging::logError) << "File " << path << " does not look like a compatible net";
             return false;
          }
