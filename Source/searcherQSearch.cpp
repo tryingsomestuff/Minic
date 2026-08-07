@@ -157,7 +157,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
       else {
          // we tried everthing ... now this position must be evaluated
          stats.incr(Stats::sid_ttscmiss);
-         evalScore = eval(p, evalData, *this, true);
+         evalScore = eval(p, evalData, *this);
 #ifdef DEBUG_STATICEVAL
          checkEval(p,evalScore,*this,"from eval (qsearch)");
 #endif
