@@ -1,0 +1,26 @@
+{
+  "NNUEThreshold": {
+    "max": 1500,
+    "min": 0,
+    "step": 100,
+    "value": 700
+  },
+  "NNUEThreshold2": {
+    "max": 1500,
+    "min": 0,
+    "step": 100,
+    "value": 150
+  },
+  "NNUEThreshold2EG": {
+    "max": 1500,
+    "min": 0,
+    "step": 100,
+    "value": 90
+  },
+  "NNUEThresholdEG": {
+    "max": 1500,
+    "min": 0,
+    "step": 100,
+    "value": 350
+  }
+}
