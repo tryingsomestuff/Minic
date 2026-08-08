@@ -1,4 +1,4 @@
-const std::string MinicVersion = "3.46";
+const std::string MinicVersion = "3.47";
 
 #if defined(ARDUINO) || defined(ESP32)
 #   define WITH_SMALL_MEMORY
@@ -31,6 +31,7 @@ const std::string MinicVersion = "3.46";
 
 // *** Optim (?)
 #define USE_PARTIAL_SORT        // do not sort every move in move list
+//#define WITH_NNUE_PREFETCH    // prefetch NNUE rows before incremental updates
 //#define WITH_EVALSCORE_AS_INT // in fact just as slow as my basic impl ...
 
 // *** Add-ons

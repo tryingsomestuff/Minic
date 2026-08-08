@@ -311,8 +311,9 @@ template<Color c> void updateNNUEEvaluator(NNUEEvaluator& nnueEvaluator, const M
    const Piece fromType = Abs(moveInfo.fromP);
    const Piece toType = Abs(moveInfo.toP);
    // Prefetch NNUE weight rows for all needed feature indices before incremental updates
-   //nnueEvaluator.template us<c>().prefetch(NNUEIndiceUs(moveInfo.king[c], moveInfo.from, fromType));
-   //nnueEvaluator.template them<c>().prefetch(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));
+#ifdef WITH_NNUE_PREFETCH
+   nnueEvaluator.template us<c>().prefetch(NNUEIndiceUs(moveInfo.king[c], moveInfo.from, fromType));
+   nnueEvaluator.template them<c>().prefetch(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));
    if (isPromotion(moveInfo.type)) {
       const Piece promPieceType = promShift(moveInfo.type);
       nnueEvaluator.template us<c>().prefetch(NNUEIndiceUs(moveInfo.king[c], moveInfo.to, promPieceType));
@@ -331,6 +332,7 @@ template<Color c> void updateNNUEEvaluator(NNUEEvaluator& nnueEvaluator, const M
       nnueEvaluator.template us<c>().prefetch(NNUEIndiceThem(moveInfo.king[c], moveInfo.to, toType));
       nnueEvaluator.template them<c>().prefetch(NNUEIndiceUs(moveInfo.king[~c], moveInfo.to, toType));
    }
+#endif
    nnueEvaluator.template us<c>().erase(NNUEIndiceUs(moveInfo.king[c], moveInfo.from, fromType));
    nnueEvaluator.template them<c>().erase(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));
    if (isPromotion(moveInfo.type)) {
@@ -360,7 +362,8 @@ template<Color c> void updateNNUEEvaluatorThemOnly(NNUEEvaluator& nnueEvaluator,
    const Piece fromType = Abs(moveInfo.fromP);
    const Piece toType = Abs(moveInfo.toP);
    // Prefetch NNUE weight rows for all needed feature indices before incremental updates
-   //nnueEvaluator.template them<c>().prefetch(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));
+#ifdef WITH_NNUE_PREFETCH
+   nnueEvaluator.template them<c>().prefetch(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));
    if (isPromotion(moveInfo.type)) {
       const Piece promPieceType = promShift(moveInfo.type);
       nnueEvaluator.template them<c>().prefetch(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, promPieceType));
@@ -375,6 +378,7 @@ template<Color c> void updateNNUEEvaluatorThemOnly(NNUEEvaluator& nnueEvaluator,
    else if (toType != P_none) {
       nnueEvaluator.template them<c>().prefetch(NNUEIndiceUs(moveInfo.king[~c], moveInfo.to, toType));
    }
+#endif
    nnueEvaluator.template them<c>().erase(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));
    if (isPromotion(moveInfo.type)) {
       const Piece promPieceType = promShift(moveInfo.type);
