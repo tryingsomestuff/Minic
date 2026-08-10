@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-05-17 16:03:16</td>
+            <td class="headerValue">2026-08-10 07:44:05</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -82,32 +82,49 @@
 <span id="L20"><span class="lineNum">      20</span>              :    const StackVector&lt;BIT, firstInnerLayerSize, Q&gt; &amp; active() const { return active_; }</span>
 <span id="L21"><span class="lineNum">      21</span>              : </span>
 <span id="L22"><span class="lineNum">      22</span>              :    FORCE_FINLINE void clear() {</span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC tlaBgGNC">     8634738 :       assert(weights_);</span></span>
-<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">     8634738 :       active_.from(weights_-&gt;b);</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC tlaBgGNC">     8428861 :       assert(weights_);</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">     8428861 :       active_.from(weights_-&gt;b);</span></span>
 <span id="L25"><span class="lineNum">      25</span>              :    }</span>
 <span id="L26"><span class="lineNum">      26</span>              : </span>
-<span id="L27"><span class="lineNum">      27</span>              :    FORCE_FINLINE void insert(const size_t idx) {</span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">   517498362 :       assert(weights_);</span></span>
-<span id="L29"><span class="lineNum">      29</span>              :       weights_-&gt;insertIdx(idx, active_);</span>
-<span id="L30"><span class="lineNum">      30</span>              :    }</span>
-<span id="L31"><span class="lineNum">      31</span>              : </span>
-<span id="L32"><span class="lineNum">      32</span>              :    FORCE_FINLINE void erase(const size_t idx) {</span>
-<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">   342736944 :       assert(weights_);</span></span>
-<span id="L34"><span class="lineNum">      34</span>              :       weights_-&gt;eraseIdx(idx, active_);</span>
-<span id="L35"><span class="lineNum">      35</span>              :    }</span>
-<span id="L36"><span class="lineNum">      36</span>              : </span>
-<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">        2340 :    FeatureTransformer(const InputLayer&lt;NT, inputLayerSize, firstInnerLayerSize, Q&gt;* src): weights_ {src} { clear(); }</span></span>
-<span id="L38"><span class="lineNum">      38</span>              : </span>
-<span id="L39"><span class="lineNum">      39</span>              :    FeatureTransformer() = delete;</span>
-<span id="L40"><span class="lineNum">      40</span>              : </span>
-<span id="L41"><span class="lineNum">      41</span>              : #ifdef DEBUG_NNUE_UPDATE</span>
-<span id="L42"><span class="lineNum">      42</span>              :    bool operator==(const FeatureTransformer&lt;NT, Q&gt;&amp; other) { return active_ == other.active_; }</span>
+<span id="L27"><span class="lineNum">      27</span>              :    // Prefetch the weight row for feature index `idx` into L1 cache before</span>
+<span id="L28"><span class="lineNum">      28</span>              :    // the upcoming insert/erase call on the same index.  The feature-transformer</span>
+<span id="L29"><span class="lineNum">      29</span>              :    // weight matrix W is large and randomly accessed (indexed by king-sq x</span>
+<span id="L30"><span class="lineNum">      30</span>              :    // piece-sq x piece-type), so rows are almost never hot in L1/L2.  Issuing</span>
+<span id="L31"><span class="lineNum">      31</span>              :    // the prefetch early (before all insert/erase ops for a move are dispatched)</span>
+<span id="L32"><span class="lineNum">      32</span>              :    // hides the L3/DRAM load latency (~100-200 cycles) and avoids a stall when</span>
+<span id="L33"><span class="lineNum">      33</span>              :    // insertIdx/eraseIdx actually reads the row.</span>
+<span id="L34"><span class="lineNum">      34</span>              :    // Hint (0,3): prefetch for read, high temporal locality (keep in L1).</span>
+<span id="L35"><span class="lineNum">      35</span>              :    FORCE_FINLINE void prefetch(const size_t idx) const {</span>
+<span id="L36"><span class="lineNum">      36</span>              :       assert(weights_);</span>
+<span id="L37"><span class="lineNum">      37</span>              : #if defined(__GNUC__) || defined(__clang__)</span>
+<span id="L38"><span class="lineNum">      38</span>              :       __builtin_prefetch(weights_-&gt;W + idx * firstInnerLayerSize, 0, 3);</span>
+<span id="L39"><span class="lineNum">      39</span>              : #else</span>
+<span id="L40"><span class="lineNum">      40</span>              :       (void)idx;</span>
+<span id="L41"><span class="lineNum">      41</span>              : #endif</span>
+<span id="L42"><span class="lineNum">      42</span>              :    }</span>
 <span id="L43"><span class="lineNum">      43</span>              : </span>
-<span id="L44"><span class="lineNum">      44</span>              :    bool operator!=(const FeatureTransformer&lt;NT, Q&gt;&amp; other) { return active_ != other.active_; }</span>
-<span id="L45"><span class="lineNum">      45</span>              : #endif</span>
-<span id="L46"><span class="lineNum">      46</span>              : };</span>
-<span id="L47"><span class="lineNum">      47</span>              : </span>
-<span id="L48"><span class="lineNum">      48</span>              : #endif // WITH_NNUE</span>
+<span id="L44"><span class="lineNum">      44</span>              :    FORCE_FINLINE void insert(const size_t idx) {</span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">   515087589 :       assert(weights_);</span></span>
+<span id="L46"><span class="lineNum">      46</span>              :       weights_-&gt;insertIdx(idx, active_);</span>
+<span id="L47"><span class="lineNum">      47</span>              :    }</span>
+<span id="L48"><span class="lineNum">      48</span>              : </span>
+<span id="L49"><span class="lineNum">      49</span>              :    FORCE_FINLINE void erase(const size_t idx) {</span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">   342663166 :       assert(weights_);</span></span>
+<span id="L51"><span class="lineNum">      51</span>              :       weights_-&gt;eraseIdx(idx, active_);</span>
+<span id="L52"><span class="lineNum">      52</span>              :    }</span>
+<span id="L53"><span class="lineNum">      53</span>              : </span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">      268206 :    FeatureTransformer(const InputLayer&lt;NT, inputLayerSize, firstInnerLayerSize, Q&gt;* src): weights_ {src} { clear(); }</span></span>
+<span id="L55"><span class="lineNum">      55</span>              : </span>
+<span id="L56"><span class="lineNum">      56</span>              :    FeatureTransformer() = delete;</span>
+<span id="L57"><span class="lineNum">      57</span>              : </span>
+<span id="L58"><span class="lineNum">      58</span>              : #ifdef DEBUG_NNUE_UPDATE</span>
+<span id="L59"><span class="lineNum">      59</span>              :    bool operator==(const FeatureTransformer&lt;NT, Q&gt;&amp; other) { return active_ == other.active_; }</span>
+<span id="L60"><span class="lineNum">      60</span>              : </span>
+<span id="L61"><span class="lineNum">      61</span>              :    bool operator!=(const FeatureTransformer&lt;NT, Q&gt;&amp; other) { return active_ != other.active_; }</span>
+<span id="L62"><span class="lineNum">      62</span>              : #endif</span>
+<span id="L63"><span class="lineNum">      63</span>              : };</span>
+<span id="L64"><span class="lineNum">      64</span>              : </span>
+<span id="L65"><span class="lineNum">      65</span>              : #endif // WITH_NNUE</span>
         </pre>
               </td>
             </tr>

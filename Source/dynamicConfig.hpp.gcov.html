@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-05-17 16:03:16</td>
+            <td class="headerValue">2026-08-10 07:44:05</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -96,40 +96,42 @@
 <span id="L34"><span class="lineNum">      34</span>              : extern std::string  NNUEFile;</span>
 <span id="L35"><span class="lineNum">      35</span>              : extern int          NNUEScaling;</span>
 <span id="L36"><span class="lineNum">      36</span>              : extern int          NNUEThreshold;</span>
-<span id="L37"><span class="lineNum">      37</span>              : extern int          NNUEThreshold2;</span>
-<span id="L38"><span class="lineNum">      38</span>              : extern bool         genFen;</span>
-<span id="L39"><span class="lineNum">      39</span>              : extern bool         pgnOut;</span>
-<span id="L40"><span class="lineNum">      40</span>              : extern unsigned int genFenDepth;</span>
-<span id="L41"><span class="lineNum">      41</span>              : extern unsigned int genFenDepthEG;</span>
-<span id="L42"><span class="lineNum">      42</span>              : extern unsigned int randomPly;</span>
-<span id="L43"><span class="lineNum">      43</span>              : extern unsigned int moveOverHead;</span>
-<span id="L44"><span class="lineNum">      44</span>              : extern bool         armageddon;</span>
-<span id="L45"><span class="lineNum">      45</span>              : extern bool         antichess; ///@todo not yet fully implemented due to king capture</span>
-<span id="L46"><span class="lineNum">      46</span>              : extern bool         withWDL;</span>
-<span id="L47"><span class="lineNum">      47</span>              : extern bool         bongCloud;</span>
-<span id="L48"><span class="lineNum">      48</span>              : extern bool         anarchy;</span>
-<span id="L49"><span class="lineNum">      49</span>              : extern ScoreType    badCapLimit;</span>
-<span id="L50"><span class="lineNum">      50</span>              : // handles chess variants</span>
-<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC tlaBgGNC">     2367169 : inline bool isKingMandatory(){ return !antichess;}</span></span>
-<span id="L52"><span class="lineNum">      52</span>              : </span>
-<span id="L53"><span class="lineNum">      53</span>              : extern std::string  chessvariant;</span>
+<span id="L37"><span class="lineNum">      37</span>              : extern int          NNUEThresholdEG;</span>
+<span id="L38"><span class="lineNum">      38</span>              : extern int          NNUEThreshold2;</span>
+<span id="L39"><span class="lineNum">      39</span>              : extern int          NNUEThreshold2EG;</span>
+<span id="L40"><span class="lineNum">      40</span>              : extern bool         genFen;</span>
+<span id="L41"><span class="lineNum">      41</span>              : extern bool         pgnOut;</span>
+<span id="L42"><span class="lineNum">      42</span>              : extern unsigned int genFenDepth;</span>
+<span id="L43"><span class="lineNum">      43</span>              : extern unsigned int genFenDepthEG;</span>
+<span id="L44"><span class="lineNum">      44</span>              : extern unsigned int randomPly;</span>
+<span id="L45"><span class="lineNum">      45</span>              : extern unsigned int moveOverHead;</span>
+<span id="L46"><span class="lineNum">      46</span>              : extern bool         armageddon;</span>
+<span id="L47"><span class="lineNum">      47</span>              : extern bool         antichess; ///@todo not yet fully implemented due to king capture</span>
+<span id="L48"><span class="lineNum">      48</span>              : extern bool         withWDL;</span>
+<span id="L49"><span class="lineNum">      49</span>              : extern bool         bongCloud;</span>
+<span id="L50"><span class="lineNum">      50</span>              : extern bool         anarchy;</span>
+<span id="L51"><span class="lineNum">      51</span>              : extern ScoreType    badCapLimit;</span>
+<span id="L52"><span class="lineNum">      52</span>              : // handles chess variants</span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC tlaBgGNC">     2228152 : inline bool isKingMandatory(){ return !antichess;}</span></span>
 <span id="L54"><span class="lineNum">      54</span>              : </span>
-<span id="L55"><span class="lineNum">      55</span>              : extern std::string opponent;</span>
-<span id="L56"><span class="lineNum">      56</span>              : extern int         ratingAdv;</span>
-<span id="L57"><span class="lineNum">      57</span>              : extern bool        ratingAdvReceived;</span>
-<span id="L58"><span class="lineNum">      58</span>              : extern double      ratingFactor;</span>
-<span id="L59"><span class="lineNum">      59</span>              : </span>
-<span id="L60"><span class="lineNum">      60</span>              : extern int styleComplexity;</span>
-<span id="L61"><span class="lineNum">      61</span>              : extern int styleMaterial;</span>
-<span id="L62"><span class="lineNum">      62</span>              : extern int stylePositional;</span>
-<span id="L63"><span class="lineNum">      63</span>              : extern int styleDevelopment;</span>
-<span id="L64"><span class="lineNum">      64</span>              : extern int styleMobility;</span>
-<span id="L65"><span class="lineNum">      65</span>              : extern int styleAttack;</span>
-<span id="L66"><span class="lineNum">      66</span>              : extern int stylePawnStruct;</span>
-<span id="L67"><span class="lineNum">      67</span>              : extern int styleForwardness;</span>
-<span id="L68"><span class="lineNum">      68</span>              : </span>
-<span id="L69"><span class="lineNum">      69</span>              : extern bool stylized;</span>
-<span id="L70"><span class="lineNum">      70</span>              : } // namespace DynamicConfig</span>
+<span id="L55"><span class="lineNum">      55</span>              : extern std::string  chessvariant;</span>
+<span id="L56"><span class="lineNum">      56</span>              : </span>
+<span id="L57"><span class="lineNum">      57</span>              : extern std::string opponent;</span>
+<span id="L58"><span class="lineNum">      58</span>              : extern int         ratingAdv;</span>
+<span id="L59"><span class="lineNum">      59</span>              : extern bool        ratingAdvReceived;</span>
+<span id="L60"><span class="lineNum">      60</span>              : extern double      ratingFactor;</span>
+<span id="L61"><span class="lineNum">      61</span>              : </span>
+<span id="L62"><span class="lineNum">      62</span>              : extern int styleComplexity;</span>
+<span id="L63"><span class="lineNum">      63</span>              : extern int styleMaterial;</span>
+<span id="L64"><span class="lineNum">      64</span>              : extern int stylePositional;</span>
+<span id="L65"><span class="lineNum">      65</span>              : extern int styleDevelopment;</span>
+<span id="L66"><span class="lineNum">      66</span>              : extern int styleMobility;</span>
+<span id="L67"><span class="lineNum">      67</span>              : extern int styleAttack;</span>
+<span id="L68"><span class="lineNum">      68</span>              : extern int stylePawnStruct;</span>
+<span id="L69"><span class="lineNum">      69</span>              : extern int styleForwardness;</span>
+<span id="L70"><span class="lineNum">      70</span>              : </span>
+<span id="L71"><span class="lineNum">      71</span>              : extern bool stylized;</span>
+<span id="L72"><span class="lineNum">      72</span>              : } // namespace DynamicConfig</span>
         </pre>
               </td>
             </tr>

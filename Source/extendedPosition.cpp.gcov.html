@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-05-17 16:03:16</td>
+            <td class="headerValue">2026-08-10 07:44:05</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
@@ -365,7 +365,7 @@
 <span id="L303"><span class="lineNum">     303</span> <span class="tlaUNC">           0 :       ExtendedPosition extP(positions[k], withMoveCount);</span></span>
 <span id="L304"><span class="lineNum">     304</span>              :       //std::cout &lt;&lt; &quot; &quot; &lt;&lt; t &lt;&lt; std::endl;</span>
 <span id="L305"><span class="lineNum">     305</span> <span class="tlaUNC">           0 :       EvalData  data;</span></span>
-<span id="L306"><span class="lineNum">     306</span> <span class="tlaUNC">           0 :       ScoreType ret = eval(extP, data, ThreadPool::instance().main(), true, true);</span></span>
+<span id="L306"><span class="lineNum">     306</span> <span class="tlaUNC">           0 :       ScoreType ret = eval(extP, data, ThreadPool::instance().main(), false, true, true);</span></span>
 <span id="L307"><span class="lineNum">     307</span>              : </span>
 <span id="L308"><span class="lineNum">     308</span> <span class="tlaUNC">           0 :       results[k].name  = extP.id();</span></span>
 <span id="L309"><span class="lineNum">     309</span> <span class="tlaUNC">           0 :       results[k].k     = static_cast&lt;int&gt;(k);</span></span>
