@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-10 07:44:05</td>
+            <td class="headerValue">2026-08-14 06:38:29</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -102,19 +102,19 @@
 <span id="L40"><span class="lineNum">      40</span>              :    CONST_SEARCH_TUNING array1d&lt;DepthType, N&gt; minDepth;</span>
 <span id="L41"><span class="lineNum">      41</span>              :    CONST_SEARCH_TUNING array1d&lt;DepthType, N&gt; maxDepth;</span>
 <span id="L42"><span class="lineNum">      42</span>              :    const std::string name;</span>
-<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC tlaBgGNC">     6388452 :    [[nodiscard]] CONSTEXPR_SEARCH_TUNING ScoreType threshold(const DepthType d, const float gp, const size_t idx1 = 0, const size_t idx2 = 0) const {</span></span>
-<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">     6388452 :       assert(idx1 &lt; N);</span></span>
-<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">     6388452 :       assert(idx2 &lt; M);</span></span>
-<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">     6388452 :       const auto value = init[idx1]</span></span>
-<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">     6388452 :                        + d * slopeDepth[idx1] </span></span>
-<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">     6388452 :                        + static_cast&lt;double&gt;(gp) * slopeGamePhase[idx1];</span></span>
-<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">     6388452 :       assert(value &gt; std::numeric_limits&lt;ScoreType&gt;::min());</span></span>
-<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">     6388452 :       assert(value &lt; std::numeric_limits&lt;ScoreType&gt;::max());</span></span>
-<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">     6388452 :       return static_cast&lt;ScoreType&gt;(value * bonus[idx2] / 256.0);</span></span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaGNC tlaBgGNC">     3581752 :    [[nodiscard]] CONSTEXPR_SEARCH_TUNING ScoreType threshold(const DepthType d, const float gp, const size_t idx1 = 0, const size_t idx2 = 0) const {</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaGNC">     3581752 :       assert(idx1 &lt; N);</span></span>
+<span id="L45"><span class="lineNum">      45</span> <span class="tlaGNC">     3581752 :       assert(idx2 &lt; M);</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">     3581752 :       const auto value = init[idx1]</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">     3581752 :                        + d * slopeDepth[idx1] </span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">     3581752 :                        + static_cast&lt;double&gt;(gp) * slopeGamePhase[idx1];</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">     3581752 :       assert(value &gt; std::numeric_limits&lt;ScoreType&gt;::min());</span></span>
+<span id="L50"><span class="lineNum">      50</span> <span class="tlaGNC">     3581752 :       assert(value &lt; std::numeric_limits&lt;ScoreType&gt;::max());</span></span>
+<span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">     3581752 :       return static_cast&lt;ScoreType&gt;(value * bonus[idx2] / 256.0);</span></span>
 <span id="L52"><span class="lineNum">      52</span>              :    }</span>
-<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">     8684191 :    [[nodiscard]] CONSTEXPR_SEARCH_TUNING bool isActive(const DepthType d, const size_t idx1 = 0) const {</span></span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">     8684191 :       assert(idx1 &lt; N);</span></span>
-<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">     8684191 :       return d &gt;= minDepth[idx1] &amp;&amp; d &lt;= maxDepth[idx1];</span></span>
+<span id="L53"><span class="lineNum">      53</span> <span class="tlaGNC">     4970934 :    [[nodiscard]] CONSTEXPR_SEARCH_TUNING bool isActive(const DepthType d, const size_t idx1 = 0) const {</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">     4970934 :       assert(idx1 &lt; N);</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">     4970934 :       return d &gt;= minDepth[idx1] &amp;&amp; d &lt;= maxDepth[idx1];</span></span>
 <span id="L56"><span class="lineNum">      56</span>              :    }</span>
 <span id="L57"><span class="lineNum">      57</span>              :    [[nodiscard]] FORCE_FINLINE std::string getName(CoeffNameType t, size_t idx)const{</span>
 <span id="L58"><span class="lineNum">      58</span>              :       assert(t &gt;= 0);</span>
@@ -208,60 +208,77 @@
 <span id="L146"><span class="lineNum">     146</span>              : extern CONST_SEARCH_TUNING int       quietHistoryDivisor2;</span>
 <span id="L147"><span class="lineNum">     147</span>              : extern CONST_SEARCH_TUNING int       quietHistoryDivisor3;</span>
 <span id="L148"><span class="lineNum">     148</span>              : </span>
-<span id="L149"><span class="lineNum">     149</span>              : inline const DepthType lmpMaxDepth = 10;</span>
-<span id="L150"><span class="lineNum">     150</span>              : inline const array2d&lt;int,2,SearchConfig::lmpMaxDepth+1&gt; lmpLimit = {{{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55}, {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}}};</span>
-<span id="L151"><span class="lineNum">     151</span>              : </span>
-<span id="L152"><span class="lineNum">     152</span>              : constexpr</span>
-<span id="L153"><span class="lineNum">     153</span>              : double my_log2(double x){</span>
-<span id="L154"><span class="lineNum">     154</span>              :    int N = 1;</span>
-<span id="L155"><span class="lineNum">     155</span>              :    while(x&gt;=2){</span>
-<span id="L156"><span class="lineNum">     156</span>              :       ++N;</span>
-<span id="L157"><span class="lineNum">     157</span>              :       x/=2;</span>
-<span id="L158"><span class="lineNum">     158</span>              :    }</span>
-<span id="L159"><span class="lineNum">     159</span>              :    const double ln2 = 0.6931471805599453094172321214581765680755001343602552541206800094;</span>
-<span id="L160"><span class="lineNum">     160</span>              :    const double y = (x-1)/(x+1);</span>
-<span id="L161"><span class="lineNum">     161</span>              :    double v = 2*y;</span>
-<span id="L162"><span class="lineNum">     162</span>              :    for (int k = 1 ; k &lt; 10; ++k){</span>
-<span id="L163"><span class="lineNum">     163</span>              :       double p = y;</span>
-<span id="L164"><span class="lineNum">     164</span>              :       const int n = 2*k+1;</span>
-<span id="L165"><span class="lineNum">     165</span>              :       for (int i = 1 ; i &lt; n ; ++i){</span>
-<span id="L166"><span class="lineNum">     166</span>              :          p *= y;</span>
-<span id="L167"><span class="lineNum">     167</span>              :       }</span>
-<span id="L168"><span class="lineNum">     168</span>              :       v += 2*p/n;</span>
-<span id="L169"><span class="lineNum">     169</span>              :    }</span>
-<span id="L170"><span class="lineNum">     170</span>              :    return v + (N-1)*ln2;</span>
-<span id="L171"><span class="lineNum">     171</span>              : }</span>
-<span id="L172"><span class="lineNum">     172</span>              : </span>
-<span id="L173"><span class="lineNum">     173</span>              : /*</span>
-<span id="L174"><span class="lineNum">     174</span>              : void test_log(){</span>
-<span id="L175"><span class="lineNum">     175</span>              :    for (int d = 1; d &lt; MAX_DEPTH; d++)</span>
-<span id="L176"><span class="lineNum">     176</span>              :       for (int m = 1; m &lt; MAX_MOVE; m++){</span>
-<span id="L177"><span class="lineNum">     177</span>              :          std::cout &lt;&lt; (my_log2(d * 1.6) * my_log2(m) * 0.4) &lt;&lt; std::endl;</span>
-<span id="L178"><span class="lineNum">     178</span>              :          std::cout &lt;&lt; (std::log(d * 1.6) * std::log(m) * 0.4) &lt;&lt; std::endl;</span>
-<span id="L179"><span class="lineNum">     179</span>              :       }</span>
-<span id="L180"><span class="lineNum">     180</span>              : }</span>
-<span id="L181"><span class="lineNum">     181</span>              : */</span>
-<span id="L182"><span class="lineNum">     182</span>              : </span>
-<span id="L183"><span class="lineNum">     183</span>              : ///@todo try lmr based on game phase</span>
-<span id="L184"><span class="lineNum">     184</span>              : inline const array2d&lt;DepthType, MAX_DEPTH, MAX_MOVE&gt; lmrReduction = [] {</span>
-<span id="L185"><span class="lineNum">     185</span>              :    auto ret = decltype(lmrReduction){};</span>
-<span id="L186"><span class="lineNum">     186</span>              :    //Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Init lmr&quot;;</span>
-<span id="L187"><span class="lineNum">     187</span>              :    for (int d = 1; d &lt; MAX_DEPTH; d++)</span>
-<span id="L188"><span class="lineNum">     188</span>              :       for (int m = 1; m &lt; MAX_MOVE; m++)</span>
-<span id="L189"><span class="lineNum">     189</span>              :          ret[d][m] = DepthType(my_log2(d * 1.6) * my_log2(m * 1) * 0.4);</span>
-<span id="L190"><span class="lineNum">     190</span>              :    return ret;</span>
-<span id="L191"><span class="lineNum">     191</span>              : }();</span>
-<span id="L192"><span class="lineNum">     192</span>              : </span>
-<span id="L193"><span class="lineNum">     193</span>              : inline const array2d&lt;ScoreType, 6, 6&gt; MvvLvaScores = [] {</span>
-<span id="L194"><span class="lineNum">     194</span>              :    auto ret = decltype(MvvLvaScores){};</span>
-<span id="L195"><span class="lineNum">     195</span>              :    //Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Init mvv-lva&quot;;</span>
-<span id="L196"><span class="lineNum">     196</span>              :    constexpr array1d&lt;ScoreType, 6&gt; IValues = {1, 2, 3, 5, 9, 20}; ///@todo try N=B=3 ??</span>
-<span id="L197"><span class="lineNum">     197</span>              :    for (int v = 0; v &lt; 6; ++v)</span>
-<span id="L198"><span class="lineNum">     198</span>              :       for (int a = 0; a &lt; 6; ++a) ret[v][a] = static_cast&lt;ScoreType&gt;(IValues[v] * 20 - IValues[a]);</span>
-<span id="L199"><span class="lineNum">     199</span>              :    return ret;</span>
-<span id="L200"><span class="lineNum">     200</span>              : }();</span>
-<span id="L201"><span class="lineNum">     201</span>              : </span>
-<span id="L202"><span class="lineNum">     202</span>              : } // namespace SearchConfig</span>
+<span id="L149"><span class="lineNum">     149</span>              : #ifdef WITH_CORRECTION_HISTORY</span>
+<span id="L150"><span class="lineNum">     150</span>              : extern CONST_SEARCH_TUNING int correctionHistoryDepthCap;</span>
+<span id="L151"><span class="lineNum">     151</span>              : extern CONST_SEARCH_TUNING int correctionHistoryDepthScale;</span>
+<span id="L152"><span class="lineNum">     152</span>              : #ifdef WITH_PAWN_CORRHIST</span>
+<span id="L153"><span class="lineNum">     153</span>              : extern CONST_SEARCH_TUNING int correctionHistoryMaxPawn;</span>
+<span id="L154"><span class="lineNum">     154</span>              : #endif</span>
+<span id="L155"><span class="lineNum">     155</span>              : #ifdef WITH_NONPAWN_CORRHIST</span>
+<span id="L156"><span class="lineNum">     156</span>              : extern CONST_SEARCH_TUNING int correctionHistoryMaxNonPawn;</span>
+<span id="L157"><span class="lineNum">     157</span>              : #endif</span>
+<span id="L158"><span class="lineNum">     158</span>              : #ifdef WITH_MINOR_CORRHIST</span>
+<span id="L159"><span class="lineNum">     159</span>              : extern CONST_SEARCH_TUNING int correctionHistoryMaxMinor;</span>
+<span id="L160"><span class="lineNum">     160</span>              : #endif</span>
+<span id="L161"><span class="lineNum">     161</span>              : #ifdef WITH_MAJOR_CORRHIST</span>
+<span id="L162"><span class="lineNum">     162</span>              : extern CONST_SEARCH_TUNING int correctionHistoryMaxMajor;</span>
+<span id="L163"><span class="lineNum">     163</span>              : #endif</span>
+<span id="L164"><span class="lineNum">     164</span>              : #endif // WITH_CORRECTION_HISTORY</span>
+<span id="L165"><span class="lineNum">     165</span>              : </span>
+<span id="L166"><span class="lineNum">     166</span>              : inline const DepthType lmpMaxDepth = 10;</span>
+<span id="L167"><span class="lineNum">     167</span>              : inline const array2d&lt;int,2,SearchConfig::lmpMaxDepth+1&gt; lmpLimit = {{{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55}, {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}}};</span>
+<span id="L168"><span class="lineNum">     168</span>              : </span>
+<span id="L169"><span class="lineNum">     169</span>              : constexpr</span>
+<span id="L170"><span class="lineNum">     170</span>              : double my_log2(double x){</span>
+<span id="L171"><span class="lineNum">     171</span>              :    int N = 1;</span>
+<span id="L172"><span class="lineNum">     172</span>              :    while(x&gt;=2){</span>
+<span id="L173"><span class="lineNum">     173</span>              :       ++N;</span>
+<span id="L174"><span class="lineNum">     174</span>              :       x/=2;</span>
+<span id="L175"><span class="lineNum">     175</span>              :    }</span>
+<span id="L176"><span class="lineNum">     176</span>              :    const double ln2 = 0.6931471805599453094172321214581765680755001343602552541206800094;</span>
+<span id="L177"><span class="lineNum">     177</span>              :    const double y = (x-1)/(x+1);</span>
+<span id="L178"><span class="lineNum">     178</span>              :    double v = 2*y;</span>
+<span id="L179"><span class="lineNum">     179</span>              :    for (int k = 1 ; k &lt; 10; ++k){</span>
+<span id="L180"><span class="lineNum">     180</span>              :       double p = y;</span>
+<span id="L181"><span class="lineNum">     181</span>              :       const int n = 2*k+1;</span>
+<span id="L182"><span class="lineNum">     182</span>              :       for (int i = 1 ; i &lt; n ; ++i){</span>
+<span id="L183"><span class="lineNum">     183</span>              :          p *= y;</span>
+<span id="L184"><span class="lineNum">     184</span>              :       }</span>
+<span id="L185"><span class="lineNum">     185</span>              :       v += 2*p/n;</span>
+<span id="L186"><span class="lineNum">     186</span>              :    }</span>
+<span id="L187"><span class="lineNum">     187</span>              :    return v + (N-1)*ln2;</span>
+<span id="L188"><span class="lineNum">     188</span>              : }</span>
+<span id="L189"><span class="lineNum">     189</span>              : </span>
+<span id="L190"><span class="lineNum">     190</span>              : /*</span>
+<span id="L191"><span class="lineNum">     191</span>              : void test_log(){</span>
+<span id="L192"><span class="lineNum">     192</span>              :    for (int d = 1; d &lt; MAX_DEPTH; d++)</span>
+<span id="L193"><span class="lineNum">     193</span>              :       for (int m = 1; m &lt; MAX_MOVE; m++){</span>
+<span id="L194"><span class="lineNum">     194</span>              :          std::cout &lt;&lt; (my_log2(d * 1.6) * my_log2(m) * 0.4) &lt;&lt; std::endl;</span>
+<span id="L195"><span class="lineNum">     195</span>              :          std::cout &lt;&lt; (std::log(d * 1.6) * std::log(m) * 0.4) &lt;&lt; std::endl;</span>
+<span id="L196"><span class="lineNum">     196</span>              :       }</span>
+<span id="L197"><span class="lineNum">     197</span>              : }</span>
+<span id="L198"><span class="lineNum">     198</span>              : */</span>
+<span id="L199"><span class="lineNum">     199</span>              : </span>
+<span id="L200"><span class="lineNum">     200</span>              : ///@todo try lmr based on game phase</span>
+<span id="L201"><span class="lineNum">     201</span>              : inline const array2d&lt;DepthType, MAX_DEPTH, MAX_MOVE&gt; lmrReduction = [] {</span>
+<span id="L202"><span class="lineNum">     202</span>              :    auto ret = decltype(lmrReduction){};</span>
+<span id="L203"><span class="lineNum">     203</span>              :    //Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Init lmr&quot;;</span>
+<span id="L204"><span class="lineNum">     204</span>              :    for (int d = 1; d &lt; MAX_DEPTH; d++)</span>
+<span id="L205"><span class="lineNum">     205</span>              :       for (int m = 1; m &lt; MAX_MOVE; m++)</span>
+<span id="L206"><span class="lineNum">     206</span>              :          ret[d][m] = DepthType(my_log2(d * 1.6) * my_log2(m * 1) * 0.4);</span>
+<span id="L207"><span class="lineNum">     207</span>              :    return ret;</span>
+<span id="L208"><span class="lineNum">     208</span>              : }();</span>
+<span id="L209"><span class="lineNum">     209</span>              : </span>
+<span id="L210"><span class="lineNum">     210</span>              : inline const array2d&lt;ScoreType, 6, 6&gt; MvvLvaScores = [] {</span>
+<span id="L211"><span class="lineNum">     211</span>              :    auto ret = decltype(MvvLvaScores){};</span>
+<span id="L212"><span class="lineNum">     212</span>              :    //Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Init mvv-lva&quot;;</span>
+<span id="L213"><span class="lineNum">     213</span>              :    constexpr array1d&lt;ScoreType, 6&gt; IValues = {1, 2, 3, 5, 9, 20}; ///@todo try N=B=3 ??</span>
+<span id="L214"><span class="lineNum">     214</span>              :    for (int v = 0; v &lt; 6; ++v)</span>
+<span id="L215"><span class="lineNum">     215</span>              :       for (int a = 0; a &lt; 6; ++a) ret[v][a] = static_cast&lt;ScoreType&gt;(IValues[v] * 20 - IValues[a]);</span>
+<span id="L216"><span class="lineNum">     216</span>              :    return ret;</span>
+<span id="L217"><span class="lineNum">     217</span>              : }();</span>
+<span id="L218"><span class="lineNum">     218</span>              : </span>
+<span id="L219"><span class="lineNum">     219</span>              : } // namespace SearchConfig</span>
         </pre>
               </td>
             </tr>

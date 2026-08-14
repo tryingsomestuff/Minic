@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-10 07:44:05</td>
+            <td class="headerValue">2026-08-14 06:38:29</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -77,10 +77,10 @@
 <span id="L15"><span class="lineNum">      15</span>              : </span>
 <span id="L16"><span class="lineNum">      16</span>              : // Compute hash for a move using from/to squares</span>
 <span id="L17"><span class="lineNum">      17</span>              : // Uses unused ZT slot [5][NbPiece] to add variation</span>
-<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC tlaBgGNC">       40813 : [[nodiscard]] constexpr Hash hashMove(MiniMove m) {</span></span>
-<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">       40813 :    const Square from = Move2From(m);</span></span>
-<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">       40813 :    const Square to = Move2To(m);</span></span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">       40813 :    return ZT[from][NbPiece] ^ ZT[to][NbPiece] ^ ZT[5][NbPiece];</span></span>
+<span id="L18"><span class="lineNum">      18</span> <span class="tlaGNC tlaBgGNC">       36366 : [[nodiscard]] constexpr Hash hashMove(MiniMove m) {</span></span>
+<span id="L19"><span class="lineNum">      19</span> <span class="tlaGNC">       36366 :    const Square from = Move2From(m);</span></span>
+<span id="L20"><span class="lineNum">      20</span> <span class="tlaGNC">       36366 :    const Square to = Move2To(m);</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">       36366 :    return ZT[from][NbPiece] ^ ZT[to][NbPiece] ^ ZT[5][NbPiece];</span></span>
 <span id="L22"><span class="lineNum">      22</span>              : }</span>
 <span id="L23"><span class="lineNum">      23</span>              : } // namespace Zobrist</span>
 <span id="L24"><span class="lineNum">      24</span>              : </span>
@@ -90,6 +90,19 @@
 <span id="L28"><span class="lineNum">      28</span>              : </span>
 <span id="L29"><span class="lineNum">      29</span>              : // Same holds from K+P hash (used for pawn hash table)</span>
 <span id="L30"><span class="lineNum">      30</span>              : [[nodiscard]] Hash computePHash(const Position &amp;p);</span>
+<span id="L31"><span class="lineNum">      31</span>              : </span>
+<span id="L32"><span class="lineNum">      32</span>              : #ifdef WITH_NONPAWN_CORRHIST</span>
+<span id="L33"><span class="lineNum">      33</span>              : [[nodiscard]] Hash computeNonPawnHash(const Position &amp;p, Color c);</span>
+<span id="L34"><span class="lineNum">      34</span>              : [[nodiscard]] Hash nonPawnKey(const Position &amp;p, Color c);</span>
+<span id="L35"><span class="lineNum">      35</span>              : #endif</span>
+<span id="L36"><span class="lineNum">      36</span>              : #ifdef WITH_MINOR_CORRHIST</span>
+<span id="L37"><span class="lineNum">      37</span>              : [[nodiscard]] Hash computeMinorHash(const Position &amp;p);</span>
+<span id="L38"><span class="lineNum">      38</span>              : [[nodiscard]] Hash minorKey(const Position &amp;p);</span>
+<span id="L39"><span class="lineNum">      39</span>              : #endif</span>
+<span id="L40"><span class="lineNum">      40</span>              : #ifdef WITH_MAJOR_CORRHIST</span>
+<span id="L41"><span class="lineNum">      41</span>              : [[nodiscard]] Hash computeMajorHash(const Position &amp;p);</span>
+<span id="L42"><span class="lineNum">      42</span>              : [[nodiscard]] Hash majorKey(const Position &amp;p);</span>
+<span id="L43"><span class="lineNum">      43</span>              : #endif</span>
         </pre>
               </td>
             </tr>
