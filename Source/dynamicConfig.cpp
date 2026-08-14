@@ -39,10 +39,10 @@ std::string  chessvariant     = "chess";
 // this is used to scale NNUE score to classic eval score.
 // This way search params can remain the same ... more or less ...
 // from 32 to 256      x_scaled = x * NNUEscaling / 64
-int NNUEScaling    = 42; // hand tuned
+int NNUEScaling    = 48; // hand tuned
 int NNUEThreshold  = 638;
 int NNUEThresholdEG = 638;
-int NNUEThreshold2 = 315;
+int NNUEThreshold2 = 344;
 int NNUEThreshold2EG = 315;
 
 #ifndef FORCEEMBEDDEDNNUE

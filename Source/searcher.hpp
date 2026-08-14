@@ -1,5 +1,6 @@
 #pragma once
 
+#include "correctionHistory.hpp"
 #include "definition.hpp"
 #include "evalDef.hpp"
 #include "material.hpp"
@@ -160,6 +161,23 @@ struct Searcher {
    KillerT   killerT;
    HistoryT  historyT;
    CounterT  counterT;
+#ifdef WITH_CORRECTION_HISTORY
+#ifdef WITH_PAWN_CORRHIST
+   CorrectionHistoryT pawnCorrHist;
+#endif
+#ifdef WITH_NONPAWN_CORRHIST
+   CorrectionHistoryT nonPawnCorrHist;
+#endif
+#ifdef WITH_MINOR_CORRHIST
+   CorrectionHistoryT minorCorrHist;
+#endif
+#ifdef WITH_MAJOR_CORRHIST
+   CorrectionHistoryT majorCorrHist;
+#endif
+   [[nodiscard]] ScoreType correctionScore(const Position& p) const;
+   [[nodiscard]] ScoreType correctedEval(const Position& p, ScoreType rawScore) const;
+   void updateCorrectionHistory(const Position& p, DepthType depth, ScoreType bestScore, ScoreType baselineEval);
+#endif // WITH_CORRECTION_HISTORY
    DepthType nullMoveMinPly = 0;
    Color     nullMoveVerifColor = Co_None;
    EvalScore contempt       = 0;

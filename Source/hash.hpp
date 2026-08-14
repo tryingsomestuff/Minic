@@ -28,3 +28,16 @@ void initHash();
 
 // Same holds from K+P hash (used for pawn hash table)
 [[nodiscard]] Hash computePHash(const Position &p);
+
+#ifdef WITH_NONPAWN_CORRHIST
+[[nodiscard]] Hash computeNonPawnHash(const Position &p, Color c);
+[[nodiscard]] Hash nonPawnKey(const Position &p, Color c);
+#endif
+#ifdef WITH_MINOR_CORRHIST
+[[nodiscard]] Hash computeMinorHash(const Position &p);
+[[nodiscard]] Hash minorKey(const Position &p);
+#endif
+#ifdef WITH_MAJOR_CORRHIST
+[[nodiscard]] Hash computeMajorHash(const Position &p);
+[[nodiscard]] Hash majorKey(const Position &p);
+#endif

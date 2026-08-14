@@ -50,6 +50,16 @@ FORCE_FINLINE void movePieceCastle(Position& p, const CastlingTypes ct, const Sq
    p.h  ^= Zobrist::ZT[kingDest][pk + PieceShift];
    p.ph ^= Zobrist::ZT[kingDest][pk + PieceShift];
    p.h  ^= Zobrist::ZT[rookDest][pr + PieceShift];
+#ifdef WITH_NONPAWN_CORRHIST
+   // king is excluded from nph by design (only the rook moves as far as that key is concerned)
+   p.nph[c] ^= Zobrist::ZT[p.rootInfo().rooksInit[c][ct]][pr + PieceShift];
+   p.nph[c] ^= Zobrist::ZT[rookDest][pr + PieceShift];
+#endif
+#ifdef WITH_MAJOR_CORRHIST
+   // king is excluded from mjh by design (only the rook moves as far as that key is concerned)
+   p.mjh ^= Zobrist::ZT[p.rootInfo().rooksInit[c][ct]][pr + PieceShift];
+   p.mjh ^= Zobrist::ZT[rookDest][pr + PieceShift];
+#endif
    p.king[c] = kingDest;
    p.h  ^= Zobrist::ZTCastling[p.castling];
    p.castling &= ~(ks | qs);
@@ -92,6 +102,31 @@ void movePiece(Position& p, const Square from, const Square to, const Piece from
       p.h ^= Zobrist::ZT[to][toId];
       if (abs(toP) == P_wp || abs(toP) == P_wk) p.ph ^= Zobrist::ZT[to][toId];
    }
+#ifdef WITH_NONPAWN_CORRHIST
+   // king excluded by design, see hash.hpp nonPawnKey()
+   if (abs(fromP) != P_wp && abs(fromP) != P_wk) {
+      p.nph[p.c] ^= Zobrist::ZT[from][fromId];
+      if (prom == P_none) p.nph[p.c] ^= Zobrist::ZT[to][toIdnew];
+   }
+   if (prom != P_none) p.nph[p.c] ^= Zobrist::ZT[to][toIdnew]; // promoted piece is always non-pawn
+   if (isCapture && abs(toP) != P_wp && abs(toP) != P_wk) p.nph[~p.c] ^= Zobrist::ZT[to][toId];
+#endif
+#ifdef WITH_MINOR_CORRHIST
+   if (abs(fromP) == P_wn || abs(fromP) == P_wb) {
+      p.mnh ^= Zobrist::ZT[from][fromId];
+      if (prom == P_none) p.mnh ^= Zobrist::ZT[to][toIdnew];
+   }
+   if (prom != P_none && (abs(prom) == P_wn || abs(prom) == P_wb)) p.mnh ^= Zobrist::ZT[to][toIdnew];
+   if (isCapture && (abs(toP) == P_wn || abs(toP) == P_wb)) p.mnh ^= Zobrist::ZT[to][toId];
+#endif
+#ifdef WITH_MAJOR_CORRHIST
+   if (abs(fromP) == P_wr || abs(fromP) == P_wq) {
+      p.mjh ^= Zobrist::ZT[from][fromId];
+      if (prom == P_none) p.mjh ^= Zobrist::ZT[to][toIdnew];
+   }
+   if (prom != P_none && (abs(prom) == P_wr || abs(prom) == P_wq)) p.mjh ^= Zobrist::ZT[to][toIdnew];
+   if (isCapture && (abs(toP) == P_wr || abs(toP) == P_wq)) p.mjh ^= Zobrist::ZT[to][toId];
+#endif
    // consequences on castling
    if (p.castling && (p.rootInfo().castlePermHashTable[from] ^ p.rootInfo().castlePermHashTable[to])) {
       p.h ^= Zobrist::ZTCastling[p.castling];
@@ -292,6 +327,7 @@ bool applyMove(Position& p, const MoveInfo & moveInfo, [[maybe_unused]] const bo
    }
 #endif
    p.lastMove = Move2MiniMove(moveInfo.m);
+
    STOP_AND_SUM_TIMER(Apply)
    return true;
 }

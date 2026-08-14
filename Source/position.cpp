@@ -240,6 +240,16 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
    MaterialHash::initMaterial(p);
    p.h  = computeHash(p);
    p.ph = computePHash(p);
+#ifdef WITH_NONPAWN_CORRHIST
+   p.nph[Co_White] = computeNonPawnHash(p, Co_White);
+   p.nph[Co_Black] = computeNonPawnHash(p, Co_Black);
+#endif
+#ifdef WITH_MINOR_CORRHIST
+   p.mnh = computeMinorHash(p);
+#endif
+#ifdef WITH_MAJOR_CORRHIST
+   p.mjh = computeMajorHash(p);
+#endif
 
 #ifdef WITH_NNUE
    // If position is associated with an NNUE evaluator,

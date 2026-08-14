@@ -288,7 +288,7 @@ void Searcher::searchDriver(bool postMove) {
                }
             }
             else if (beta < matingScore(0) && score >= beta) {
-               --windowDepth; // from Ethereal
+               windowDepth = std::max(static_cast<DepthType>(1), static_cast<DepthType>(windowDepth - 1)); // from Ethereal
                beta = std::min(static_cast<ScoreType>(score + delta), matingScore(0));
                Logging::LogIt(Logging::logInfo) << "Increase window beta " << alpha << ".." << beta;
                if (isMainThread() && DynamicConfig::multiPV == 1) {
@@ -329,7 +329,7 @@ void Searcher::searchDriver(bool postMove) {
             // update the outputed pv only with the best move line
             if (multi == 0) {
                std::unique_lock lock(_mutexPV);
-               _data.pv    = pvLoc;
+               _data.pv = pvLoc;
                _data.depth = depth;
                _data.score = score;
             }

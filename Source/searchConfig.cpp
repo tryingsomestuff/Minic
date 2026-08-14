@@ -90,6 +90,23 @@ CONST_SEARCH_TUNING int       quietHistoryDivisor1  = 3;
 CONST_SEARCH_TUNING int       quietHistoryDivisor2  = 3;
 CONST_SEARCH_TUNING int       quietHistoryDivisor3  = 3;
 
+#ifdef WITH_CORRECTION_HISTORY
+CONST_SEARCH_TUNING int correctionHistoryDepthCap   = 16;
+CONST_SEARCH_TUNING int correctionHistoryDepthScale = 16;
+#ifdef WITH_PAWN_CORRHIST
+CONST_SEARCH_TUNING int correctionHistoryMaxPawn    = 32;
+#endif
+#ifdef WITH_NONPAWN_CORRHIST
+CONST_SEARCH_TUNING int correctionHistoryMaxNonPawn = 44;
+#endif
+#ifdef WITH_MINOR_CORRHIST
+CONST_SEARCH_TUNING int correctionHistoryMaxMinor   = 64;
+#endif
+#ifdef WITH_MAJOR_CORRHIST
+CONST_SEARCH_TUNING int correctionHistoryMaxMajor   = 64;
+#endif
+#endif // WITH_CORRECTION_HISTORY
+
 
 //CONST_SEARCH_TUNING ScoreType randomAggressiveReductionFactor = 2;
 

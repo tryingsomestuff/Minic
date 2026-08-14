@@ -60,12 +60,23 @@ const std::string MinicVersion = "3.47";
 //#define WITH_EVAL_TUNING
 //#define WITH_PIECE_TUNING
 
+#define WITH_CORRECTION_HISTORY
+#ifdef WITH_CORRECTION_HISTORY
+#define WITH_PAWN_CORRHIST      // pawn (+king) structure bucket, reuses Position::ph at no extra cost
+#define WITH_NONPAWN_CORRHIST   // non-pawn material bucket, one key per color (king excluded)
+//#define WITH_MINOR_CORRHIST   // minor pieces (knight+bishop) bucket, king excluded
+//#define WITH_MAJOR_CORRHIST   // major pieces (rook+queen) bucket, king excluded
+#endif // WITH_CORRECTION_HISTORY
+
 // *** Debug
 //#define VERBOSE_EVAL
 //#define DEBUG_NNUE_UPDATE
 //#define DEBUG_BACKTRACE
 //#define DEBUG_HASH
 //#define DEBUG_PHASH
+//#define DEBUG_NONPAWNHASH
+//#define DEBUG_MINORHASH
+//#define DEBUG_MAJORHASH
 //#define DEBUG_MATERIAL
 //#define DEBUG_APPLY
 //#define DEBUG_GENERATION
