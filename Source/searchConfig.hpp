@@ -146,6 +146,23 @@ extern CONST_SEARCH_TUNING int       quietHistoryDivisor1;
 extern CONST_SEARCH_TUNING int       quietHistoryDivisor2;
 extern CONST_SEARCH_TUNING int       quietHistoryDivisor3;
 
+#ifdef WITH_CORRECTION_HISTORY
+extern CONST_SEARCH_TUNING int correctionHistoryDepthCap;
+extern CONST_SEARCH_TUNING int correctionHistoryDepthScale;
+#ifdef WITH_PAWN_CORRHIST
+extern CONST_SEARCH_TUNING int correctionHistoryMaxPawn;
+#endif
+#ifdef WITH_NONPAWN_CORRHIST
+extern CONST_SEARCH_TUNING int correctionHistoryMaxNonPawn;
+#endif
+#ifdef WITH_MINOR_CORRHIST
+extern CONST_SEARCH_TUNING int correctionHistoryMaxMinor;
+#endif
+#ifdef WITH_MAJOR_CORRHIST
+extern CONST_SEARCH_TUNING int correctionHistoryMaxMajor;
+#endif
+#endif // WITH_CORRECTION_HISTORY
+
 inline const DepthType lmpMaxDepth = 10;
 inline const array2d<int,2,SearchConfig::lmpMaxDepth+1> lmpLimit = {{{0, 2, 3, 5, 9, 13, 18, 25, 34, 45, 55}, {0, 5, 6, 9, 14, 21, 30, 41, 55, 69, 84}}};
 

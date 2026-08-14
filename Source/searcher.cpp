@@ -219,6 +219,20 @@ void Searcher::clearGame() {
    killerT.initKillers();
    historyT.initHistory();
    counterT.initCounter();
+#ifdef WITH_CORRECTION_HISTORY
+#ifdef WITH_PAWN_CORRHIST
+   pawnCorrHist.clear();
+#endif
+#ifdef WITH_NONPAWN_CORRHIST
+   nonPawnCorrHist.clear();
+#endif
+#ifdef WITH_MINOR_CORRHIST
+   minorCorrHist.clear();
+#endif
+#ifdef WITH_MAJOR_CORRHIST
+   majorCorrHist.clear();
+#endif
+#endif // WITH_CORRECTION_HISTORY
    previousBest = INVALIDMOVE;
 
    // clear stack data
@@ -236,6 +250,22 @@ void Searcher::clearSearch(bool forceHistoryClear) {
    killerT.initKillers();
    if (forceHistoryClear) historyT.initHistory();
    counterT.initCounter();
+#ifdef WITH_CORRECTION_HISTORY
+   if (forceHistoryClear) {
+#ifdef WITH_PAWN_CORRHIST
+      pawnCorrHist.clear();
+#endif
+#ifdef WITH_NONPAWN_CORRHIST
+      nonPawnCorrHist.clear();
+#endif
+#ifdef WITH_MINOR_CORRHIST
+      minorCorrHist.clear();
+#endif
+#ifdef WITH_MAJOR_CORRHIST
+      majorCorrHist.clear();
+#endif
+   }
+#endif // WITH_CORRECTION_HISTORY
    previousBest = INVALIDMOVE;
 }
 

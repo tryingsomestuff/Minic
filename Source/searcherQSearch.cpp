@@ -166,15 +166,21 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    // backup this score as the "static" one
    const ScoreType staticScore = evalScore;
 
+#ifdef WITH_CORRECTION_HISTORY
+   ScoreType qsearchEval = correctedEval(p, staticScore);
+#else
+   ScoreType& qsearchEval = evalScore;
+#endif
+
    if (!isInCheck && !ttHit){
       // Be carefull here, _data in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
       // depth -2 is used to ensure this will never be used directly (only evaluation score is of interest here...)
       TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(staticScore, height), TT::createHashScore(staticScore, height), TT::B_none, -2, isMainThread());
    }
 
-   // early cut-off based on staticScore score
-   if (staticScore >= beta) return staticScore;
-   else if (staticScore > alpha) alpha = staticScore;
+   // early cut-off based on the (corrected) static score
+   if (qsearchEval >= beta) return qsearchEval;
+   else if (qsearchEval > alpha) alpha = qsearchEval;
 
    // maybe we can use tt score (instead of static evaluation) as a better draft if possible and not in check ?
    bool evalScoreIsHashScore = false;
@@ -183,11 +189,15 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
       if (ttHit && ((bound == TT::B_alpha && e.s <= evalScore) || (bound == TT::B_beta && e.s >= evalScore) || (bound == TT::B_exact))){
          evalScore = TT::adjustHashScore(e.s, height);
          evalScoreIsHashScore = true;
+#ifdef WITH_CORRECTION_HISTORY
+         // TT score: already a search result, so without correction
+         qsearchEval = evalScore;
+#endif
       }
    }
 
    TT::Bound       b              = TT::B_alpha;
-   ScoreType       bestScore      = evalScore;
+   ScoreType       bestScore      = qsearchEval;
    const ScoreType alphaInit      = alpha;
    int             validMoveCount = 0;
 
@@ -257,7 +267,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
             if (recapture != INVALIDSQUARE && Move2To(*it) != recapture) continue; // only recapture now ...
          }
          if (SearchConfig::doQFutility && validMoveCount &&
-             staticScore + SearchConfig::qfutilityMargin[evalScoreIsHashScore] 
+             qsearchEval + SearchConfig::qfutilityMargin[evalScoreIsHashScore]
                          + (isPromotionCap(*it) ? (value(P_wq) - value(P_wp)) : 0) 
                          + (Move2Type(*it) == T_ep ? value(P_wp) : PieceTools::getAbsValue(p, Move2To(*it))) <= alphaInit) {
             stats.incr(Stats::sid_qfutility);
@@ -271,13 +281,13 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
          }
          // neutral captures are pruned if move can't raise alpha (idea origin from Seer)
          if (SearchConfig::doQDeltaPruning && !ttPV
-             && seeValue <= SearchConfig::deltaBadSEEThreshold && staticScore + SearchConfig::deltaBadMargin < alpha){
+             && seeValue <= SearchConfig::deltaBadSEEThreshold && qsearchEval + SearchConfig::deltaBadMargin < alpha){
             stats.incr(Stats::sid_deltaAlpha);
             continue;
          }
          // return beta early if a good capture sequence is found and static eval was not far from beta (idea origin from Seer)
          if (SearchConfig::doQDeltaPruning && !ttPV
-             && seeValue >= SearchConfig::deltaGoodSEEThreshold && staticScore + SearchConfig::deltaGoodMargin > beta){
+             && seeValue >= SearchConfig::deltaGoodSEEThreshold && qsearchEval + SearchConfig::deltaGoodMargin > beta){
             stats.incr(Stats::sid_deltaBeta);
             return beta;
          }

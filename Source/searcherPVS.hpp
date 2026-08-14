@@ -643,7 +643,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    assert(p.halfmoves - 1 < MAX_PLY && p.halfmoves - 1 >= 0);
 
-   // now, let's get a static score for the position.
+   // now, let's get an evaluation score for the position.
    ScoreType evalScore;
 
    // do not eval position when in check, we won't use it (as we won't forward prune)
@@ -699,8 +699,13 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // insert only static eval in stack data, never hash score for consistancy!
    stack[p.halfmoves].eval = evalScore; 
 
-   // backup the static evaluation score as we will try to get a better evalScore approximation
+   // backup the static evaluation score as we will try to get a better evalScore approximation using TT
    const ScoreType staticScore = evalScore;
+
+#ifdef WITH_CORRECTION_HISTORY
+   // staticScore + correction
+   const ScoreType correctedStaticScore = correctedEval(p, staticScore);
+#endif
 
    // if no TT hit yet, we insert an eval without a move here in case of forward pruning (depth is negative, bound is none) ...
    // Be carefull here, _data2 in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
@@ -710,10 +715,22 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // but we set evalScoreIsHashScore to be aware of that !
    if (pvsData.ttHit && e.d > 0 && !pvsData.isInCheck && !pvsData.isKnownEndGame
      && ((pvsData.bound == TT::B_alpha && e.s < evalScore) || (pvsData.bound == TT::B_beta && e.s > evalScore) || (pvsData.bound == TT::B_exact))){
+     // evalScore updated with the search value from TT
      evalScore = TT::adjustHashScore(e.s, height);
      pvsData.evalScoreIsHashScore = true;
      stats.incr(Stats::sid_staticScoreIsFromSearch);
    }
+
+#ifdef WITH_CORRECTION_HISTORY
+   // never add the correction on top of a TT score : that score is already a search
+   // result, so correcting it double-counts the very bias corrhist is meant to predict
+   ScoreType pruningEval = pvsData.evalScoreIsHashScore ? evalScore : correctedStaticScore;
+   // both sides of the NMP test must be in the same corrected/uncorrected state
+   ScoreType pruningEvalBaseline = pvsData.evalScoreIsHashScore ? staticScore : correctedStaticScore;
+#else
+   ScoreType& pruningEval = evalScore;
+   const ScoreType pruningEvalBaseline = staticScore;
+#endif
 
    // take **initial** position situation (from game history) into account for pruning ? 
    ///@todo retry this
@@ -809,15 +826,15 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       if (!DynamicConfig::mateFinder && !pvsData.rootnode && !pvsData.isInCheck /*&& !isMateScore(beta)*/) {
 
          // static null move
-         if (SearchConfig::doStaticNullMove && !isMateScore(evalScore) && pvsData.lessZugzwangRisk && SearchConfig::staticNullMoveCoeff.isActive(depth, pvsData.evalScoreIsHashScore) ) {
+         if (SearchConfig::doStaticNullMove && !isMateScore(pruningEval) && pvsData.lessZugzwangRisk && SearchConfig::staticNullMoveCoeff.isActive(depth, pvsData.evalScoreIsHashScore) ) {
             const ScoreType margin = SearchConfig::staticNullMoveCoeff.threshold(depth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving);
-            if (evalScore > beta + margin) return stats.incr(Stats::sid_staticNullMove), evalScore - margin;
+            if (pruningEval > beta + margin) return stats.incr(Stats::sid_staticNullMove), pruningEval - margin;
          }
 
          // (absence of) opponent threats pruning (idea origin from Koivisto)
-         if ( SearchConfig::doThreatsPruning && !isMateScore(evalScore) && pvsData.lessZugzwangRisk && !evalData.goodThreats[~p.c] && SearchConfig::threatCoeff.isActive(depth, pvsData.evalScoreIsHashScore) ) {
+         if ( SearchConfig::doThreatsPruning && !isMateScore(pruningEval) && pvsData.lessZugzwangRisk && !evalData.goodThreats[~p.c] && SearchConfig::threatCoeff.isActive(depth, pvsData.evalScoreIsHashScore) ) {
             const ScoreType margin = SearchConfig::threatCoeff.threshold(depth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving);
-            if (evalScore > beta + margin) return stats.incr(Stats::sid_threatsPruning), evalScore - margin;
+            if (pruningEval > beta + margin) return stats.incr(Stats::sid_threatsPruning), pruningEval - margin;
          }
 /*
          // own threats pruning
@@ -828,7 +845,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 */
          // razoring
          if (const ScoreType rAlpha = alpha - SearchConfig::razoringCoeff.threshold(pvsData.marginDepth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving);
-            SearchConfig::doRazoring && SearchConfig::razoringCoeff.isActive(depth, pvsData.evalScoreIsHashScore) && evalScore <= rAlpha) {
+            SearchConfig::doRazoring && SearchConfig::razoringCoeff.isActive(depth, pvsData.evalScoreIsHashScore) && pruningEval <= rAlpha) {
             stats.incr(Stats::sid_razoringTry);
             if (!evalData.haveThreats[p.c]) return stats.incr(Stats::sid_razoringNoThreat), rAlpha;
             const ScoreType qScore = qsearch(alpha, beta, p, height, seldepth, 0, true, pvnode, pvsData.isInCheck);
@@ -843,15 +860,15 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
              pvsData.lessZugzwangRisk && 
              //!pvsData.isKnownEndGame &&
              pvsData.withoutSkipMove &&
-             (evalScore == beta || evalScore >= beta + SearchConfig::nullMoveMargin) && 
-             evalScore >= stack[p.halfmoves].eval &&
+             (pruningEval == beta || pruningEval >= beta + SearchConfig::nullMoveMargin) && 
+             pruningEval >= pruningEvalBaseline &&
              stack[p.halfmoves].p.lastMove != NULLMOVE && 
              (height >= nullMoveMinPly || nullMoveVerifColor != p.c)) {
             PVList nullPV;
             stats.incr(Stats::sid_nullMoveTry);
             const DepthType R = SearchConfig::nullMoveReductionInit +
                               depth / SearchConfig::nullMoveReductionDepthDivisor + 
-                              std::min((evalScore - beta) / SearchConfig::nullMoveDynamicDivisor, 7); // adaptative
+                              std::min((pruningEval - beta) / SearchConfig::nullMoveDynamicDivisor, 7); // adaptative
             const DepthType nullDepth = std::max(0, depth - R);
             Position& pN = stack[p.halfmoves + 1].p;
             pN = p;
@@ -977,6 +994,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             evalScore = TT::adjustHashScore(e.s, height);
             pvsData.evalScoreIsHashScore = true;
             pvsData.marginDepth = std::max(0, depth - (pvsData.evalScoreIsHashScore ? e.d : 0)); // a depth that take TT depth into account
+#ifdef WITH_CORRECTION_HISTORY
+            pruningEval = evalScore; // TT score : left uncorrected
+            pruningEvalBaseline = staticScore;
+#endif         
          }
       }
    }
@@ -1002,7 +1023,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
       pvsData.lmp = SearchConfig::doLMP && depth <= SearchConfig::lmpMaxDepth;
       // futility
       const ScoreType futilityScore = alpha - SearchConfig::futilityPruningCoeff.threshold(pvsData.marginDepth, evalData.gp, pvsData.evalScoreIsHashScore, pvsData.improving);
-      pvsData.futility = SearchConfig::doFutility && SearchConfig::futilityPruningCoeff.isActive(depth, pvsData.evalScoreIsHashScore) && evalScore <= futilityScore;
+      pvsData.futility = SearchConfig::doFutility && SearchConfig::futilityPruningCoeff.isActive(depth, pvsData.evalScoreIsHashScore) && pruningEval <= futilityScore;
       // history pruning
       pvsData.historyPruning = SearchConfig::doHistoryPruning && pvsData.isNotPawnEndGame && SearchConfig::historyPruningCoeff.isActive(depth, pvsData.improving);
       // CMH pruning
@@ -1448,6 +1469,15 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    else if (is50moves(p,false)){
       return drawScore(p, height);
    }
+
+#ifdef WITH_CORRECTION_HISTORY
+   // update correction history against the corrected (residual) baseline
+   if (!pvsData.isInCheck && isValidMove(bestMove) && !isCaptureOrProm(bestMove) && !isMateScore(bestScore)
+       && !(hashBound == TT::B_beta  && bestScore <= correctedStaticScore)
+       && !(hashBound == TT::B_alpha && bestScore >= correctedStaticScore)) {
+      updateCorrectionHistory(p, depth, bestScore, correctedStaticScore);
+   }
+#endif
 
    // insert data in TT
    TT::setEntry(*this, pHash, bestMove, TT::createHashScore(bestScore, height), TT::createHashScore(evalScore, height),

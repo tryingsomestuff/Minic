@@ -1,26 +1,50 @@
 {
-  "NNUEThreshold": {
-    "max": 1500,
-    "min": 0,
-    "step": 100,
-    "value": 700
+  "CorrectionHistoryDepthCap": {
+    "max": 24,
+    "min": 8,
+    "step": 2,
+    "value": 16
   },
-  "NNUEThreshold2": {
-    "max": 1500,
-    "min": 0,
-    "step": 100,
-    "value": 150
+  "CorrectionHistoryDepthScale": {
+    "max": 32,
+    "min": 4,
+    "step": 1,
+    "value": 16
   },
-  "NNUEThreshold2EG": {
-    "max": 1500,
-    "min": 0,
-    "step": 100,
-    "value": 90
+  "CorrectionHistoryMaxPawn": {
+    "max": 160,
+    "min": 16,
+    "step": 8,
+    "value": 32
   },
-  "NNUEThresholdEG": {
-    "max": 1500,
+  "CorrectionHistoryMaxNonPawn": {
+    "max": 128,
+    "min": 8,
+    "step": 8,
+    "value": 44
+  },
+  "aspirationMinDepth": {
+    "max": 12,
+    "min": 2,
+    "step": 1,
+    "value": 4
+  },
+  "aspirationInit": {
+    "max": 30,
     "min": 0,
-    "step": 100,
-    "value": 350
+    "step": 2,
+    "value": 5
+  },
+  "aspirationDepthInit": {
+    "max": 150,
+    "min": 0,
+    "step": 8,
+    "value": 40
+  },
+  "aspirationDepthCoef": {
+    "max": 10,
+    "min": 0,
+    "step": 1,
+    "value": 3
   }
 }

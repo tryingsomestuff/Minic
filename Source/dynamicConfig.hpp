@@ -69,4 +69,5 @@ extern int stylePawnStruct;
 extern int styleForwardness;
 
 extern bool stylized;
+
 } // namespace DynamicConfig
