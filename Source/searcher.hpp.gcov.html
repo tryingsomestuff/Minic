@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-14 06:38:29</td>
+            <td class="headerValue">2026-08-19 14:42:08</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -176,33 +176,33 @@
 <span id="L114"><span class="lineNum">     114</span>              :    FORCE_FINLINE void updatePV(PVList&amp; pv, const Move&amp; m, const PVList&amp; childPV) {</span>
 <span id="L115"><span class="lineNum">     115</span>              :       stats.incr(Stats::sid_PVupdate);</span>
 <span id="L116"><span class="lineNum">     116</span>              :       pv.clear();</span>
-<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">       11617 :       pv.emplace_back(m);</span></span>
-<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">       11617 :       std::ranges::copy(childPV, std::back_inserter(pv));</span></span>
-<span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">       11617 :    }</span></span>
+<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">       16615 :       pv.emplace_back(m);</span></span>
+<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">       16615 :       std::ranges::copy(childPV, std::back_inserter(pv));</span></span>
+<span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">       16615 :    }</span></span>
 <span id="L120"><span class="lineNum">     120</span>              : </span>
 <span id="L121"><span class="lineNum">     121</span>              :    FORCE_FINLINE Position&amp; initRootPositionOnStack(const Position&amp; rootPosition) {</span>
-<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">         134 :       assert(rootPosition.halfmoves &lt; MAX_PLY);</span></span>
-<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">         134 :       auto&amp; rootData = stack[rootPosition.halfmoves];</span></span>
-<span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">         134 :       rootData.p = rootPosition;</span></span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">         293 :       assert(rootPosition.halfmoves &lt; MAX_PLY);</span></span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">         293 :       auto&amp; rootData = stack[rootPosition.halfmoves];</span></span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">         293 :       rootData.p = rootPosition;</span></span>
 <span id="L125"><span class="lineNum">     125</span>              : #ifdef WITH_NNUE</span>
-<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">         134 :       rootData.p.associateEvaluator(rootData.evaluator); // stole the evaluator</span></span>
-<span id="L127"><span class="lineNum">     127</span> <span class="tlaGNC">         134 :       rootData.p.resetNNUEEvaluator(rootData.evaluator);</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">         293 :       rootData.p.associateEvaluator(rootData.evaluator); // stole the evaluator</span></span>
+<span id="L127"><span class="lineNum">     127</span> <span class="tlaGNC">         293 :       rootData.p.resetNNUEEvaluator(rootData.evaluator);</span></span>
 <span id="L128"><span class="lineNum">     128</span>              : #endif</span>
 <span id="L129"><span class="lineNum">     129</span>              :       return rootData.p;</span>
 <span id="L130"><span class="lineNum">     130</span>              :    }</span>
 <span id="L131"><span class="lineNum">     131</span>              : </span>
 <span id="L132"><span class="lineNum">     132</span>              :    FORCE_FINLINE Position&amp; initChildPositionOnStack(const Position&amp; parentPosition) {</span>
-<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">     7044061 :       assert(parentPosition.halfmoves + 1 &lt; MAX_PLY);</span></span>
-<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">     7044061 :       auto&amp; childData = stack[parentPosition.halfmoves + 1];</span></span>
-<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">     7044061 :       childData.p = parentPosition;</span></span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">     7250486 :       assert(parentPosition.halfmoves + 1 &lt; MAX_PLY);</span></span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">     7250486 :       auto&amp; childData = stack[parentPosition.halfmoves + 1];</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">     7250486 :       childData.p = parentPosition;</span></span>
 <span id="L136"><span class="lineNum">     136</span>              :       return childData.p;</span>
 <span id="L137"><span class="lineNum">     137</span>              :    }</span>
 <span id="L138"><span class="lineNum">     138</span>              : </span>
 <span id="L139"><span class="lineNum">     139</span>              :    FORCE_FINLINE void initChildEvaluatorOnStack(const Position&amp; parentPosition, Position&amp; childPosition) {</span>
 <span id="L140"><span class="lineNum">     140</span>              : #ifdef WITH_NNUE</span>
-<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">     2839919 :       auto&amp; childData = stack[childPosition.halfmoves];</span></span>
-<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">     2865989 :       childData.evaluator = parentPosition.evaluator();</span></span>
-<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">     2865989 :       childPosition.associateEvaluator(childData.evaluator);</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">     2938871 :       auto&amp; childData = stack[childPosition.halfmoves];</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">     2967948 :       childData.evaluator = parentPosition.evaluator();</span></span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">     2967948 :       childPosition.associateEvaluator(childData.evaluator);</span></span>
 <span id="L144"><span class="lineNum">     144</span>              : #else</span>
 <span id="L145"><span class="lineNum">     145</span>              :       (void)parentPosition;</span>
 <span id="L146"><span class="lineNum">     146</span>              :       (void)childPosition;</span>
@@ -236,170 +236,169 @@
 <span id="L174"><span class="lineNum">     174</span>              : #ifdef WITH_MAJOR_CORRHIST</span>
 <span id="L175"><span class="lineNum">     175</span>              :    CorrectionHistoryT majorCorrHist;</span>
 <span id="L176"><span class="lineNum">     176</span>              : #endif</span>
-<span id="L177"><span class="lineNum">     177</span>              :    // current correction (centipawns) to add to the raw static eval, summed over all active buckets</span>
-<span id="L178"><span class="lineNum">     178</span>              :    [[nodiscard]] ScoreType correctionScore(const Position&amp; p) const;</span>
-<span id="L179"><span class="lineNum">     179</span>              :    // called once per node, at node-exit, with a quiet best move and a reliable bound (see searcherPVS.hpp)</span>
-<span id="L180"><span class="lineNum">     180</span>              :    void updateCorrectionHistory(const Position&amp; p, DepthType depth, ScoreType bestScore, ScoreType rawEval);</span>
-<span id="L181"><span class="lineNum">     181</span>              : #endif // WITH_CORRECTION_HISTORY</span>
-<span id="L182"><span class="lineNum">     182</span>              :    DepthType nullMoveMinPly = 0;</span>
-<span id="L183"><span class="lineNum">     183</span>              :    Color     nullMoveVerifColor = Co_None;</span>
-<span id="L184"><span class="lineNum">     184</span>              :    EvalScore contempt       = 0;</span>
-<span id="L185"><span class="lineNum">     185</span>              :    bool      subSearch      = false;</span>
-<span id="L186"><span class="lineNum">     186</span>              :    bool      isStoppableCoSearcher = false; </span>
-<span id="L187"><span class="lineNum">     187</span>              :    DepthType height_        = 0; ///@todo use this everywhere, instead of passing height in pvs and qsearch call ?</span>
-<span id="L188"><span class="lineNum">     188</span>              : </span>
-<span id="L189"><span class="lineNum">     189</span>              : #ifdef WITH_GENFILE</span>
-<span id="L190"><span class="lineNum">     190</span>              :    std::ofstream genStream;</span>
-<span id="L191"><span class="lineNum">     191</span>              :    void          writeToGenFile(const Position&amp; p, bool getQuietPos, const ThreadData &amp; d, const std::optional&lt;int&gt; result);</span>
-<span id="L192"><span class="lineNum">     192</span>              : #endif</span>
-<span id="L193"><span class="lineNum">     193</span>              :    std::ofstream pgnStream;</span>
-<span id="L194"><span class="lineNum">     194</span>              : </span>
-<span id="L195"><span class="lineNum">     195</span>              :    static Position getQuiet(const Position&amp; p, Searcher* searcher = nullptr, ScoreType* qScore = nullptr);</span>
-<span id="L196"><span class="lineNum">     196</span>              : </span>
-<span id="L197"><span class="lineNum">     197</span>              :    static Searcher&amp; getCoSearcher(size_t id);</span>
-<span id="L198"><span class="lineNum">     198</span>              : </span>
-<span id="L199"><span class="lineNum">     199</span>              :    void                    getCMHPtr(const unsigned int ply, CMHPtrArray&amp; cmhPtr);</span>
-<span id="L200"><span class="lineNum">     200</span>              :    [[nodiscard]] ScoreType getCMHScore(const Position&amp; p, const Square from, const Square to, const CMHPtrArray&amp; cmhPtr) const;</span>
-<span id="L201"><span class="lineNum">     201</span>              : </span>
-<span id="L202"><span class="lineNum">     202</span>              :    [[nodiscard]] bool isCMHGood(const Position&amp; p, const Square from, const Square to, const CMHPtrArray&amp; cmhPtr, const ScoreType threshold) const;</span>
-<span id="L203"><span class="lineNum">     203</span>              :    [[nodiscard]] bool isCMHBad (const Position&amp; p, const Square from, const Square to, const CMHPtrArray&amp; cmhPtr, const ScoreType threshold) const;</span>
-<span id="L204"><span class="lineNum">     204</span>              : </span>
-<span id="L205"><span class="lineNum">     205</span>              :    [[nodiscard]] ScoreType drawScore(const Position&amp; p, DepthType height) const;</span>
-<span id="L206"><span class="lineNum">     206</span>              : </span>
-<span id="L207"><span class="lineNum">     207</span>              :    std::tuple&lt;DepthType, DepthType, DepthType&gt; depthPolicy(const Position &amp; p, DepthType depth, DepthType height, Move m, const PVSData &amp; pvsData, const EvalData &amp; evalData, ScoreType evalScore, DepthType extensions, bool isReductible) const;</span>
-<span id="L208"><span class="lineNum">     208</span>              : </span>
-<span id="L209"><span class="lineNum">     209</span>              :    void timeCheck();</span>
-<span id="L210"><span class="lineNum">     210</span>              : </span>
-<span id="L211"><span class="lineNum">     211</span>              :    template&lt;bool pvnode&gt;</span>
-<span id="L212"><span class="lineNum">     212</span>              :    [[nodiscard]]</span>
-<span id="L213"><span class="lineNum">     213</span>              :    ScoreType pvs(ScoreType                    alpha,</span>
-<span id="L214"><span class="lineNum">     214</span>              :                  ScoreType                    beta,</span>
-<span id="L215"><span class="lineNum">     215</span>              :                  const Position&amp;              p,</span>
-<span id="L216"><span class="lineNum">     216</span>              :                  DepthType                    depth,</span>
-<span id="L217"><span class="lineNum">     217</span>              :                  DepthType                    height,</span>
-<span id="L218"><span class="lineNum">     218</span>              :                  PVList&amp;                      pv,</span>
-<span id="L219"><span class="lineNum">     219</span>              :                  DepthType&amp;                   seldepth,</span>
-<span id="L220"><span class="lineNum">     220</span>              :                  DepthType                    extensions,</span>
-<span id="L221"><span class="lineNum">     221</span>              :                  bool                         isInCheck,</span>
-<span id="L222"><span class="lineNum">     222</span>              :                  bool                         cutNode,</span>
-<span id="L223"><span class="lineNum">     223</span>              :                  const std::vector&lt;MiniMove&gt;* skipMoves = nullptr);</span>
-<span id="L224"><span class="lineNum">     224</span>              : </span>
-<span id="L225"><span class="lineNum">     225</span>              :    [[nodiscard]] ScoreType qsearch(ScoreType       alpha,</span>
-<span id="L226"><span class="lineNum">     226</span>              :                                    ScoreType       beta,</span>
-<span id="L227"><span class="lineNum">     227</span>              :                                    const Position&amp; p,</span>
-<span id="L228"><span class="lineNum">     228</span>              :                                    DepthType       height,</span>
-<span id="L229"><span class="lineNum">     229</span>              :                                    DepthType&amp;      seldepth,</span>
-<span id="L230"><span class="lineNum">     230</span>              :                                    DepthType       qply,</span>
-<span id="L231"><span class="lineNum">     231</span>              :                                    bool            qRoot,</span>
-<span id="L232"><span class="lineNum">     232</span>              :                                    bool            pvnode,</span>
-<span id="L233"><span class="lineNum">     233</span>              :                                    int8_t          isInCheckHint = -1);</span>
-<span id="L234"><span class="lineNum">     234</span>              : </span>
-<span id="L235"><span class="lineNum">     235</span>              :    // used for tuning not search !</span>
-<span id="L236"><span class="lineNum">     236</span>              :    [[nodiscard]] ScoreType qsearchNoPruning(ScoreType       alpha,</span>
-<span id="L237"><span class="lineNum">     237</span>              :                                             ScoreType       beta,</span>
-<span id="L238"><span class="lineNum">     238</span>              :                                             const Position&amp; p,</span>
-<span id="L239"><span class="lineNum">     239</span>              :                                             DepthType       height,</span>
-<span id="L240"><span class="lineNum">     240</span>              :                                             DepthType&amp;      seldepth,</span>
-<span id="L241"><span class="lineNum">     241</span>              :                                             PVList*         pv = nullptr);</span>
-<span id="L242"><span class="lineNum">     242</span>              : </span>
-<span id="L243"><span class="lineNum">     243</span>              :    [[nodiscard]] static bool SEE_GE(const Position&amp; p, const Move&amp; m, ScoreType threshold);</span>
-<span id="L244"><span class="lineNum">     244</span>              : </span>
-<span id="L245"><span class="lineNum">     245</span>              :    [[nodiscard]] static ScoreType SEE(const Position&amp; p, const Move&amp; m);</span>
-<span id="L246"><span class="lineNum">     246</span>              : </span>
-<span id="L247"><span class="lineNum">     247</span>              :    void searchDriver(bool postMove = true);</span>
-<span id="L248"><span class="lineNum">     248</span>              : </span>
-<span id="L249"><span class="lineNum">     249</span>              :    template&lt;bool isPv = true&gt;</span>
-<span id="L250"><span class="lineNum">     250</span>              :    [[nodiscard]] std::optional&lt;ScoreType&gt; interiorNodeRecognizer(const Position&amp; p, DepthType height) const;</span>
-<span id="L251"><span class="lineNum">     251</span>              : </span>
-<span id="L252"><span class="lineNum">     252</span>              :    [[nodiscard]] bool isRep(const Position&amp; p, bool isPv) const;</span>
-<span id="L253"><span class="lineNum">     253</span>              :    [[nodiscard]] bool isMaterialDraw(const Position&amp; p) const;</span>
-<span id="L254"><span class="lineNum">     254</span>              :    [[nodiscard]] bool is50moves(const Position&amp; p, bool afterMoveLoop) const;</span>
-<span id="L255"><span class="lineNum">     255</span>              : </span>
-<span id="L256"><span class="lineNum">     256</span>              :    void displayGUI(DepthType          depth,</span>
-<span id="L257"><span class="lineNum">     257</span>              :                    DepthType          seldepth,</span>
-<span id="L258"><span class="lineNum">     258</span>              :                    ScoreType          bestScore,</span>
-<span id="L259"><span class="lineNum">     259</span>              :                    unsigned int       ply,</span>
-<span id="L260"><span class="lineNum">     260</span>              :                    const PVList&amp;      pv,</span>
-<span id="L261"><span class="lineNum">     261</span>              :                    int                multipv,</span>
-<span id="L262"><span class="lineNum">     262</span>              :                    const std::string&amp; mark = &quot;&quot;);</span>
-<span id="L263"><span class="lineNum">     263</span>              : </span>
-<span id="L264"><span class="lineNum">     264</span>              :    void idleLoop();</span>
-<span id="L265"><span class="lineNum">     265</span>              : </span>
-<span id="L266"><span class="lineNum">     266</span>              :    void startThread();</span>
-<span id="L267"><span class="lineNum">     267</span>              : </span>
-<span id="L268"><span class="lineNum">     268</span>              :    void wait();</span>
-<span id="L269"><span class="lineNum">     269</span>              : </span>
-<span id="L270"><span class="lineNum">     270</span>              :    void searchLauncher();</span>
-<span id="L271"><span class="lineNum">     271</span>              : </span>
-<span id="L272"><span class="lineNum">     272</span>              :    [[nodiscard]] size_t id() const;</span>
-<span id="L273"><span class="lineNum">     273</span>              :    [[nodiscard]] bool   isMainThread() const;</span>
-<span id="L274"><span class="lineNum">     274</span>              : </span>
-<span id="L275"><span class="lineNum">     275</span>              :    explicit Searcher(size_t n);</span>
-<span id="L276"><span class="lineNum">     276</span>              :    ~Searcher();</span>
-<span id="L277"><span class="lineNum">     277</span>              :    // non copyable</span>
-<span id="L278"><span class="lineNum">     278</span>              :    Searcher(const Searcher&amp;) = delete;</span>
-<span id="L279"><span class="lineNum">     279</span>              :    Searcher(const Searcher&amp;&amp;) = delete;</span>
-<span id="L280"><span class="lineNum">     280</span>              :    Searcher&amp; operator=(const Searcher&amp;) = delete;</span>
-<span id="L281"><span class="lineNum">     281</span>              :    Searcher&amp; operator=(const Searcher&amp;&amp;) = delete;</span>
-<span id="L282"><span class="lineNum">     282</span>              : </span>
-<span id="L283"><span class="lineNum">     283</span>              :    void                            setData(const ThreadData&amp; d);</span>
-<span id="L284"><span class="lineNum">     284</span>              :    [[nodiscard]] const ThreadData&amp; getData() const;</span>
-<span id="L285"><span class="lineNum">     285</span>              :    [[nodiscard]] ThreadData&amp;       getData();</span>
-<span id="L286"><span class="lineNum">     286</span>              :    [[nodiscard]] const SearchData&amp; getSearchData() const;</span>
-<span id="L287"><span class="lineNum">     287</span>              :    [[nodiscard]] SearchData&amp;       getSearchData();</span>
-<span id="L288"><span class="lineNum">     288</span>              : </span>
-<span id="L289"><span class="lineNum">     289</span>              :    static std::atomic&lt;bool&gt; startLock;</span>
-<span id="L290"><span class="lineNum">     290</span>              : </span>
-<span id="L291"><span class="lineNum">     291</span>              :    std::chrono::time_point&lt;Clock&gt; startTime;</span>
-<span id="L292"><span class="lineNum">     292</span>              : </span>
-<span id="L293"><span class="lineNum">     293</span>              :    [[nodiscard]] bool searching() const;</span>
-<span id="L294"><span class="lineNum">     294</span>              : </span>
-<span id="L295"><span class="lineNum">     295</span>              :    void clearGame();</span>
-<span id="L296"><span class="lineNum">     296</span>              :    </span>
-<span id="L297"><span class="lineNum">     297</span>              :    void clearSearch(bool forceHistoryClear = false);</span>
-<span id="L298"><span class="lineNum">     298</span>              : </span>
-<span id="L299"><span class="lineNum">     299</span> <span class="tlaGNC">     3014656 :    struct PawnEntry {</span></span>
-<span id="L300"><span class="lineNum">     300</span>              :       colored&lt;BitBoard&gt;  pawnTargets   = {emptyBitBoard, emptyBitBoard};</span>
-<span id="L301"><span class="lineNum">     301</span>              :       colored&lt;BitBoard&gt;  holes         = {emptyBitBoard, emptyBitBoard};</span>
-<span id="L302"><span class="lineNum">     302</span>              :       colored&lt;BitBoard&gt;  semiOpenFiles = {emptyBitBoard, emptyBitBoard};</span>
-<span id="L303"><span class="lineNum">     303</span>              :       colored&lt;BitBoard&gt;  passed        = {emptyBitBoard, emptyBitBoard};</span>
-<span id="L304"><span class="lineNum">     304</span>              :       BitBoard           openFiles     = emptyBitBoard;</span>
-<span id="L305"><span class="lineNum">     305</span>              :       EvalScore          score         = {0, 0};</span>
-<span id="L306"><span class="lineNum">     306</span>              :       MiniHash           h             = nullHash;</span>
-<span id="L307"><span class="lineNum">     307</span>              :       colored&lt;ScoreType&gt; danger        = {0, 0};</span>
-<span id="L308"><span class="lineNum">     308</span>              : </span>
-<span id="L309"><span class="lineNum">     309</span>              :       FORCE_FINLINE void reset() {</span>
-<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">       59744 :          score            = {0, 0};</span></span>
-<span id="L311"><span class="lineNum">     311</span> <span class="tlaGNC">       59744 :          danger[Co_White] = 0;</span></span>
-<span id="L312"><span class="lineNum">     312</span> <span class="tlaGNC">       59744 :          danger[Co_Black] = 0;</span></span>
-<span id="L313"><span class="lineNum">     313</span>              :       }</span>
-<span id="L314"><span class="lineNum">     314</span>              :    };</span>
-<span id="L315"><span class="lineNum">     315</span>              : </span>
-<span id="L316"><span class="lineNum">     316</span>              :    std::unique_ptr&lt;Searcher::PawnEntry[]&gt; tablePawn = nullptr;</span>
-<span id="L317"><span class="lineNum">     317</span>              :    uint64_t ttSizePawn = 0;</span>
-<span id="L318"><span class="lineNum">     318</span>              : </span>
-<span id="L319"><span class="lineNum">     319</span>              :    void initPawnTable();</span>
-<span id="L320"><span class="lineNum">     320</span>              : </span>
-<span id="L321"><span class="lineNum">     321</span>              :    void clearPawnTT();</span>
-<span id="L322"><span class="lineNum">     322</span>              : </span>
-<span id="L323"><span class="lineNum">     323</span>              :    [[nodiscard]] bool getPawnEntry(Hash h, PawnEntry*&amp; pe);</span>
-<span id="L324"><span class="lineNum">     324</span>              : </span>
-<span id="L325"><span class="lineNum">     325</span>              :    void prefetchPawn(Hash h);</span>
-<span id="L326"><span class="lineNum">     326</span>              : </span>
-<span id="L327"><span class="lineNum">     327</span>              :   private:</span>
-<span id="L328"><span class="lineNum">     328</span>              :    ThreadData              _data;</span>
-<span id="L329"><span class="lineNum">     329</span>              :    std::mutex              _mutexPV;</span>
-<span id="L330"><span class="lineNum">     330</span>              :    size_t                  _index;</span>
-<span id="L331"><span class="lineNum">     331</span>              :    std::mutex              _mutex;</span>
-<span id="L332"><span class="lineNum">     332</span>              :    std::condition_variable _cv;</span>
-<span id="L333"><span class="lineNum">     333</span>              :    // next two MUST be initialized BEFORE _stdThread</span>
-<span id="L334"><span class="lineNum">     334</span>              :    bool        _exit;</span>
-<span id="L335"><span class="lineNum">     335</span>              :    bool        _searching;</span>
-<span id="L336"><span class="lineNum">     336</span>              :    std::thread _stdThread;</span>
-<span id="L337"><span class="lineNum">     337</span>              : };</span>
-<span id="L338"><span class="lineNum">     338</span>              : </span>
-<span id="L339"><span class="lineNum">     339</span>              : #include &quot;searcherDraw.hpp&quot;</span>
-<span id="L340"><span class="lineNum">     340</span>              : #include &quot;searcherPVS.hpp&quot;</span>
+<span id="L177"><span class="lineNum">     177</span>              :    [[nodiscard]] ScoreType correctionScore(const Position&amp; p) const;</span>
+<span id="L178"><span class="lineNum">     178</span>              :    [[nodiscard]] ScoreType correctedEval(const Position&amp; p, ScoreType rawScore) const;</span>
+<span id="L179"><span class="lineNum">     179</span>              :    void updateCorrectionHistory(const Position&amp; p, DepthType depth, ScoreType bestScore, ScoreType baselineEval);</span>
+<span id="L180"><span class="lineNum">     180</span>              : #endif // WITH_CORRECTION_HISTORY</span>
+<span id="L181"><span class="lineNum">     181</span>              :    DepthType nullMoveMinPly = 0;</span>
+<span id="L182"><span class="lineNum">     182</span>              :    Color     nullMoveVerifColor = Co_None;</span>
+<span id="L183"><span class="lineNum">     183</span>              :    EvalScore contempt       = 0;</span>
+<span id="L184"><span class="lineNum">     184</span>              :    bool      subSearch      = false;</span>
+<span id="L185"><span class="lineNum">     185</span>              :    bool      isStoppableCoSearcher = false; </span>
+<span id="L186"><span class="lineNum">     186</span>              :    DepthType height_        = 0; ///@todo use this everywhere, instead of passing height in pvs and qsearch call ?</span>
+<span id="L187"><span class="lineNum">     187</span>              : </span>
+<span id="L188"><span class="lineNum">     188</span>              : #ifdef WITH_GENFILE</span>
+<span id="L189"><span class="lineNum">     189</span>              :    std::ofstream genStream;</span>
+<span id="L190"><span class="lineNum">     190</span>              :    void          writeToGenFile(const Position&amp; p, bool getQuietPos, const ThreadData &amp; d, const std::optional&lt;int&gt; result);</span>
+<span id="L191"><span class="lineNum">     191</span>              : #endif</span>
+<span id="L192"><span class="lineNum">     192</span>              :    std::ofstream pgnStream;</span>
+<span id="L193"><span class="lineNum">     193</span>              : </span>
+<span id="L194"><span class="lineNum">     194</span>              :    static Position getQuiet(const Position&amp; p, Searcher* searcher = nullptr, ScoreType* qScore = nullptr);</span>
+<span id="L195"><span class="lineNum">     195</span>              : </span>
+<span id="L196"><span class="lineNum">     196</span>              :    static Searcher&amp; getCoSearcher(size_t id);</span>
+<span id="L197"><span class="lineNum">     197</span>              : </span>
+<span id="L198"><span class="lineNum">     198</span>              :    void                    getCMHPtr(const unsigned int ply, CMHPtrArray&amp; cmhPtr);</span>
+<span id="L199"><span class="lineNum">     199</span>              :    [[nodiscard]] ScoreType getCMHScore(const Position&amp; p, const Square from, const Square to, const CMHPtrArray&amp; cmhPtr) const;</span>
+<span id="L200"><span class="lineNum">     200</span>              : </span>
+<span id="L201"><span class="lineNum">     201</span>              :    [[nodiscard]] bool isCMHGood(const Position&amp; p, const Square from, const Square to, const CMHPtrArray&amp; cmhPtr, const ScoreType threshold) const;</span>
+<span id="L202"><span class="lineNum">     202</span>              :    [[nodiscard]] bool isCMHBad (const Position&amp; p, const Square from, const Square to, const CMHPtrArray&amp; cmhPtr, const ScoreType threshold) const;</span>
+<span id="L203"><span class="lineNum">     203</span>              : </span>
+<span id="L204"><span class="lineNum">     204</span>              :    [[nodiscard]] ScoreType drawScore(const Position&amp; p, DepthType height) const;</span>
+<span id="L205"><span class="lineNum">     205</span>              : </span>
+<span id="L206"><span class="lineNum">     206</span>              :    std::tuple&lt;DepthType, DepthType, DepthType&gt; depthPolicy(const Position &amp; p, DepthType depth, DepthType height, Move m, const PVSData &amp; pvsData, const EvalData &amp; evalData, ScoreType evalScore, DepthType extensions, bool isReductible) const;</span>
+<span id="L207"><span class="lineNum">     207</span>              : </span>
+<span id="L208"><span class="lineNum">     208</span>              :    void timeCheck();</span>
+<span id="L209"><span class="lineNum">     209</span>              : </span>
+<span id="L210"><span class="lineNum">     210</span>              :    template&lt;bool pvnode&gt;</span>
+<span id="L211"><span class="lineNum">     211</span>              :    [[nodiscard]]</span>
+<span id="L212"><span class="lineNum">     212</span>              :    ScoreType pvs(ScoreType                    alpha,</span>
+<span id="L213"><span class="lineNum">     213</span>              :                  ScoreType                    beta,</span>
+<span id="L214"><span class="lineNum">     214</span>              :                  const Position&amp;              p,</span>
+<span id="L215"><span class="lineNum">     215</span>              :                  DepthType                    depth,</span>
+<span id="L216"><span class="lineNum">     216</span>              :                  DepthType                    height,</span>
+<span id="L217"><span class="lineNum">     217</span>              :                  PVList&amp;                      pv,</span>
+<span id="L218"><span class="lineNum">     218</span>              :                  DepthType&amp;                   seldepth,</span>
+<span id="L219"><span class="lineNum">     219</span>              :                  DepthType                    extensions,</span>
+<span id="L220"><span class="lineNum">     220</span>              :                  bool                         isInCheck,</span>
+<span id="L221"><span class="lineNum">     221</span>              :                  bool                         cutNode,</span>
+<span id="L222"><span class="lineNum">     222</span>              :                  const std::vector&lt;MiniMove&gt;* skipMoves = nullptr);</span>
+<span id="L223"><span class="lineNum">     223</span>              : </span>
+<span id="L224"><span class="lineNum">     224</span>              :    [[nodiscard]] ScoreType qsearch(ScoreType       alpha,</span>
+<span id="L225"><span class="lineNum">     225</span>              :                                    ScoreType       beta,</span>
+<span id="L226"><span class="lineNum">     226</span>              :                                    const Position&amp; p,</span>
+<span id="L227"><span class="lineNum">     227</span>              :                                    DepthType       height,</span>
+<span id="L228"><span class="lineNum">     228</span>              :                                    DepthType&amp;      seldepth,</span>
+<span id="L229"><span class="lineNum">     229</span>              :                                    DepthType       qply,</span>
+<span id="L230"><span class="lineNum">     230</span>              :                                    bool            qRoot,</span>
+<span id="L231"><span class="lineNum">     231</span>              :                                    bool            pvnode,</span>
+<span id="L232"><span class="lineNum">     232</span>              :                                    int8_t          isInCheckHint = -1);</span>
+<span id="L233"><span class="lineNum">     233</span>              : </span>
+<span id="L234"><span class="lineNum">     234</span>              :    // used for tuning not search !</span>
+<span id="L235"><span class="lineNum">     235</span>              :    [[nodiscard]] ScoreType qsearchNoPruning(ScoreType       alpha,</span>
+<span id="L236"><span class="lineNum">     236</span>              :                                             ScoreType       beta,</span>
+<span id="L237"><span class="lineNum">     237</span>              :                                             const Position&amp; p,</span>
+<span id="L238"><span class="lineNum">     238</span>              :                                             DepthType       height,</span>
+<span id="L239"><span class="lineNum">     239</span>              :                                             DepthType&amp;      seldepth,</span>
+<span id="L240"><span class="lineNum">     240</span>              :                                             PVList*         pv = nullptr);</span>
+<span id="L241"><span class="lineNum">     241</span>              : </span>
+<span id="L242"><span class="lineNum">     242</span>              :    [[nodiscard]] static bool SEE_GE(const Position&amp; p, const Move&amp; m, ScoreType threshold);</span>
+<span id="L243"><span class="lineNum">     243</span>              : </span>
+<span id="L244"><span class="lineNum">     244</span>              :    [[nodiscard]] static ScoreType SEE(const Position&amp; p, const Move&amp; m);</span>
+<span id="L245"><span class="lineNum">     245</span>              : </span>
+<span id="L246"><span class="lineNum">     246</span>              :    void searchDriver(bool postMove = true);</span>
+<span id="L247"><span class="lineNum">     247</span>              : </span>
+<span id="L248"><span class="lineNum">     248</span>              :    template&lt;bool isPv = true&gt;</span>
+<span id="L249"><span class="lineNum">     249</span>              :    [[nodiscard]] std::optional&lt;ScoreType&gt; interiorNodeRecognizer(const Position&amp; p, DepthType height) const;</span>
+<span id="L250"><span class="lineNum">     250</span>              : </span>
+<span id="L251"><span class="lineNum">     251</span>              :    [[nodiscard]] bool isRep(const Position&amp; p, bool isPv) const;</span>
+<span id="L252"><span class="lineNum">     252</span>              :    [[nodiscard]] bool isMaterialDraw(const Position&amp; p) const;</span>
+<span id="L253"><span class="lineNum">     253</span>              :    [[nodiscard]] bool is50moves(const Position&amp; p, bool afterMoveLoop) const;</span>
+<span id="L254"><span class="lineNum">     254</span>              : </span>
+<span id="L255"><span class="lineNum">     255</span>              :    void displayGUI(DepthType          depth,</span>
+<span id="L256"><span class="lineNum">     256</span>              :                    DepthType          seldepth,</span>
+<span id="L257"><span class="lineNum">     257</span>              :                    ScoreType          bestScore,</span>
+<span id="L258"><span class="lineNum">     258</span>              :                    unsigned int       ply,</span>
+<span id="L259"><span class="lineNum">     259</span>              :                    const PVList&amp;      pv,</span>
+<span id="L260"><span class="lineNum">     260</span>              :                    int                multipv,</span>
+<span id="L261"><span class="lineNum">     261</span>              :                    const std::string&amp; mark = &quot;&quot;);</span>
+<span id="L262"><span class="lineNum">     262</span>              : </span>
+<span id="L263"><span class="lineNum">     263</span>              :    void idleLoop();</span>
+<span id="L264"><span class="lineNum">     264</span>              : </span>
+<span id="L265"><span class="lineNum">     265</span>              :    void startThread();</span>
+<span id="L266"><span class="lineNum">     266</span>              : </span>
+<span id="L267"><span class="lineNum">     267</span>              :    void wait();</span>
+<span id="L268"><span class="lineNum">     268</span>              : </span>
+<span id="L269"><span class="lineNum">     269</span>              :    void searchLauncher();</span>
+<span id="L270"><span class="lineNum">     270</span>              : </span>
+<span id="L271"><span class="lineNum">     271</span>              :    [[nodiscard]] size_t id() const;</span>
+<span id="L272"><span class="lineNum">     272</span>              :    [[nodiscard]] bool   isMainThread() const;</span>
+<span id="L273"><span class="lineNum">     273</span>              : </span>
+<span id="L274"><span class="lineNum">     274</span>              :    explicit Searcher(size_t n);</span>
+<span id="L275"><span class="lineNum">     275</span>              :    ~Searcher();</span>
+<span id="L276"><span class="lineNum">     276</span>              :    // non copyable</span>
+<span id="L277"><span class="lineNum">     277</span>              :    Searcher(const Searcher&amp;) = delete;</span>
+<span id="L278"><span class="lineNum">     278</span>              :    Searcher(const Searcher&amp;&amp;) = delete;</span>
+<span id="L279"><span class="lineNum">     279</span>              :    Searcher&amp; operator=(const Searcher&amp;) = delete;</span>
+<span id="L280"><span class="lineNum">     280</span>              :    Searcher&amp; operator=(const Searcher&amp;&amp;) = delete;</span>
+<span id="L281"><span class="lineNum">     281</span>              : </span>
+<span id="L282"><span class="lineNum">     282</span>              :    void                            setData(const ThreadData&amp; d);</span>
+<span id="L283"><span class="lineNum">     283</span>              :    [[nodiscard]] const ThreadData&amp; getData() const;</span>
+<span id="L284"><span class="lineNum">     284</span>              :    [[nodiscard]] ThreadData&amp;       getData();</span>
+<span id="L285"><span class="lineNum">     285</span>              :    [[nodiscard]] const SearchData&amp; getSearchData() const;</span>
+<span id="L286"><span class="lineNum">     286</span>              :    [[nodiscard]] SearchData&amp;       getSearchData();</span>
+<span id="L287"><span class="lineNum">     287</span>              : </span>
+<span id="L288"><span class="lineNum">     288</span>              :    static std::atomic&lt;bool&gt; startLock;</span>
+<span id="L289"><span class="lineNum">     289</span>              : </span>
+<span id="L290"><span class="lineNum">     290</span>              :    std::chrono::time_point&lt;Clock&gt; startTime;</span>
+<span id="L291"><span class="lineNum">     291</span>              : </span>
+<span id="L292"><span class="lineNum">     292</span>              :    [[nodiscard]] bool searching() const;</span>
+<span id="L293"><span class="lineNum">     293</span>              : </span>
+<span id="L294"><span class="lineNum">     294</span>              :    void clearGame();</span>
+<span id="L295"><span class="lineNum">     295</span>              :    </span>
+<span id="L296"><span class="lineNum">     296</span>              :    void clearSearch(bool forceHistoryClear = false);</span>
+<span id="L297"><span class="lineNum">     297</span>              : </span>
+<span id="L298"><span class="lineNum">     298</span> <span class="tlaGNC">     3014656 :    struct PawnEntry {</span></span>
+<span id="L299"><span class="lineNum">     299</span>              :       colored&lt;BitBoard&gt;  pawnTargets   = {emptyBitBoard, emptyBitBoard};</span>
+<span id="L300"><span class="lineNum">     300</span>              :       colored&lt;BitBoard&gt;  holes         = {emptyBitBoard, emptyBitBoard};</span>
+<span id="L301"><span class="lineNum">     301</span>              :       colored&lt;BitBoard&gt;  semiOpenFiles = {emptyBitBoard, emptyBitBoard};</span>
+<span id="L302"><span class="lineNum">     302</span>              :       colored&lt;BitBoard&gt;  passed        = {emptyBitBoard, emptyBitBoard};</span>
+<span id="L303"><span class="lineNum">     303</span>              :       BitBoard           openFiles     = emptyBitBoard;</span>
+<span id="L304"><span class="lineNum">     304</span>              :       EvalScore          score         = {0, 0};</span>
+<span id="L305"><span class="lineNum">     305</span>              :       MiniHash           h             = nullHash;</span>
+<span id="L306"><span class="lineNum">     306</span>              :       colored&lt;ScoreType&gt; danger        = {0, 0};</span>
+<span id="L307"><span class="lineNum">     307</span>              : </span>
+<span id="L308"><span class="lineNum">     308</span>              :       FORCE_FINLINE void reset() {</span>
+<span id="L309"><span class="lineNum">     309</span> <span class="tlaGNC">       61819 :          score            = {0, 0};</span></span>
+<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">       61819 :          danger[Co_White] = 0;</span></span>
+<span id="L311"><span class="lineNum">     311</span> <span class="tlaGNC">       61819 :          danger[Co_Black] = 0;</span></span>
+<span id="L312"><span class="lineNum">     312</span>              :       }</span>
+<span id="L313"><span class="lineNum">     313</span>              :    };</span>
+<span id="L314"><span class="lineNum">     314</span>              : </span>
+<span id="L315"><span class="lineNum">     315</span>              :    std::unique_ptr&lt;Searcher::PawnEntry[]&gt; tablePawn = nullptr;</span>
+<span id="L316"><span class="lineNum">     316</span>              :    uint64_t ttSizePawn = 0;</span>
+<span id="L317"><span class="lineNum">     317</span>              : </span>
+<span id="L318"><span class="lineNum">     318</span>              :    void initPawnTable();</span>
+<span id="L319"><span class="lineNum">     319</span>              : </span>
+<span id="L320"><span class="lineNum">     320</span>              :    void clearPawnTT();</span>
+<span id="L321"><span class="lineNum">     321</span>              : </span>
+<span id="L322"><span class="lineNum">     322</span>              :    [[nodiscard]] bool getPawnEntry(Hash h, PawnEntry*&amp; pe);</span>
+<span id="L323"><span class="lineNum">     323</span>              : </span>
+<span id="L324"><span class="lineNum">     324</span>              :    void prefetchPawn(Hash h);</span>
+<span id="L325"><span class="lineNum">     325</span>              : </span>
+<span id="L326"><span class="lineNum">     326</span>              :   private:</span>
+<span id="L327"><span class="lineNum">     327</span>              :    ThreadData              _data;</span>
+<span id="L328"><span class="lineNum">     328</span>              :    std::mutex              _mutexPV;</span>
+<span id="L329"><span class="lineNum">     329</span>              :    size_t                  _index;</span>
+<span id="L330"><span class="lineNum">     330</span>              :    std::mutex              _mutex;</span>
+<span id="L331"><span class="lineNum">     331</span>              :    std::condition_variable _cv;</span>
+<span id="L332"><span class="lineNum">     332</span>              :    // next two MUST be initialized BEFORE _stdThread</span>
+<span id="L333"><span class="lineNum">     333</span>              :    bool        _exit;</span>
+<span id="L334"><span class="lineNum">     334</span>              :    bool        _searching;</span>
+<span id="L335"><span class="lineNum">     335</span>              :    std::thread _stdThread;</span>
+<span id="L336"><span class="lineNum">     336</span>              : };</span>
+<span id="L337"><span class="lineNum">     337</span>              : </span>
+<span id="L338"><span class="lineNum">     338</span>              : #include &quot;searcherDraw.hpp&quot;</span>
+<span id="L339"><span class="lineNum">     339</span>              : #include &quot;searcherPVS.hpp&quot;</span>
         </pre>
               </td>
             </tr>

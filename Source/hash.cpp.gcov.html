@@ -31,18 +31,18 @@
             <td class="headerValue">coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryHi">96.6&nbsp;%</td>
-            <td class="headerCovTableEntry">88</td>
-            <td class="headerCovTableEntry">85</td>
+            <td class="headerCovTableEntryHi">97.1&nbsp;%</td>
+            <td class="headerCovTableEntry">102</td>
+            <td class="headerCovTableEntry">99</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-14 06:38:29</td>
+            <td class="headerValue">2026-08-19 14:42:08</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
-            <td class="headerCovTableEntry">6</td>
-            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntry">16</td>
+            <td class="headerCovTableEntry">16</td>
           </tr>
                   <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -192,85 +192,85 @@
 <span id="L130"><span class="lineNum">     130</span> <span class="tlaGNC">          22 : }</span></span>
 <span id="L131"><span class="lineNum">     131</span>              : } // namespace Zobrist</span>
 <span id="L132"><span class="lineNum">     132</span>              : </span>
-<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">    12310185 : Hash computeHash(const Position &amp;p) {</span></span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">    12619012 : Hash computeHash(const Position &amp;p) {</span></span>
 <span id="L134"><span class="lineNum">     134</span>              : #ifdef DEBUG_HASH</span>
 <span id="L135"><span class="lineNum">     135</span>              :    Hash h = p.h;</span>
 <span id="L136"><span class="lineNum">     136</span>              :    p.h    = nullHash;</span>
 <span id="L137"><span class="lineNum">     137</span>              : #endif</span>
-<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">    12310185 :    if (p.h != nullHash) return p.h;</span></span>
+<span id="L138"><span class="lineNum">     138</span> <span class="tlaGNC">    12619012 :    if (p.h != nullHash) return p.h;</span></span>
 <span id="L139"><span class="lineNum">     139</span>              :    //++ThreadPool::instance().main().stats.counters[Stats::sid_hashComputed]; // shall of course never happend !</span>
-<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">        1177 :    BB::applyOn(p.whitePawn(),   [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_wp)]; });</span></span>
-<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">         240 :    BB::applyOn(p.whiteKnight(), [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_wn)]; });</span></span>
-<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">         260 :    BB::applyOn(p.whiteBishop(), [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_wb)]; });</span></span>
-<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">         358 :    BB::applyOn(p.whiteRook(),   [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_wr)]; });</span></span>
-<span id="L144"><span class="lineNum">     144</span> <span class="tlaGNC">         121 :    BB::applyOn(p.whiteQueen(),  [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_wq)]; });</span></span>
-<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">         228 :    BB::applyOn(p.whiteKing(),   [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_wk)]; });</span></span>
-<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">        1196 :    BB::applyOn(p.blackPawn(),   [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_bp)]; });</span></span>
-<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">         260 :    BB::applyOn(p.blackKnight(), [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_bn)]; });</span></span>
-<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">         252 :    BB::applyOn(p.blackBishop(), [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_bb)]; });</span></span>
-<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">         318 :    BB::applyOn(p.blackRook(),   [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_br)]; });</span></span>
-<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">         142 :    BB::applyOn(p.blackQueen(),  [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_bq)]; });</span></span>
-<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">         228 :    BB::applyOn(p.blackKing(),   [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_bk)]; });</span></span>
-<span id="L152"><span class="lineNum">     152</span> <span class="tlaGNC">         228 :    if (p.ep != INVALIDSQUARE) p.h ^= Zobrist::ZT[p.ep][NbPiece];</span></span>
-<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">         228 :    p.h ^= Zobrist::ZTCastling[p.castling];</span></span>
-<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">         228 :    if (p.c == Co_White) p.h ^= Zobrist::ZT[3][NbPiece];</span></span>
-<span id="L155"><span class="lineNum">     155</span> <span class="tlaGNC">         228 :    if (p.c == Co_Black) p.h ^= Zobrist::ZT[4][NbPiece];</span></span>
+<span id="L140"><span class="lineNum">     140</span> <span class="tlaGNC">        1592 :    BB::applyOn(p.whitePawn(),   [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_wp)]; });</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">         310 :    BB::applyOn(p.whiteKnight(), [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_wn)]; });</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">         435 :    BB::applyOn(p.whiteBishop(), [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_wb)]; });</span></span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">         294 :    BB::applyOn(p.whiteRook(),   [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_wr)]; });</span></span>
+<span id="L144"><span class="lineNum">     144</span> <span class="tlaGNC">         185 :    BB::applyOn(p.whiteQueen(),  [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_wq)]; });</span></span>
+<span id="L145"><span class="lineNum">     145</span> <span class="tlaGNC">         371 :    BB::applyOn(p.whiteKing(),   [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_wk)]; });</span></span>
+<span id="L146"><span class="lineNum">     146</span> <span class="tlaGNC">        1309 :    BB::applyOn(p.blackPawn(),   [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_bp)]; });</span></span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">         306 :    BB::applyOn(p.blackKnight(), [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_bn)]; });</span></span>
+<span id="L148"><span class="lineNum">     148</span> <span class="tlaGNC">         242 :    BB::applyOn(p.blackBishop(), [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_bb)]; });</span></span>
+<span id="L149"><span class="lineNum">     149</span> <span class="tlaGNC">         372 :    BB::applyOn(p.blackRook(),   [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_br)]; });</span></span>
+<span id="L150"><span class="lineNum">     150</span> <span class="tlaGNC">         170 :    BB::applyOn(p.blackQueen(),  [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_bq)]; });</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">         371 :    BB::applyOn(p.blackKing(),   [&amp;](const Square &amp; k){ p.h ^= Zobrist::ZT[k][PieceIdx(P_bk)]; });</span></span>
+<span id="L152"><span class="lineNum">     152</span> <span class="tlaGNC">         371 :    if (p.ep != INVALIDSQUARE) p.h ^= Zobrist::ZT[p.ep][NbPiece];</span></span>
+<span id="L153"><span class="lineNum">     153</span> <span class="tlaGNC">         371 :    p.h ^= Zobrist::ZTCastling[p.castling];</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">         371 :    if (p.c == Co_White) p.h ^= Zobrist::ZT[3][NbPiece];</span></span>
+<span id="L155"><span class="lineNum">     155</span> <span class="tlaGNC">         371 :    if (p.c == Co_Black) p.h ^= Zobrist::ZT[4][NbPiece];</span></span>
 <span id="L156"><span class="lineNum">     156</span>              : #ifdef DEBUG_HASH</span>
 <span id="L157"><span class="lineNum">     157</span>              :    if (h != nullHash &amp;&amp; h != p.h) { Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;Hash error &quot; &lt;&lt; ToString(p.lastMove) &lt;&lt; ToString(p, true); }</span>
 <span id="L158"><span class="lineNum">     158</span>              : #endif</span>
-<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">         228 :    return p.h;</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">         371 :    return p.h;</span></span>
 <span id="L160"><span class="lineNum">     160</span>              : }</span>
 <span id="L161"><span class="lineNum">     161</span>              : </span>
-<span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">      334316 : Hash computePHash(const Position &amp;p) {</span></span>
+<span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">      316247 : Hash computePHash(const Position &amp;p) {</span></span>
 <span id="L163"><span class="lineNum">     163</span>              : #ifdef DEBUG_PHASH</span>
 <span id="L164"><span class="lineNum">     164</span>              :    Hash h = p.ph;</span>
 <span id="L165"><span class="lineNum">     165</span>              :    p.ph   = nullHash;</span>
 <span id="L166"><span class="lineNum">     166</span>              : #endif</span>
-<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">      334316 :    if (p.ph != nullHash) return p.ph;</span></span>
+<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">      316247 :    if (p.ph != nullHash) return p.ph;</span></span>
 <span id="L168"><span class="lineNum">     168</span>              :    //++ThreadPool::instance().main().stats.counters[Stats::sid_hashComputed]; // shall of course never happend !</span>
-<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC">        1177 :    BB::applyOn(p.whitePawn(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_wp)]; });</span></span>
-<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">        1196 :    BB::applyOn(p.blackPawn(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_bp)]; });</span></span>
-<span id="L171"><span class="lineNum">     171</span> <span class="tlaGNC">         228 :    BB::applyOn(p.whiteKing(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_wk)]; });</span></span>
-<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC">         228 :    BB::applyOn(p.blackKing(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_bk)]; });</span></span>
+<span id="L169"><span class="lineNum">     169</span> <span class="tlaGNC">        1592 :    BB::applyOn(p.whitePawn(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_wp)]; });</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">        1309 :    BB::applyOn(p.blackPawn(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_bp)]; });</span></span>
+<span id="L171"><span class="lineNum">     171</span> <span class="tlaGNC">         371 :    BB::applyOn(p.whiteKing(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_wk)]; });</span></span>
+<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC">         371 :    BB::applyOn(p.blackKing(), [&amp;](const Square &amp; k){ p.ph ^= Zobrist::ZT[k][PieceIdx(P_bk)]; });</span></span>
 <span id="L173"><span class="lineNum">     173</span>              : #ifdef DEBUG_PHASH</span>
 <span id="L174"><span class="lineNum">     174</span>              :    if (h != nullHash &amp;&amp; h != p.ph) {</span>
 <span id="L175"><span class="lineNum">     175</span>              :       Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;Pawn Hash error &quot; &lt;&lt; ToString(p.lastMove) &lt;&lt; ToString(p, true) &lt;&lt; p.ph &lt;&lt; &quot; != &quot; &lt;&lt; h;</span>
 <span id="L176"><span class="lineNum">     176</span>              :    }</span>
 <span id="L177"><span class="lineNum">     177</span>              : #endif</span>
-<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">         228 :    return p.ph;</span></span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">         371 :    return p.ph;</span></span>
 <span id="L179"><span class="lineNum">     179</span>              : }</span>
 <span id="L180"><span class="lineNum">     180</span>              : </span>
 <span id="L181"><span class="lineNum">     181</span>              : #ifdef WITH_NONPAWN_CORRHIST</span>
 <span id="L182"><span class="lineNum">     182</span>              : // king excluded on purpose</span>
-<span id="L183"><span class="lineNum">     183</span>              : Hash computeNonPawnHash(const Position &amp;p, Color c) {</span>
+<span id="L183"><span class="lineNum">     183</span> <span class="tlaGNC">         742 : Hash computeNonPawnHash(const Position &amp;p, Color c) {</span></span>
 <span id="L184"><span class="lineNum">     184</span>              : #ifdef DEBUG_NONPAWNHASH</span>
 <span id="L185"><span class="lineNum">     185</span>              :    Hash h = p.nph[c];</span>
 <span id="L186"><span class="lineNum">     186</span>              :    p.nph[c] = nullHash;</span>
 <span id="L187"><span class="lineNum">     187</span>              : #endif</span>
-<span id="L188"><span class="lineNum">     188</span>              :    if (p.nph[c] != nullHash) return p.nph[c];</span>
+<span id="L188"><span class="lineNum">     188</span> <span class="tlaGNC">         742 :    if (p.nph[c] != nullHash) return p.nph[c];</span></span>
 <span id="L189"><span class="lineNum">     189</span>              :    //++ThreadPool::instance().main().stats.counters[Stats::sid_nonPawnHashComputed]; // shall of course never happend !</span>
-<span id="L190"><span class="lineNum">     190</span>              :    if (c == Co_White) {</span>
-<span id="L191"><span class="lineNum">     191</span>              :       BB::applyOn(p.whiteKnight(), [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_wn)]; });</span>
-<span id="L192"><span class="lineNum">     192</span>              :       BB::applyOn(p.whiteBishop(), [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_wb)]; });</span>
-<span id="L193"><span class="lineNum">     193</span>              :       BB::applyOn(p.whiteRook(),   [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_wr)]; });</span>
-<span id="L194"><span class="lineNum">     194</span>              :       BB::applyOn(p.whiteQueen(),  [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_wq)]; });</span>
+<span id="L190"><span class="lineNum">     190</span> <span class="tlaGNC">         742 :    if (c == Co_White) {</span></span>
+<span id="L191"><span class="lineNum">     191</span> <span class="tlaGNC">         371 :       BB::applyOn(p.whiteKnight(), [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_wn)]; });</span></span>
+<span id="L192"><span class="lineNum">     192</span> <span class="tlaGNC">         371 :       BB::applyOn(p.whiteBishop(), [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_wb)]; });</span></span>
+<span id="L193"><span class="lineNum">     193</span> <span class="tlaGNC">         371 :       BB::applyOn(p.whiteRook(),   [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_wr)]; });</span></span>
+<span id="L194"><span class="lineNum">     194</span> <span class="tlaGNC">         371 :       BB::applyOn(p.whiteQueen(),  [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_wq)]; });</span></span>
 <span id="L195"><span class="lineNum">     195</span>              :    }</span>
 <span id="L196"><span class="lineNum">     196</span>              :    else {</span>
-<span id="L197"><span class="lineNum">     197</span>              :       BB::applyOn(p.blackKnight(), [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_bn)]; });</span>
-<span id="L198"><span class="lineNum">     198</span>              :       BB::applyOn(p.blackBishop(), [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_bb)]; });</span>
-<span id="L199"><span class="lineNum">     199</span>              :       BB::applyOn(p.blackRook(),   [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_br)]; });</span>
-<span id="L200"><span class="lineNum">     200</span>              :       BB::applyOn(p.blackQueen(),  [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_bq)]; });</span>
+<span id="L197"><span class="lineNum">     197</span> <span class="tlaGNC">         371 :       BB::applyOn(p.blackKnight(), [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_bn)]; });</span></span>
+<span id="L198"><span class="lineNum">     198</span> <span class="tlaGNC">         371 :       BB::applyOn(p.blackBishop(), [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_bb)]; });</span></span>
+<span id="L199"><span class="lineNum">     199</span> <span class="tlaGNC">         371 :       BB::applyOn(p.blackRook(),   [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_br)]; });</span></span>
+<span id="L200"><span class="lineNum">     200</span> <span class="tlaGNC">         371 :       BB::applyOn(p.blackQueen(),  [&amp;](const Square &amp; k){ p.nph[c] ^= Zobrist::ZT[k][PieceIdx(P_bq)]; });</span></span>
 <span id="L201"><span class="lineNum">     201</span>              :    }</span>
 <span id="L202"><span class="lineNum">     202</span>              : #ifdef DEBUG_NONPAWNHASH</span>
 <span id="L203"><span class="lineNum">     203</span>              :    if (h != nullHash &amp;&amp; h != p.nph[c]) {</span>
 <span id="L204"><span class="lineNum">     204</span>              :       Logging::LogIt(Logging::logFatal) &lt;&lt; &quot;NonPawn Hash error &quot; &lt;&lt; ToString(p.lastMove) &lt;&lt; ToString(p, true) &lt;&lt; p.nph[c] &lt;&lt; &quot; != &quot; &lt;&lt; h;</span>
 <span id="L205"><span class="lineNum">     205</span>              :    }</span>
 <span id="L206"><span class="lineNum">     206</span>              : #endif</span>
-<span id="L207"><span class="lineNum">     207</span>              :    return p.nph[c];</span>
+<span id="L207"><span class="lineNum">     207</span> <span class="tlaGNC">         742 :    return p.nph[c];</span></span>
 <span id="L208"><span class="lineNum">     208</span>              : }</span>
 <span id="L209"><span class="lineNum">     209</span>              : </span>
-<span id="L210"><span class="lineNum">     210</span>              : Hash nonPawnKey(const Position &amp;p, Color c) {</span>
-<span id="L211"><span class="lineNum">     211</span>              :    return p.nph[c] ^ Zobrist::ZT[p.king[c]][PieceIdx(c == Co_White ? P_wk : P_bk)];</span>
+<span id="L210"><span class="lineNum">     210</span> <span class="tlaGNC">     5485570 : Hash nonPawnKey(const Position &amp;p, Color c) {</span></span>
+<span id="L211"><span class="lineNum">     211</span> <span class="tlaGNC">     5485570 :    return p.nph[c] ^ Zobrist::ZT[p.king[c]][PieceIdx(c == Co_White ? P_wk : P_bk)];</span></span>
 <span id="L212"><span class="lineNum">     212</span>              : }</span>
 <span id="L213"><span class="lineNum">     213</span>              : #endif // WITH_NONPAWN_CORRHIST</span>
 <span id="L214"><span class="lineNum">     214</span>              : </span>
