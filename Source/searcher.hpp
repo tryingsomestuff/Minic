@@ -163,20 +163,19 @@ struct Searcher {
    CounterT  counterT;
 #ifdef WITH_CORRECTION_HISTORY
 #ifdef WITH_PAWN_CORRHIST
-   CorrectionHistoryT pawnCorrHist;
+   CorrectionHistoryT<16384> pawnCorrHist;
 #endif
 #ifdef WITH_NONPAWN_CORRHIST
-   CorrectionHistoryT nonPawnCorrHist;
+   CorrectionHistoryT<16384> nonPawnCorrHist;
 #endif
-#ifdef WITH_MINOR_CORRHIST
-   CorrectionHistoryT minorCorrHist;
-#endif
-#ifdef WITH_MAJOR_CORRHIST
-   CorrectionHistoryT majorCorrHist;
+#ifdef WITH_HORIZON_CORRHIST
+   CorrectionHistoryT<32> horizonCorrHist;
 #endif
    [[nodiscard]] ScoreType correctionScore(const Position& p) const;
    [[nodiscard]] ScoreType correctedEval(const Position& p, ScoreType rawScore) const;
-   void updateCorrectionHistory(const Position& p, DepthType depth, ScoreType bestScore, ScoreType baselineEval);
+   [[nodiscard]] ScoreType horizonCorrection(Color c, DepthType depth, ScoreType baselineEval, ScoreType ttRefScore, bool hasTTHint, bool pvnode, bool cutNode) const;
+   void updateCorrectionHistory(const Position& p, DepthType depth, ScoreType bestScore, ScoreType baselineEval,
+                                ScoreType ttRefScore, bool hasTTHint, bool pvnode, bool cutNode);
 #endif // WITH_CORRECTION_HISTORY
    DepthType nullMoveMinPly = 0;
    Color     nullMoveVerifColor = Co_None;

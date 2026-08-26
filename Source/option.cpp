@@ -373,11 +373,8 @@ void registerCOMOptions() { // options exposed to GUI
 #ifdef WITH_NONPAWN_CORRHIST
    _keys.emplace_back(k_int,   w_spin, "CorrectionHistoryMaxNonPawn"       , &SearchConfig::correctionHistoryMaxNonPawn         , (int)1          , (int)1024          );
 #endif
-#ifdef WITH_MINOR_CORRHIST
-   _keys.emplace_back(k_int,   w_spin, "CorrectionHistoryMaxMinor"         , &SearchConfig::correctionHistoryMaxMinor           , (int)1          , (int)1024          );
-#endif
-#ifdef WITH_MAJOR_CORRHIST
-   _keys.emplace_back(k_int,   w_spin, "CorrectionHistoryMaxMajor"         , &SearchConfig::correctionHistoryMaxMajor           , (int)1          , (int)1024          );
+#ifdef WITH_HORIZON_CORRHIST
+   _keys.emplace_back(k_int,   w_spin, "CorrectionHistoryMaxHorizon"       , &SearchConfig::correctionHistoryMaxHorizon         , (int)1          , (int)1024          );
 #endif
 #endif // WITH_CORRECTION_HISTORY
    //_keys.emplace_back(k_score, w_spin, "randomAggressiveReductionFactor"   , &SearchConfig::randomAggressiveReductionFactor     , ScoreType(-10)  , ScoreType(10)      );

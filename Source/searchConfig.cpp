@@ -99,11 +99,8 @@ CONST_SEARCH_TUNING int correctionHistoryMaxPawn    = 32;
 #ifdef WITH_NONPAWN_CORRHIST
 CONST_SEARCH_TUNING int correctionHistoryMaxNonPawn = 44;
 #endif
-#ifdef WITH_MINOR_CORRHIST
-CONST_SEARCH_TUNING int correctionHistoryMaxMinor   = 64;
-#endif
-#ifdef WITH_MAJOR_CORRHIST
-CONST_SEARCH_TUNING int correctionHistoryMaxMajor   = 64;
+#ifdef WITH_HORIZON_CORRHIST
+CONST_SEARCH_TUNING int correctionHistoryMaxHorizon = 24;
 #endif
 #endif // WITH_CORRECTION_HISTORY
 

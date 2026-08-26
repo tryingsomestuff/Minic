@@ -702,11 +702,6 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // backup the static evaluation score as we will try to get a better evalScore approximation using TT
    const ScoreType staticScore = evalScore;
 
-#ifdef WITH_CORRECTION_HISTORY
-   // staticScore + correction
-   const ScoreType correctedStaticScore = correctedEval(p, staticScore);
-#endif
-
    // if no TT hit yet, we insert an eval without a move here in case of forward pruning (depth is negative, bound is none) ...
    // Be carefull here, _data2 in Entry is always (INVALIDMOVE,B_none,-2) here, so that collisions are a lot more likely
    if (!pvsData.ttHit) TT::setEntry(*this, pHash, INVALIDMOVE, TT::createHashScore(evalScore, height), TT::createHashScore(staticScore, height), TT::B_none, -2, isMainThread());
@@ -722,9 +717,12 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    }
 
 #ifdef WITH_CORRECTION_HISTORY
+   // staticScore + correction
+   const ScoreType correctedStaticScore = correctedEval(p, staticScore);
    // never add the correction on top of a TT score : that score is already a search
    // result, so correcting it double-counts the very bias corrhist is meant to predict
-   ScoreType pruningEval = pvsData.evalScoreIsHashScore ? evalScore : correctedStaticScore;
+   const ScoreType horizonCorr = pvsData.evalScoreIsHashScore ? 0 : horizonCorrection(p.c, depth, correctedStaticScore, evalScore, pvsData.ttHit, pvsData.pvnode, pvsData.cutNode);
+   ScoreType pruningEval = pvsData.evalScoreIsHashScore ? evalScore : clampScore(static_cast<int>(correctedStaticScore) + static_cast<int>(horizonCorr));
    // both sides of the NMP test must be in the same corrected/uncorrected state
    ScoreType pruningEvalBaseline = pvsData.evalScoreIsHashScore ? staticScore : correctedStaticScore;
 #else
@@ -1475,7 +1473,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    if (!pvsData.isInCheck && isValidMove(bestMove) && !isCaptureOrProm(bestMove) && !isMateScore(bestScore)
        && !(hashBound == TT::B_beta  && bestScore <= correctedStaticScore)
        && !(hashBound == TT::B_alpha && bestScore >= correctedStaticScore)) {
-      updateCorrectionHistory(p, depth, bestScore, correctedStaticScore);
+      updateCorrectionHistory(p, depth, bestScore, correctedStaticScore, evalScore, pvsData.ttHit, pvsData.pvnode, pvsData.cutNode);
    }
 #endif
 

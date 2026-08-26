@@ -155,11 +155,8 @@ extern CONST_SEARCH_TUNING int correctionHistoryMaxPawn;
 #ifdef WITH_NONPAWN_CORRHIST
 extern CONST_SEARCH_TUNING int correctionHistoryMaxNonPawn;
 #endif
-#ifdef WITH_MINOR_CORRHIST
-extern CONST_SEARCH_TUNING int correctionHistoryMaxMinor;
-#endif
-#ifdef WITH_MAJOR_CORRHIST
-extern CONST_SEARCH_TUNING int correctionHistoryMaxMajor;
+#ifdef WITH_HORIZON_CORRHIST
+extern CONST_SEARCH_TUNING int correctionHistoryMaxHorizon;
 #endif
 #endif // WITH_CORRECTION_HISTORY
 

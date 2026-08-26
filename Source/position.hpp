@@ -84,12 +84,6 @@ struct alignas(32) Position {
 #ifdef WITH_NONPAWN_CORRHIST
    mutable colored<Hash> nph = {nullHash, nullHash};
 #endif
-#ifdef WITH_MINOR_CORRHIST
-   mutable Hash    mnh       = nullHash;
-#endif
-#ifdef WITH_MAJOR_CORRHIST
-   mutable Hash    mjh       = nullHash;
-#endif
    MiniMove        lastMove  = INVALIDMINIMOVE;
    uint16_t        moves     = 0;
    uint16_t        halfmoves = 0;
@@ -108,12 +102,6 @@ struct alignas(32) Position {
       ph        = nullHash;
 #ifdef WITH_NONPAWN_CORRHIST
       nph       = {nullHash, nullHash};
-#endif
-#ifdef WITH_MINOR_CORRHIST
-      mnh       = nullHash;
-#endif
-#ifdef WITH_MAJOR_CORRHIST
-      mjh       = nullHash;
 #endif
       lastMove  = INVALIDMINIMOVE;
       moves     = 0;
