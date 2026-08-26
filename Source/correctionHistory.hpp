@@ -6,8 +6,11 @@
 
 #include "searchConfig.hpp"
 
+
+
+template<size_t TableSize>
 struct CorrectionHistoryT {
-   static constexpr size_t size = 16384; // power of 2
+   static constexpr size_t size = TableSize; // power of 2
 
    array2d<ScoreType, 2, size> table {}; // [Color][key & (size-1)]
 

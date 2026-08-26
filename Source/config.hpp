@@ -62,10 +62,9 @@ const std::string MinicVersion = "3.47";
 
 #define WITH_CORRECTION_HISTORY
 #ifdef WITH_CORRECTION_HISTORY
-#define WITH_PAWN_CORRHIST      // pawn (+king) structure bucket, reuses Position::ph at no extra cost
-#define WITH_NONPAWN_CORRHIST   // non-pawn material bucket, one key per color (king excluded)
-//#define WITH_MINOR_CORRHIST   // minor pieces (knight+bishop) bucket, king excluded
-//#define WITH_MAJOR_CORRHIST   // major pieces (rook+queen) bucket, king excluded
+#define WITH_PAWN_CORRHIST      // pawn+king structure
+#define WITH_NONPAWN_CORRHIST   // non-pawn material, one key per color (king excluded)
+//#define WITH_HORIZON_CORRHIST   // depth-context correction (depth/volatility/tt/node-type)
 #endif // WITH_CORRECTION_HISTORY
 
 // *** Debug

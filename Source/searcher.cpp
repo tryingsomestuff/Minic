@@ -226,11 +226,8 @@ void Searcher::clearGame() {
 #ifdef WITH_NONPAWN_CORRHIST
    nonPawnCorrHist.clear();
 #endif
-#ifdef WITH_MINOR_CORRHIST
-   minorCorrHist.clear();
-#endif
-#ifdef WITH_MAJOR_CORRHIST
-   majorCorrHist.clear();
+#ifdef WITH_HORIZON_CORRHIST
+   horizonCorrHist.clear();
 #endif
 #endif // WITH_CORRECTION_HISTORY
    previousBest = INVALIDMOVE;
@@ -258,11 +255,8 @@ void Searcher::clearSearch(bool forceHistoryClear) {
 #ifdef WITH_NONPAWN_CORRHIST
       nonPawnCorrHist.clear();
 #endif
-#ifdef WITH_MINOR_CORRHIST
-      minorCorrHist.clear();
-#endif
-#ifdef WITH_MAJOR_CORRHIST
-      majorCorrHist.clear();
+#ifdef WITH_HORIZON_CORRHIST
+      horizonCorrHist.clear();
 #endif
    }
 #endif // WITH_CORRECTION_HISTORY
