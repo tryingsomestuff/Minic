@@ -49,7 +49,7 @@ do_sep
 
 WARN="-Wall -Wcast-qual -Wno-reorder -Wmaybe-uninitialized -Wuninitialized -pedantic -Wextra -Wshadow -Wno-unknown-pragmas -Wno-unknown-warning-option -Wno-missing-braces -Wno-constant-logical-operand"
 #-Wno-char-subscripts
-if [[ $CXX == *"clang"* ]] || [[ $CXX == *"icpx"* ]]; then
+if "$CXX" --version 2>&1 | grep -qi 'clang'; then
    echo "Using LLVM-based compiler (clang/icpx)"
    #WARN="$WARN -fconstexpr-steps=1000000000"
    PROF_GEN="-fprofile-generate=${buildDir}/"
