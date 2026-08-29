@@ -696,7 +696,7 @@ template<Color C> [[nodiscard]] constexpr Square ColorSquarePstHelper(const Squa
    return power / 2;
 }
 
-FORCE_FINLINE void* std_aligned_alloc(const size_t alignment, const size_t size) {
+FORCE_FINLINE void* std_aligned_alloc([[maybe_unused]] const size_t alignment, const size_t size) {
 #ifdef __ANDROID__
   return malloc(size);
 #elif defined(__EMSCRIPTEN__)
