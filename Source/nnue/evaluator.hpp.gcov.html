@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-29 19:01:47</td>
+            <td class="headerValue">2026-08-29 21:03:23</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -90,14 +90,14 @@
 <span id="L28"><span class="lineNum">      28</span>              :    bool dirty = true;</span>
 <span id="L29"><span class="lineNum">      29</span>              : </span>
 <span id="L30"><span class="lineNum">      30</span>              :    FORCE_FINLINE void clear() {</span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC tlaBgGNC">        1601 :       dirty = true;</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC tlaBgGNC">        1597 :       dirty = true;</span></span>
 <span id="L32"><span class="lineNum">      32</span>              :       white.clear();</span>
 <span id="L33"><span class="lineNum">      33</span>              :       black.clear();</span>
 <span id="L34"><span class="lineNum">      34</span>              :    }</span>
 <span id="L35"><span class="lineNum">      35</span>              : </span>
 <span id="L36"><span class="lineNum">      36</span>              :    FORCE_FINLINE void clear(Color color) {</span>
-<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">     8224900 :       dirty = true;</span></span>
-<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">     8224900 :       if (color == Co_White)</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaGNC">     8224923 :       dirty = true;</span></span>
+<span id="L38"><span class="lineNum">      38</span> <span class="tlaGNC">     8224923 :       if (color == Co_White)</span></span>
 <span id="L39"><span class="lineNum">      39</span>              :          white.clear();</span>
 <span id="L40"><span class="lineNum">      40</span>              :       else</span>
 <span id="L41"><span class="lineNum">      41</span>              :          black.clear();</span>
@@ -105,26 +105,26 @@
 <span id="L43"><span class="lineNum">      43</span>              : </span>
 <span id="L44"><span class="lineNum">      44</span>              :    using BT = typename Quantization&lt;Q&gt;::BT;</span>
 <span id="L45"><span class="lineNum">      45</span>              :    </span>
-<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">     1160107 :    EvalWithUncertainty propagate(Color c, const int bucket) const {</span></span>
-<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">     1160107 :       assert(!dirty);</span></span>
-<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">     1160107 :       assert(bucket &gt;= 0);</span></span>
-<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">     1160107 :       assert(bucket &lt; (NNUEWeights&lt;NT, Q&gt;::nbuckets));</span></span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaGNC">     1160047 :    EvalWithUncertainty propagate(Color c, const int bucket) const {</span></span>
+<span id="L47"><span class="lineNum">      47</span> <span class="tlaGNC">     1160047 :       assert(!dirty);</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">     1160047 :       assert(bucket &gt;= 0);</span></span>
+<span id="L49"><span class="lineNum">      49</span> <span class="tlaGNC">     1160047 :       assert(bucket &lt; (NNUEWeights&lt;NT, Q&gt;::nbuckets));</span></span>
 <span id="L50"><span class="lineNum">      50</span>              :       </span>
 <span id="L51"><span class="lineNum">      51</span>              :       constexpr float deqScale = 1.f / Quantization&lt;Q&gt;::scale;</span>
-<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">     1160107 :       const auto&amp; layer = weights.innerLayer[bucket];</span></span>
+<span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">     1160047 :       const auto&amp; layer = weights.innerLayer[bucket];</span></span>
 <span id="L53"><span class="lineNum">      53</span>              : </span>
 <span id="L54"><span class="lineNum">      54</span>              : #ifdef USE_SIMD_INTRIN</span>
 <span id="L55"><span class="lineNum">      55</span>              :       StackVector&lt;BT, 2 * firstInnerLayerSize, Q&gt; x0;</span>
 <span id="L56"><span class="lineNum">      56</span>              :       {</span>
-<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">     1160107 :          const auto&amp; first  = (c == Co_White) ? white : black;</span></span>
-<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">     1160107 :          const auto&amp; second = (c == Co_White) ? black : white;</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">     1160047 :          const auto&amp; first  = (c == Co_White) ? white : black;</span></span>
+<span id="L58"><span class="lineNum">      58</span> <span class="tlaGNC">     1160047 :          const auto&amp; second = (c == Co_White) ? black : white;</span></span>
 <span id="L59"><span class="lineNum">      59</span>              :          simdDequantizeActivate_i16_f32&lt;firstInnerLayerSize, Q&gt;(</span>
-<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">     1160107 :             x0.data, first.active().data, deqScale);</span></span>
+<span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">     1160047 :             x0.data, first.active().data, deqScale);</span></span>
 <span id="L61"><span class="lineNum">      61</span>              :          simdDequantizeActivate_i16_f32&lt;firstInnerLayerSize, Q&gt;(</span>
-<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">     1160107 :             x0.data + firstInnerLayerSize, second.active().data, deqScale);</span></span>
+<span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">     1160047 :             x0.data + firstInnerLayerSize, second.active().data, deqScale);</span></span>
 <span id="L63"><span class="lineNum">      63</span>              :       }</span>
 <span id="L64"><span class="lineNum">      64</span>              : </span>
-<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">     1160107 :       auto x1 = layer.fc0.forward(x0).activation_();</span></span>
+<span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">     1160047 :       auto x1 = layer.fc0.forward(x0).activation_();</span></span>
 <span id="L66"><span class="lineNum">      66</span>              : </span>
 <span id="L67"><span class="lineNum">      67</span>              :       StackVector&lt;BT, 16, Q&gt; x2;</span>
 <span id="L68"><span class="lineNum">      68</span>              :       simdCopy_f32&lt;8&gt;(x2.data, x1.data);</span>
@@ -136,7 +136,7 @@
 <span id="L74"><span class="lineNum">      74</span>              :       layer.fc2.forwardTo(x2, x3.data + 16);</span>
 <span id="L75"><span class="lineNum">      75</span>              :       simdActivation&lt;8, Q&gt;(x3.data + 16);</span>
 <span id="L76"><span class="lineNum">      76</span>              : </span>
-<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">     1160107 :       const float eval = layer.fc3.forward(x3).data[0];</span></span>
+<span id="L77"><span class="lineNum">      77</span> <span class="tlaGNC">     1160047 :       const float eval = layer.fc3.forward(x3).data[0];</span></span>
 <span id="L78"><span class="lineNum">      78</span>              : #ifdef WITH_NNUE_UNCERTAINTY</span>
 <span id="L79"><span class="lineNum">      79</span>              :       const float log_var = layer.fc3_uncertainty.forward(x3).data[0];</span>
 <span id="L80"><span class="lineNum">      80</span>              :       const float variance = std::exp(std::clamp(log_var, -10.0f, 10.0f));</span>
@@ -172,7 +172,7 @@
 <span id="L110"><span class="lineNum">     110</span>              :       constexpr float variance = 1.0f;</span>
 <span id="L111"><span class="lineNum">     111</span>              : #endif</span>
 <span id="L112"><span class="lineNum">     112</span>              : #endif</span>
-<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">     1160107 :       return {eval * Quantization&lt;Q&gt;::outFactor, variance};</span></span>
+<span id="L113"><span class="lineNum">     113</span> <span class="tlaGNC">     1160047 :       return {eval * Quantization&lt;Q&gt;::outFactor, variance};</span></span>
 <span id="L114"><span class="lineNum">     114</span>              :    }</span>
 <span id="L115"><span class="lineNum">     115</span>              : </span>
 <span id="L116"><span class="lineNum">     116</span>              : #ifdef DEBUG_NNUE_UPDATE</span>
@@ -189,9 +189,9 @@
 <span id="L127"><span class="lineNum">     127</span>              : </span>
 <span id="L128"><span class="lineNum">     128</span>              :    // default CTOR always use loaded weights in FeatureTransformer </span>
 <span id="L129"><span class="lineNum">     129</span>              :    // (as pointer of course, not a copy)</span>
-<span id="L130"><span class="lineNum">     130</span> <span class="tlaGNC">      161024 :    NNUEEval():</span></span>
+<span id="L130"><span class="lineNum">     130</span> <span class="tlaGNC">      161019 :    NNUEEval():</span></span>
 <span id="L131"><span class="lineNum">     131</span>              :       white(&amp;weights.w),</span>
-<span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC">      161024 :       black(&amp;weights.b){}</span></span>
+<span id="L132"><span class="lineNum">     132</span> <span class="tlaGNC">      161019 :       black(&amp;weights.b){}</span></span>
 <span id="L133"><span class="lineNum">     133</span>              : };</span>
 <span id="L134"><span class="lineNum">     134</span>              : </span>
 <span id="L135"><span class="lineNum">     135</span>              : template&lt;typename NT, bool Q&gt; </span>

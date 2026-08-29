@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-29 19:01:47</td>
+            <td class="headerValue">2026-08-29 21:03:23</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -176,33 +176,33 @@
 <span id="L114"><span class="lineNum">     114</span>              :    FORCE_FINLINE void updatePV(PVList&amp; pv, const Move&amp; m, const PVList&amp; childPV) {</span>
 <span id="L115"><span class="lineNum">     115</span>              :       stats.incr(Stats::sid_PVupdate);</span>
 <span id="L116"><span class="lineNum">     116</span>              :       pv.clear();</span>
-<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">       16591 :       pv.emplace_back(m);</span></span>
-<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">       16591 :       std::ranges::copy(childPV, std::back_inserter(pv));</span></span>
-<span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">       16591 :    }</span></span>
+<span id="L117"><span class="lineNum">     117</span> <span class="tlaGNC">       16587 :       pv.emplace_back(m);</span></span>
+<span id="L118"><span class="lineNum">     118</span> <span class="tlaGNC">       16587 :       std::ranges::copy(childPV, std::back_inserter(pv));</span></span>
+<span id="L119"><span class="lineNum">     119</span> <span class="tlaGNC">       16587 :    }</span></span>
 <span id="L120"><span class="lineNum">     120</span>              : </span>
 <span id="L121"><span class="lineNum">     121</span>              :    FORCE_FINLINE Position&amp; initRootPositionOnStack(const Position&amp; rootPosition) {</span>
-<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">         285 :       assert(rootPosition.halfmoves &lt; MAX_PLY);</span></span>
-<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">         285 :       auto&amp; rootData = stack[rootPosition.halfmoves];</span></span>
-<span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">         285 :       rootData.p = rootPosition;</span></span>
+<span id="L122"><span class="lineNum">     122</span> <span class="tlaGNC">         281 :       assert(rootPosition.halfmoves &lt; MAX_PLY);</span></span>
+<span id="L123"><span class="lineNum">     123</span> <span class="tlaGNC">         281 :       auto&amp; rootData = stack[rootPosition.halfmoves];</span></span>
+<span id="L124"><span class="lineNum">     124</span> <span class="tlaGNC">         281 :       rootData.p = rootPosition;</span></span>
 <span id="L125"><span class="lineNum">     125</span>              : #ifdef WITH_NNUE</span>
-<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">         285 :       rootData.p.associateEvaluator(rootData.evaluator); // stole the evaluator</span></span>
-<span id="L127"><span class="lineNum">     127</span> <span class="tlaGNC">         285 :       rootData.p.resetNNUEEvaluator(rootData.evaluator);</span></span>
+<span id="L126"><span class="lineNum">     126</span> <span class="tlaGNC">         281 :       rootData.p.associateEvaluator(rootData.evaluator); // stole the evaluator</span></span>
+<span id="L127"><span class="lineNum">     127</span> <span class="tlaGNC">         281 :       rootData.p.resetNNUEEvaluator(rootData.evaluator);</span></span>
 <span id="L128"><span class="lineNum">     128</span>              : #endif</span>
 <span id="L129"><span class="lineNum">     129</span>              :       return rootData.p;</span>
 <span id="L130"><span class="lineNum">     130</span>              :    }</span>
 <span id="L131"><span class="lineNum">     131</span>              : </span>
 <span id="L132"><span class="lineNum">     132</span>              :    FORCE_FINLINE Position&amp; initChildPositionOnStack(const Position&amp; parentPosition) {</span>
-<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">     7249927 :       assert(parentPosition.halfmoves + 1 &lt; MAX_PLY);</span></span>
-<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">     7249927 :       auto&amp; childData = stack[parentPosition.halfmoves + 1];</span></span>
-<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">     7249927 :       childData.p = parentPosition;</span></span>
+<span id="L133"><span class="lineNum">     133</span> <span class="tlaGNC">     7250043 :       assert(parentPosition.halfmoves + 1 &lt; MAX_PLY);</span></span>
+<span id="L134"><span class="lineNum">     134</span> <span class="tlaGNC">     7250043 :       auto&amp; childData = stack[parentPosition.halfmoves + 1];</span></span>
+<span id="L135"><span class="lineNum">     135</span> <span class="tlaGNC">     7250043 :       childData.p = parentPosition;</span></span>
 <span id="L136"><span class="lineNum">     136</span>              :       return childData.p;</span>
 <span id="L137"><span class="lineNum">     137</span>              :    }</span>
 <span id="L138"><span class="lineNum">     138</span>              : </span>
 <span id="L139"><span class="lineNum">     139</span>              :    FORCE_FINLINE void initChildEvaluatorOnStack(const Position&amp; parentPosition, Position&amp; childPosition) {</span>
 <span id="L140"><span class="lineNum">     140</span>              : #ifdef WITH_NNUE</span>
-<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">     2938329 :       auto&amp; childData = stack[childPosition.halfmoves];</span></span>
-<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">     2967401 :       childData.evaluator = parentPosition.evaluator();</span></span>
-<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">     2967401 :       childPosition.associateEvaluator(childData.evaluator);</span></span>
+<span id="L141"><span class="lineNum">     141</span> <span class="tlaGNC">     2938422 :       auto&amp; childData = stack[childPosition.halfmoves];</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">     2967502 :       childData.evaluator = parentPosition.evaluator();</span></span>
+<span id="L143"><span class="lineNum">     143</span> <span class="tlaGNC">     2967502 :       childPosition.associateEvaluator(childData.evaluator);</span></span>
 <span id="L144"><span class="lineNum">     144</span>              : #else</span>
 <span id="L145"><span class="lineNum">     145</span>              :       (void)parentPosition;</span>
 <span id="L146"><span class="lineNum">     146</span>              :       (void)childPosition;</span>
@@ -368,9 +368,9 @@
 <span id="L306"><span class="lineNum">     306</span>              :       colored&lt;ScoreType&gt; danger        = {0, 0};</span>
 <span id="L307"><span class="lineNum">     307</span>              : </span>
 <span id="L308"><span class="lineNum">     308</span>              :       FORCE_FINLINE void reset() {</span>
-<span id="L309"><span class="lineNum">     309</span> <span class="tlaGNC">       61815 :          score            = {0, 0};</span></span>
-<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">       61815 :          danger[Co_White] = 0;</span></span>
-<span id="L311"><span class="lineNum">     311</span> <span class="tlaGNC">       61815 :          danger[Co_Black] = 0;</span></span>
+<span id="L309"><span class="lineNum">     309</span> <span class="tlaGNC">       61810 :          score            = {0, 0};</span></span>
+<span id="L310"><span class="lineNum">     310</span> <span class="tlaGNC">       61810 :          danger[Co_White] = 0;</span></span>
+<span id="L311"><span class="lineNum">     311</span> <span class="tlaGNC">       61810 :          danger[Co_Black] = 0;</span></span>
 <span id="L312"><span class="lineNum">     312</span>              :       }</span>
 <span id="L313"><span class="lineNum">     313</span>              :    };</span>
 <span id="L314"><span class="lineNum">     314</span>              : </span>
