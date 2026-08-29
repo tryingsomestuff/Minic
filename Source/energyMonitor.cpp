@@ -254,7 +254,7 @@ namespace {
    };
 }
 
-void initEnergyMonitor(int period_ms) {
+void initEnergyMonitor([[maybe_unused]] int period_ms) {
 #ifndef __ANDROID__   
    EnergyMonitorInitializer::create(period_ms);
    if (energyMonitor) energyMonitor->start();
