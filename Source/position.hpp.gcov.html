@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-29 21:03:23</td>
+            <td class="headerValue">2026-08-29 21:35:42</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">94.6&nbsp;%</td>
@@ -71,16 +71,16 @@
 <span id="L9"><span class="lineNum">       9</span>              : #include &quot;nnue.hpp&quot;</span>
 <span id="L10"><span class="lineNum">      10</span>              : </span>
 <span id="L11"><span class="lineNum">      11</span>              : [[nodiscard]] static constexpr size_t getBlock(const Square ksq) {</span>
-<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC tlaBgGNC">   840544624 :    return ksq;</span></span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC tlaBgGNC">   840545498 :    return ksq;</span></span>
 <span id="L13"><span class="lineNum">      13</span>              :    //return (ksq / 16) * 4 + ((ksq % 8) / 2);</span>
 <span id="L14"><span class="lineNum">      14</span>              : }</span>
 <span id="L15"><span class="lineNum">      15</span>              : </span>
 <span id="L16"><span class="lineNum">      16</span>              : [[nodiscard]] static constexpr size_t NNUEIndiceUs(const Square ksq, const Square s, const Piece p) {</span>
-<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">   492306510 :    return nnue::FeatureIdx::major * getBlock(HFlip(ksq)) + HFlip(s) + nnue::FeatureIdx::usOffset(p);</span></span>
+<span id="L17"><span class="lineNum">      17</span> <span class="tlaGNC">   492306960 :    return nnue::FeatureIdx::major * getBlock(HFlip(ksq)) + HFlip(s) + nnue::FeatureIdx::usOffset(p);</span></span>
 <span id="L18"><span class="lineNum">      18</span>              : }</span>
 <span id="L19"><span class="lineNum">      19</span>              : </span>
 <span id="L20"><span class="lineNum">      20</span>              : [[nodiscard]] static constexpr size_t NNUEIndiceThem(const Square ksq, const Square s, const Piece p) {</span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">   515459147 :    return nnue::FeatureIdx::major * getBlock(HFlip(ksq)) + HFlip(s) + nnue::FeatureIdx::themOffset(p);</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC">   515459541 :    return nnue::FeatureIdx::major * getBlock(HFlip(ksq)) + HFlip(s) + nnue::FeatureIdx::themOffset(p);</span></span>
 <span id="L22"><span class="lineNum">      22</span>              : }</span>
 <span id="L23"><span class="lineNum">      23</span>              : #endif // WITH_NNUE</span>
 <span id="L24"><span class="lineNum">      24</span>              : </span>
@@ -201,57 +201,57 @@
 <span id="L139"><span class="lineNum">     139</span>              : #endif</span>
 <span id="L140"><span class="lineNum">     140</span>              : </span>
 <span id="L141"><span class="lineNum">     141</span>              :    [[nodiscard]] FORCE_FINLINE RootInformation&amp; rootInfo() {</span>
-<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">   149083124 :       assert(root);</span></span>
+<span id="L142"><span class="lineNum">     142</span> <span class="tlaGNC">   149083308 :       assert(root);</span></span>
 <span id="L143"><span class="lineNum">     143</span>              :       return *root;</span>
 <span id="L144"><span class="lineNum">     144</span>              :    }</span>
 <span id="L145"><span class="lineNum">     145</span>              : </span>
 <span id="L146"><span class="lineNum">     146</span>              :    [[nodiscard]] FORCE_FINLINE const RootInformation&amp; rootInfo() const {</span>
-<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">    13786438 :       assert(root);</span></span>
+<span id="L147"><span class="lineNum">     147</span> <span class="tlaGNC">    13786452 :       assert(root);</span></span>
 <span id="L148"><span class="lineNum">     148</span>              :       return *root;</span>
 <span id="L149"><span class="lineNum">     149</span>              :    }</span>
 <span id="L150"><span class="lineNum">     150</span>              : </span>
-<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">   334969825 :    [[nodiscard]] FORCE_FINLINE const Piece&amp; board_const(const Square k) const { return _b[k]; }</span></span>
-<span id="L152"><span class="lineNum">     152</span> <span class="tlaGNC">   172290410 :    [[nodiscard]] FORCE_FINLINE Piece&amp;       board      (const Square k)       { return _b[k]; }</span></span>
+<span id="L151"><span class="lineNum">     151</span> <span class="tlaGNC">   334971947 :    [[nodiscard]] FORCE_FINLINE const Piece&amp; board_const(const Square k) const { return _b[k]; }</span></span>
+<span id="L152"><span class="lineNum">     152</span> <span class="tlaGNC">   172290517 :    [[nodiscard]] FORCE_FINLINE Piece&amp;       board      (const Square k)       { return _b[k]; }</span></span>
 <span id="L153"><span class="lineNum">     153</span>              : </span>
-<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">   310433202 :    [[nodiscard]] FORCE_FINLINE BitBoard occupancy() const { return allPieces[Co_White] | allPieces[Co_Black]; }</span></span>
+<span id="L154"><span class="lineNum">     154</span> <span class="tlaGNC">   310433900 :    [[nodiscard]] FORCE_FINLINE BitBoard occupancy() const { return allPieces[Co_White] | allPieces[Co_Black]; }</span></span>
 <span id="L155"><span class="lineNum">     155</span>              : </span>
-<span id="L156"><span class="lineNum">     156</span> <span class="tlaGNC">     7309070 :    [[nodiscard]] FORCE_FINLINE BitBoard allKing()   const { return _allB[5]; }</span></span>
-<span id="L157"><span class="lineNum">     157</span> <span class="tlaGNC">     7907586 :    [[nodiscard]] FORCE_FINLINE BitBoard allQueen()  const { return _allB[4]; }</span></span>
-<span id="L158"><span class="lineNum">     158</span> <span class="tlaGNC">     7653541 :    [[nodiscard]] FORCE_FINLINE BitBoard allRook()   const { return _allB[3]; }</span></span>
-<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">     7656414 :    [[nodiscard]] FORCE_FINLINE BitBoard allBishop() const { return _allB[2]; }</span></span>
-<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">     2914743 :    [[nodiscard]] FORCE_FINLINE BitBoard allKnight() const { return _allB[1]; }</span></span>
-<span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">      255602 :    [[nodiscard]] FORCE_FINLINE BitBoard allPawn()   const { return _allB[0]; }</span></span>
+<span id="L156"><span class="lineNum">     156</span> <span class="tlaGNC">     7309344 :    [[nodiscard]] FORCE_FINLINE BitBoard allKing()   const { return _allB[5]; }</span></span>
+<span id="L157"><span class="lineNum">     157</span> <span class="tlaGNC">     7907719 :    [[nodiscard]] FORCE_FINLINE BitBoard allQueen()  const { return _allB[4]; }</span></span>
+<span id="L158"><span class="lineNum">     158</span> <span class="tlaGNC">     7653669 :    [[nodiscard]] FORCE_FINLINE BitBoard allRook()   const { return _allB[3]; }</span></span>
+<span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">     7656542 :    [[nodiscard]] FORCE_FINLINE BitBoard allBishop() const { return _allB[2]; }</span></span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">     2914823 :    [[nodiscard]] FORCE_FINLINE BitBoard allKnight() const { return _allB[1]; }</span></span>
+<span id="L161"><span class="lineNum">     161</span> <span class="tlaGNC">      255607 :    [[nodiscard]] FORCE_FINLINE BitBoard allPawn()   const { return _allB[0]; }</span></span>
 <span id="L162"><span class="lineNum">     162</span>              : </span>
-<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC">    35888476 :    [[nodiscard]] FORCE_FINLINE BitBoard blackKing()   const { return _allB[5] &amp; allPieces[Co_Black]; }</span></span>
-<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">    39240221 :    [[nodiscard]] FORCE_FINLINE BitBoard blackQueen()  const { return _allB[4] &amp; allPieces[Co_Black]; }</span></span>
-<span id="L165"><span class="lineNum">     165</span> <span class="tlaGNC">    36469030 :    [[nodiscard]] FORCE_FINLINE BitBoard blackRook()   const { return _allB[3] &amp; allPieces[Co_Black]; }</span></span>
-<span id="L166"><span class="lineNum">     166</span> <span class="tlaGNC">    47190581 :    [[nodiscard]] FORCE_FINLINE BitBoard blackBishop() const { return _allB[2] &amp; allPieces[Co_Black]; }</span></span>
-<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">    35911613 :    [[nodiscard]] FORCE_FINLINE BitBoard blackKnight() const { return _allB[1] &amp; allPieces[Co_Black]; }</span></span>
-<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">    39065089 :    [[nodiscard]] FORCE_FINLINE BitBoard blackPawn()   const { return _allB[0] &amp; allPieces[Co_Black]; }</span></span>
+<span id="L163"><span class="lineNum">     163</span> <span class="tlaGNC">    35888609 :    [[nodiscard]] FORCE_FINLINE BitBoard blackKing()   const { return _allB[5] &amp; allPieces[Co_Black]; }</span></span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">    39240359 :    [[nodiscard]] FORCE_FINLINE BitBoard blackQueen()  const { return _allB[4] &amp; allPieces[Co_Black]; }</span></span>
+<span id="L165"><span class="lineNum">     165</span> <span class="tlaGNC">    36469156 :    [[nodiscard]] FORCE_FINLINE BitBoard blackRook()   const { return _allB[3] &amp; allPieces[Co_Black]; }</span></span>
+<span id="L166"><span class="lineNum">     166</span> <span class="tlaGNC">    47190669 :    [[nodiscard]] FORCE_FINLINE BitBoard blackBishop() const { return _allB[2] &amp; allPieces[Co_Black]; }</span></span>
+<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">    35911746 :    [[nodiscard]] FORCE_FINLINE BitBoard blackKnight() const { return _allB[1] &amp; allPieces[Co_Black]; }</span></span>
+<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">    39065297 :    [[nodiscard]] FORCE_FINLINE BitBoard blackPawn()   const { return _allB[0] &amp; allPieces[Co_Black]; }</span></span>
 <span id="L169"><span class="lineNum">     169</span>              : </span>
-<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">   154851004 :    [[nodiscard]] FORCE_FINLINE BitBoard whitePawn()   const { return _allB[0] &amp; allPieces[Co_White]; }</span></span>
-<span id="L171"><span class="lineNum">     171</span> <span class="tlaGNC">   149578293 :    [[nodiscard]] FORCE_FINLINE BitBoard whiteKnight() const { return _allB[1] &amp; allPieces[Co_White]; }</span></span>
-<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC">   161445833 :    [[nodiscard]] FORCE_FINLINE BitBoard whiteBishop() const { return _allB[2] &amp; allPieces[Co_White]; }</span></span>
-<span id="L173"><span class="lineNum">     173</span> <span class="tlaGNC">   153139592 :    [[nodiscard]] FORCE_FINLINE BitBoard whiteRook()   const { return _allB[3] &amp; allPieces[Co_White]; }</span></span>
-<span id="L174"><span class="lineNum">     174</span> <span class="tlaGNC">   152057725 :    [[nodiscard]] FORCE_FINLINE BitBoard whiteQueen()  const { return _allB[4] &amp; allPieces[Co_White]; }</span></span>
-<span id="L175"><span class="lineNum">     175</span> <span class="tlaGNC">   149519386 :    [[nodiscard]] FORCE_FINLINE BitBoard whiteKing()   const { return _allB[5] &amp; allPieces[Co_White]; }</span></span>
+<span id="L170"><span class="lineNum">     170</span> <span class="tlaGNC">   154851224 :    [[nodiscard]] FORCE_FINLINE BitBoard whitePawn()   const { return _allB[0] &amp; allPieces[Co_White]; }</span></span>
+<span id="L171"><span class="lineNum">     171</span> <span class="tlaGNC">   149578414 :    [[nodiscard]] FORCE_FINLINE BitBoard whiteKnight() const { return _allB[1] &amp; allPieces[Co_White]; }</span></span>
+<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC">   161445912 :    [[nodiscard]] FORCE_FINLINE BitBoard whiteBishop() const { return _allB[2] &amp; allPieces[Co_White]; }</span></span>
+<span id="L173"><span class="lineNum">     173</span> <span class="tlaGNC">   153139721 :    [[nodiscard]] FORCE_FINLINE BitBoard whiteRook()   const { return _allB[3] &amp; allPieces[Co_White]; }</span></span>
+<span id="L174"><span class="lineNum">     174</span> <span class="tlaGNC">   152057847 :    [[nodiscard]] FORCE_FINLINE BitBoard whiteQueen()  const { return _allB[4] &amp; allPieces[Co_White]; }</span></span>
+<span id="L175"><span class="lineNum">     175</span> <span class="tlaGNC">   149519508 :    [[nodiscard]] FORCE_FINLINE BitBoard whiteKing()   const { return _allB[5] &amp; allPieces[Co_White]; }</span></span>
 <span id="L176"><span class="lineNum">     176</span>              : </span>
-<span id="L177"><span class="lineNum">     177</span> <span class="tlaGNC">      254045 :    [[nodiscard]] FORCE_FINLINE BitBoard whiteLightBishop() const { return whiteBishop() &amp; BB::whiteSquare; }</span></span>
-<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">      254045 :    [[nodiscard]] FORCE_FINLINE BitBoard whiteDarkBishop()  const { return whiteBishop() &amp; BB::blackSquare; }</span></span>
-<span id="L179"><span class="lineNum">     179</span> <span class="tlaGNC">      254045 :    [[nodiscard]] FORCE_FINLINE BitBoard blackLightBishop() const { return blackBishop() &amp; BB::whiteSquare; }</span></span>
-<span id="L180"><span class="lineNum">     180</span> <span class="tlaGNC">      254045 :    [[nodiscard]] FORCE_FINLINE BitBoard blackDarkBishop()  const { return blackBishop() &amp; BB::blackSquare; }</span></span>
+<span id="L177"><span class="lineNum">     177</span> <span class="tlaGNC">      254050 :    [[nodiscard]] FORCE_FINLINE BitBoard whiteLightBishop() const { return whiteBishop() &amp; BB::whiteSquare; }</span></span>
+<span id="L178"><span class="lineNum">     178</span> <span class="tlaGNC">      254050 :    [[nodiscard]] FORCE_FINLINE BitBoard whiteDarkBishop()  const { return whiteBishop() &amp; BB::blackSquare; }</span></span>
+<span id="L179"><span class="lineNum">     179</span> <span class="tlaGNC">      254050 :    [[nodiscard]] FORCE_FINLINE BitBoard blackLightBishop() const { return blackBishop() &amp; BB::whiteSquare; }</span></span>
+<span id="L180"><span class="lineNum">     180</span> <span class="tlaGNC">      254050 :    [[nodiscard]] FORCE_FINLINE BitBoard blackDarkBishop()  const { return blackBishop() &amp; BB::blackSquare; }</span></span>
 <span id="L181"><span class="lineNum">     181</span>              : </span>
 <span id="L182"><span class="lineNum">     182</span>              :    template&lt;Piece pp&gt; [[nodiscard]] FORCE_FINLINE BitBoard pieces_const(const Color cc) const {</span>
 <span id="L183"><span class="lineNum">     183</span>              :       assert(pp &gt; P_none);</span>
 <span id="L184"><span class="lineNum">     184</span>              :       assert(pp &lt; P_end);</span>
-<span id="L185"><span class="lineNum">     185</span> <span class="tlaGNC">    38284126 :       assert(cc == Co_White || cc == Co_Black);</span></span>
-<span id="L186"><span class="lineNum">     186</span> <span class="tlaGNC">    42171452 :       return _allB[pp - 1] &amp; allPieces[cc];</span></span>
+<span id="L185"><span class="lineNum">     185</span> <span class="tlaGNC">    38284643 :       assert(cc == Co_White || cc == Co_Black);</span></span>
+<span id="L186"><span class="lineNum">     186</span> <span class="tlaGNC">    42172093 :       return _allB[pp - 1] &amp; allPieces[cc];</span></span>
 <span id="L187"><span class="lineNum">     187</span>              :    }</span>
 <span id="L188"><span class="lineNum">     188</span>              :    [[nodiscard]] FORCE_FINLINE BitBoard pieces_const(const Color cc, const Piece pp) const {</span>
-<span id="L189"><span class="lineNum">     189</span> <span class="tlaGNC">    20602850 :       assert(pp &gt; P_none);</span></span>
+<span id="L189"><span class="lineNum">     189</span> <span class="tlaGNC">    20602984 :       assert(pp &gt; P_none);</span></span>
 <span id="L190"><span class="lineNum">     190</span>              :       assert(pp &lt; P_end);</span>
-<span id="L191"><span class="lineNum">     191</span> <span class="tlaGNC">    54272401 :       assert(cc == Co_White || cc == Co_Black);</span></span>
-<span id="L192"><span class="lineNum">     192</span> <span class="tlaGNC">    56077397 :       return _allB[pp - 1] &amp; allPieces[cc];</span></span>
+<span id="L191"><span class="lineNum">     191</span> <span class="tlaGNC">    54272613 :       assert(cc == Co_White || cc == Co_Black);</span></span>
+<span id="L192"><span class="lineNum">     192</span> <span class="tlaGNC">    56077659 :       return _allB[pp - 1] &amp; allPieces[cc];</span></span>
 <span id="L193"><span class="lineNum">     193</span>              :    }</span>
 <span id="L194"><span class="lineNum">     194</span>              :    [[nodiscard]] FORCE_FINLINE BitBoard pieces_const(const Piece pp) const {</span>
 <span id="L195"><span class="lineNum">     195</span> <span class="tlaUNC tlaBgUNC">           0 :       assert(pp != P_none);</span></span>
@@ -261,16 +261,16 @@
 <span id="L199"><span class="lineNum">     199</span>              :    }</span>
 <span id="L200"><span class="lineNum">     200</span>              :    // next one is kinda &quot;private&quot;</span>
 <span id="L201"><span class="lineNum">     201</span>              :    [[nodiscard]] FORCE_FINLINE BitBoard&amp; _pieces(const Piece pp) {</span>
-<span id="L202"><span class="lineNum">     202</span> <span class="tlaGNC tlaBgGNC">      352696 :       assert(pp != P_none);</span></span>
-<span id="L203"><span class="lineNum">     203</span> <span class="tlaGNC">   181495078 :       assert(pp &lt; P_end);</span></span>
-<span id="L204"><span class="lineNum">     204</span> <span class="tlaGNC">   181495078 :       assert(pp &gt;= P_bk);</span></span>
-<span id="L205"><span class="lineNum">     205</span> <span class="tlaGNC">   353542607 :       return _allB[Abs(pp) - 1];</span></span>
+<span id="L202"><span class="lineNum">     202</span> <span class="tlaGNC tlaBgGNC">      352692 :       assert(pp != P_none);</span></span>
+<span id="L203"><span class="lineNum">     203</span> <span class="tlaGNC">   181495138 :       assert(pp &lt; P_end);</span></span>
+<span id="L204"><span class="lineNum">     204</span> <span class="tlaGNC">   181495138 :       assert(pp &gt;= P_bk);</span></span>
+<span id="L205"><span class="lineNum">     205</span> <span class="tlaGNC">   353542778 :       return _allB[Abs(pp) - 1];</span></span>
 <span id="L206"><span class="lineNum">     206</span>              :    }</span>
 <span id="L207"><span class="lineNum">     207</span>              : </span>
 <span id="L208"><span class="lineNum">     208</span>              : #ifdef WITH_NNUE</span>
 <span id="L209"><span class="lineNum">     209</span>              :    void associateEvaluator(NNUEEvaluator&amp; evaluator, bool dirty = true) { </span>
-<span id="L210"><span class="lineNum">     210</span> <span class="tlaGNC">     2968546 :       associatedEvaluator = &amp;evaluator; </span></span>
-<span id="L211"><span class="lineNum">     211</span> <span class="tlaGNC">     2990594 :       evaluator.dirty = dirty;</span></span>
+<span id="L210"><span class="lineNum">     210</span> <span class="tlaGNC">     2968678 :       associatedEvaluator = &amp;evaluator; </span></span>
+<span id="L211"><span class="lineNum">     211</span> <span class="tlaGNC">     2990718 :       evaluator.dirty = dirty;</span></span>
 <span id="L212"><span class="lineNum">     212</span>              :    }</span>
 <span id="L213"><span class="lineNum">     213</span>              : </span>
 <span id="L214"><span class="lineNum">     214</span>              :    void dissociateEvaluator() { </span>
@@ -278,11 +278,11 @@
 <span id="L216"><span class="lineNum">     216</span>              :    }</span>
 <span id="L217"><span class="lineNum">     217</span>              : </span>
 <span id="L218"><span class="lineNum">     218</span>              :    [[nodiscard]] NNUEEvaluator&amp; evaluator() {</span>
-<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC tlaBgGNC">   172464482 :       assert(associatedEvaluator);</span></span>
+<span id="L219"><span class="lineNum">     219</span> <span class="tlaGNC tlaBgGNC">   172464593 :       assert(associatedEvaluator);</span></span>
 <span id="L220"><span class="lineNum">     220</span>              :       return *associatedEvaluator;</span>
 <span id="L221"><span class="lineNum">     221</span>              :    }</span>
 <span id="L222"><span class="lineNum">     222</span>              :    [[nodiscard]] const NNUEEvaluator&amp; evaluator() const {</span>
-<span id="L223"><span class="lineNum">     223</span> <span class="tlaGNC">     4127549 :       assert(associatedEvaluator);</span></span>
+<span id="L223"><span class="lineNum">     223</span> <span class="tlaGNC">     4127738 :       assert(associatedEvaluator);</span></span>
 <span id="L224"><span class="lineNum">     224</span>              :       return *associatedEvaluator;</span>
 <span id="L225"><span class="lineNum">     225</span>              :    }</span>
 <span id="L226"><span class="lineNum">     226</span>              :    [[nodiscard]] bool hasEvaluator() const {</span>
@@ -292,66 +292,66 @@
 <span id="L230"><span class="lineNum">     230</span>              :    // Vastly taken from Seer implementation.</span>
 <span id="L231"><span class="lineNum">     231</span>              :    // see https://github.com/connormcmonigle/seer-nnue</span>
 <span id="L232"><span class="lineNum">     232</span>              : </span>
-<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">     8228117 :    template&lt;Color c&gt; void resetNNUEIndices_(NNUEEvaluator&amp; nnueEvaluator) const {</span></span>
+<span id="L233"><span class="lineNum">     233</span> <span class="tlaGNC">     8228111 :    template&lt;Color c&gt; void resetNNUEIndices_(NNUEEvaluator&amp; nnueEvaluator) const {</span></span>
 <span id="L234"><span class="lineNum">     234</span>              :       //us</span>
-<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">   105026033 :       BB::applyOn(pieces_const&lt;P_wp&gt;(c), [&amp;](const Square &amp; k) {</span></span>
-<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">    48398958 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(king[c], k, P_wp)); </span></span>
+<span id="L235"><span class="lineNum">     235</span> <span class="tlaGNC">   105026233 :       BB::applyOn(pieces_const&lt;P_wp&gt;(c), [&amp;](const Square &amp; k) {</span></span>
+<span id="L236"><span class="lineNum">     236</span> <span class="tlaGNC">    48399061 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(king[c], k, P_wp)); </span></span>
 <span id="L237"><span class="lineNum">     237</span>              :       });</span>
-<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">    26302247 :       BB::applyOn(pieces_const&lt;P_wn&gt;(c), [&amp;](const Square &amp; k) {</span></span>
-<span id="L239"><span class="lineNum">     239</span> <span class="tlaGNC">     9037065 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(king[c], k, P_wn)); </span></span>
+<span id="L238"><span class="lineNum">     238</span> <span class="tlaGNC">    26302305 :       BB::applyOn(pieces_const&lt;P_wn&gt;(c), [&amp;](const Square &amp; k) {</span></span>
+<span id="L239"><span class="lineNum">     239</span> <span class="tlaGNC">     9037097 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(king[c], k, P_wn)); </span></span>
 <span id="L240"><span class="lineNum">     240</span>              :       });</span>
-<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">    26295851 :       BB::applyOn(pieces_const&lt;P_wb&gt;(c), [&amp;](const Square &amp; k) {</span></span>
-<span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">     9033867 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(king[c], k, P_wb)); </span></span>
+<span id="L241"><span class="lineNum">     241</span> <span class="tlaGNC">    26295917 :       BB::applyOn(pieces_const&lt;P_wb&gt;(c), [&amp;](const Square &amp; k) {</span></span>
+<span id="L242"><span class="lineNum">     242</span> <span class="tlaGNC">     9033903 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(king[c], k, P_wb)); </span></span>
 <span id="L243"><span class="lineNum">     243</span>              :       });</span>
-<span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC">    34023443 :       BB::applyOn(pieces_const&lt;P_wr&gt;(c), [&amp;](const Square &amp; k) {</span></span>
-<span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">    12897663 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(king[c], k, P_wr));</span></span>
+<span id="L244"><span class="lineNum">     244</span> <span class="tlaGNC">    34023463 :       BB::applyOn(pieces_const&lt;P_wr&gt;(c), [&amp;](const Square &amp; k) {</span></span>
+<span id="L245"><span class="lineNum">     245</span> <span class="tlaGNC">    12897676 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(king[c], k, P_wr));</span></span>
 <span id="L246"><span class="lineNum">     246</span>              :       });</span>
-<span id="L247"><span class="lineNum">     247</span> <span class="tlaGNC">    17435289 :       BB::applyOn(pieces_const&lt;P_wq&gt;(c), [&amp;](const Square &amp; k) {</span></span>
-<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC">     4603586 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(king[c], k, P_wq)); </span></span>
+<span id="L247"><span class="lineNum">     247</span> <span class="tlaGNC">    17435321 :       BB::applyOn(pieces_const&lt;P_wq&gt;(c), [&amp;](const Square &amp; k) {</span></span>
+<span id="L248"><span class="lineNum">     248</span> <span class="tlaGNC">     4603605 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(king[c], k, P_wq)); </span></span>
 <span id="L249"><span class="lineNum">     249</span>              :       });</span>
-<span id="L250"><span class="lineNum">     250</span> <span class="tlaGNC">    24684351 :       BB::applyOn(pieces_const&lt;P_wk&gt;(c), [&amp;](const Square &amp; k) {</span></span>
-<span id="L251"><span class="lineNum">     251</span> <span class="tlaGNC">     8228117 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(king[c], k, P_wk));</span></span>
+<span id="L250"><span class="lineNum">     250</span> <span class="tlaGNC">    24684333 :       BB::applyOn(pieces_const&lt;P_wk&gt;(c), [&amp;](const Square &amp; k) {</span></span>
+<span id="L251"><span class="lineNum">     251</span> <span class="tlaGNC">     8228111 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(king[c], k, P_wk));</span></span>
 <span id="L252"><span class="lineNum">     252</span>              :       });</span>
 <span id="L253"><span class="lineNum">     253</span>              :       //them</span>
-<span id="L254"><span class="lineNum">     254</span> <span class="tlaGNC">   103750259 :       BB::applyOn(pieces_const&lt;P_wp&gt;(~c), [&amp;](const Square &amp; k) {</span></span>
-<span id="L255"><span class="lineNum">     255</span> <span class="tlaGNC">    47761071 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceThem(king[c], k, P_wp)); </span></span>
+<span id="L254"><span class="lineNum">     254</span> <span class="tlaGNC">   103750457 :       BB::applyOn(pieces_const&lt;P_wp&gt;(~c), [&amp;](const Square &amp; k) {</span></span>
+<span id="L255"><span class="lineNum">     255</span> <span class="tlaGNC">    47761173 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceThem(king[c], k, P_wp)); </span></span>
 <span id="L256"><span class="lineNum">     256</span>              :       });</span>
-<span id="L257"><span class="lineNum">     257</span> <span class="tlaGNC">    26454763 :       BB::applyOn(pieces_const&lt;P_wn&gt;(~c), [&amp;](const Square &amp; k) {</span></span>
-<span id="L258"><span class="lineNum">     258</span> <span class="tlaGNC">     9113323 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceThem(king[c], k, P_wn)); </span></span>
+<span id="L257"><span class="lineNum">     257</span> <span class="tlaGNC">    26454821 :       BB::applyOn(pieces_const&lt;P_wn&gt;(~c), [&amp;](const Square &amp; k) {</span></span>
+<span id="L258"><span class="lineNum">     258</span> <span class="tlaGNC">     9113355 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceThem(king[c], k, P_wn)); </span></span>
 <span id="L259"><span class="lineNum">     259</span>              :       });</span>
-<span id="L260"><span class="lineNum">     260</span> <span class="tlaGNC">    26529469 :       BB::applyOn(pieces_const&lt;P_wb&gt;(~c), [&amp;](const Square &amp; k) {</span></span>
-<span id="L261"><span class="lineNum">     261</span> <span class="tlaGNC">     9150676 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceThem(king[c], k, P_wb)); </span></span>
+<span id="L260"><span class="lineNum">     260</span> <span class="tlaGNC">    26529527 :       BB::applyOn(pieces_const&lt;P_wb&gt;(~c), [&amp;](const Square &amp; k) {</span></span>
+<span id="L261"><span class="lineNum">     261</span> <span class="tlaGNC">     9150708 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceThem(king[c], k, P_wb)); </span></span>
 <span id="L262"><span class="lineNum">     262</span>              :       });</span>
-<span id="L263"><span class="lineNum">     263</span> <span class="tlaGNC">    34369499 :       BB::applyOn(pieces_const&lt;P_wr&gt;(~c), [&amp;](const Square &amp; k) {</span></span>
-<span id="L264"><span class="lineNum">     264</span> <span class="tlaGNC">    13070691 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceThem(king[c], k, P_wr));</span></span>
+<span id="L263"><span class="lineNum">     263</span> <span class="tlaGNC">    34369519 :       BB::applyOn(pieces_const&lt;P_wr&gt;(~c), [&amp;](const Square &amp; k) {</span></span>
+<span id="L264"><span class="lineNum">     264</span> <span class="tlaGNC">    13070704 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceThem(king[c], k, P_wr));</span></span>
 <span id="L265"><span class="lineNum">     265</span>              :       });</span>
-<span id="L266"><span class="lineNum">     266</span> <span class="tlaGNC">    17510171 :       BB::applyOn(pieces_const&lt;P_wq&gt;(~c), [&amp;](const Square &amp; k) {</span></span>
-<span id="L267"><span class="lineNum">     267</span> <span class="tlaGNC">     4641027 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceThem(king[c], k, P_wq)); </span></span>
+<span id="L266"><span class="lineNum">     266</span> <span class="tlaGNC">    17510199 :       BB::applyOn(pieces_const&lt;P_wq&gt;(~c), [&amp;](const Square &amp; k) {</span></span>
+<span id="L267"><span class="lineNum">     267</span> <span class="tlaGNC">     4641044 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceThem(king[c], k, P_wq)); </span></span>
 <span id="L268"><span class="lineNum">     268</span>              :       });</span>
-<span id="L269"><span class="lineNum">     269</span> <span class="tlaGNC">    24684351 :       BB::applyOn(pieces_const&lt;P_wk&gt;(~c), [&amp;](const Square &amp; k) {</span></span>
-<span id="L270"><span class="lineNum">     270</span> <span class="tlaGNC">     8228117 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceThem(king[c], k, P_wk));</span></span>
+<span id="L269"><span class="lineNum">     269</span> <span class="tlaGNC">    24684333 :       BB::applyOn(pieces_const&lt;P_wk&gt;(~c), [&amp;](const Square &amp; k) {</span></span>
+<span id="L270"><span class="lineNum">     270</span> <span class="tlaGNC">     8228111 :          nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceThem(king[c], k, P_wk));</span></span>
 <span id="L271"><span class="lineNum">     271</span>              :       });</span>
-<span id="L272"><span class="lineNum">     272</span> <span class="tlaGNC">     8228117 :    }</span></span>
+<span id="L272"><span class="lineNum">     272</span> <span class="tlaGNC">     8228111 :    }</span></span>
 <span id="L273"><span class="lineNum">     273</span>              : </span>
-<span id="L274"><span class="lineNum">     274</span> <span class="tlaGNC">        1597 :    void resetNNUEEvaluator(NNUEEvaluator&amp; nnueEvaluator) const {</span></span>
+<span id="L274"><span class="lineNum">     274</span> <span class="tlaGNC">        1602 :    void resetNNUEEvaluator(NNUEEvaluator&amp; nnueEvaluator) const {</span></span>
 <span id="L275"><span class="lineNum">     275</span>              :       START_TIMER</span>
 <span id="L276"><span class="lineNum">     276</span>              :       nnueEvaluator.clear();</span>
-<span id="L277"><span class="lineNum">     277</span> <span class="tlaGNC">        1597 :       resetNNUEIndices_&lt;Co_White&gt;(nnueEvaluator);</span></span>
-<span id="L278"><span class="lineNum">     278</span> <span class="tlaGNC">        1597 :       resetNNUEIndices_&lt;Co_Black&gt;(nnueEvaluator);</span></span>
-<span id="L279"><span class="lineNum">     279</span> <span class="tlaGNC">        1597 :       nnueEvaluator.dirty = false;</span></span>
+<span id="L277"><span class="lineNum">     277</span> <span class="tlaGNC">        1602 :       resetNNUEIndices_&lt;Co_White&gt;(nnueEvaluator);</span></span>
+<span id="L278"><span class="lineNum">     278</span> <span class="tlaGNC">        1602 :       resetNNUEIndices_&lt;Co_Black&gt;(nnueEvaluator);</span></span>
+<span id="L279"><span class="lineNum">     279</span> <span class="tlaGNC">        1602 :       nnueEvaluator.dirty = false;</span></span>
 <span id="L280"><span class="lineNum">     280</span>              :       STOP_AND_SUM_TIMER(ResetNNUE)</span>
-<span id="L281"><span class="lineNum">     281</span> <span class="tlaGNC">        1597 :    }</span></span>
+<span id="L281"><span class="lineNum">     281</span> <span class="tlaGNC">        1602 :    }</span></span>
 <span id="L282"><span class="lineNum">     282</span>              : </span>
-<span id="L283"><span class="lineNum">     283</span> <span class="tlaGNC">     8224923 :    void resetNNUEEvaluator(NNUEEvaluator&amp; nnueEvaluator, Color color) const {</span></span>
+<span id="L283"><span class="lineNum">     283</span> <span class="tlaGNC">     8224907 :    void resetNNUEEvaluator(NNUEEvaluator&amp; nnueEvaluator, Color color) const {</span></span>
 <span id="L284"><span class="lineNum">     284</span>              :       START_TIMER</span>
 <span id="L285"><span class="lineNum">     285</span>              :       nnueEvaluator.clear(color);</span>
-<span id="L286"><span class="lineNum">     286</span> <span class="tlaGNC">     8224923 :       if (color == Co_White)</span></span>
-<span id="L287"><span class="lineNum">     287</span> <span class="tlaGNC">     1566100 :          resetNNUEIndices_&lt;Co_White&gt;(nnueEvaluator);</span></span>
+<span id="L286"><span class="lineNum">     286</span> <span class="tlaGNC">     8224907 :       if (color == Co_White)</span></span>
+<span id="L287"><span class="lineNum">     287</span> <span class="tlaGNC">     1566077 :          resetNNUEIndices_&lt;Co_White&gt;(nnueEvaluator);</span></span>
 <span id="L288"><span class="lineNum">     288</span>              :       else</span>
-<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">     6658823 :          resetNNUEIndices_&lt;Co_Black&gt;(nnueEvaluator);</span></span>
-<span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">     8224923 :       nnueEvaluator.dirty = false;</span></span>
+<span id="L289"><span class="lineNum">     289</span> <span class="tlaGNC">     6658830 :          resetNNUEIndices_&lt;Co_Black&gt;(nnueEvaluator);</span></span>
+<span id="L290"><span class="lineNum">     290</span> <span class="tlaGNC">     8224907 :       nnueEvaluator.dirty = false;</span></span>
 <span id="L291"><span class="lineNum">     291</span>              :       STOP_AND_SUM_TIMER(ResetNNUE)</span>
-<span id="L292"><span class="lineNum">     292</span> <span class="tlaGNC">     8224923 :    }</span></span>
+<span id="L292"><span class="lineNum">     292</span> <span class="tlaGNC">     8224907 :    }</span></span>
 <span id="L293"><span class="lineNum">     293</span>              : </span>
 <span id="L294"><span class="lineNum">     294</span>              : #endif</span>
 <span id="L295"><span class="lineNum">     295</span>              : };</span>
@@ -386,10 +386,10 @@
 <span id="L324"><span class="lineNum">     324</span>              : };</span>
 <span id="L325"><span class="lineNum">     325</span>              : </span>
 <span id="L326"><span class="lineNum">     326</span>              : #ifdef WITH_NNUE</span>
-<span id="L327"><span class="lineNum">     327</span> <span class="tlaGNC">   156293393 : template&lt;Color c&gt; void updateNNUEEvaluator(NNUEEvaluator&amp; nnueEvaluator, const MoveInfo&amp; moveInfo) {</span></span>
+<span id="L327"><span class="lineNum">     327</span> <span class="tlaGNC">   156293536 : template&lt;Color c&gt; void updateNNUEEvaluator(NNUEEvaluator&amp; nnueEvaluator, const MoveInfo&amp; moveInfo) {</span></span>
 <span id="L328"><span class="lineNum">     328</span>              :    START_TIMER</span>
-<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC">   156293393 :    const Piece fromType = Abs(moveInfo.fromP);</span></span>
-<span id="L330"><span class="lineNum">     330</span> <span class="tlaGNC">   156293393 :    const Piece toType = Abs(moveInfo.toP);</span></span>
+<span id="L329"><span class="lineNum">     329</span> <span class="tlaGNC">   156293536 :    const Piece fromType = Abs(moveInfo.fromP);</span></span>
+<span id="L330"><span class="lineNum">     330</span> <span class="tlaGNC">   156293536 :    const Piece toType = Abs(moveInfo.toP);</span></span>
 <span id="L331"><span class="lineNum">     331</span>              :    // Prefetch NNUE weight rows for all needed feature indices before incremental updates</span>
 <span id="L332"><span class="lineNum">     332</span>              : #ifdef WITH_NNUE_PREFETCH</span>
 <span id="L333"><span class="lineNum">     333</span>              :    nnueEvaluator.template us&lt;c&gt;().prefetch(NNUEIndiceUs(moveInfo.king[c], moveInfo.from, fromType));</span>
@@ -413,34 +413,34 @@
 <span id="L351"><span class="lineNum">     351</span>              :       nnueEvaluator.template them&lt;c&gt;().prefetch(NNUEIndiceUs(moveInfo.king[~c], moveInfo.to, toType));</span>
 <span id="L352"><span class="lineNum">     352</span>              :    }</span>
 <span id="L353"><span class="lineNum">     353</span>              : #endif</span>
-<span id="L354"><span class="lineNum">     354</span> <span class="tlaGNC">   156293393 :    nnueEvaluator.template us&lt;c&gt;().erase(NNUEIndiceUs(moveInfo.king[c], moveInfo.from, fromType));</span></span>
-<span id="L355"><span class="lineNum">     355</span> <span class="tlaGNC">   156293393 :    nnueEvaluator.template them&lt;c&gt;().erase(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));</span></span>
-<span id="L356"><span class="lineNum">     356</span> <span class="tlaGNC">   156293393 :    if (isPromotion(moveInfo.type)) {</span></span>
+<span id="L354"><span class="lineNum">     354</span> <span class="tlaGNC">   156293536 :    nnueEvaluator.template us&lt;c&gt;().erase(NNUEIndiceUs(moveInfo.king[c], moveInfo.from, fromType));</span></span>
+<span id="L355"><span class="lineNum">     355</span> <span class="tlaGNC">   156293536 :    nnueEvaluator.template them&lt;c&gt;().erase(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));</span></span>
+<span id="L356"><span class="lineNum">     356</span> <span class="tlaGNC">   156293536 :    if (isPromotion(moveInfo.type)) {</span></span>
 <span id="L357"><span class="lineNum">     357</span> <span class="tlaGNC">      415907 :       const Piece promPieceType = promShift(moveInfo.type);</span></span>
 <span id="L358"><span class="lineNum">     358</span> <span class="tlaGNC">      415907 :       nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(moveInfo.king[c], moveInfo.to, promPieceType));</span></span>
 <span id="L359"><span class="lineNum">     359</span> <span class="tlaGNC">      415907 :       nnueEvaluator.template them&lt;c&gt;().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, promPieceType));</span></span>
 <span id="L360"><span class="lineNum">     360</span>              :    }</span>
 <span id="L361"><span class="lineNum">     361</span>              :    else {</span>
-<span id="L362"><span class="lineNum">     362</span> <span class="tlaGNC">   155877486 :       nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(moveInfo.king[c], moveInfo.to, fromType));</span></span>
-<span id="L363"><span class="lineNum">     363</span> <span class="tlaGNC">   155877486 :       nnueEvaluator.template them&lt;c&gt;().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, fromType));</span></span>
+<span id="L362"><span class="lineNum">     362</span> <span class="tlaGNC">   155877629 :       nnueEvaluator.template us&lt;c&gt;().insert(NNUEIndiceUs(moveInfo.king[c], moveInfo.to, fromType));</span></span>
+<span id="L363"><span class="lineNum">     363</span> <span class="tlaGNC">   155877629 :       nnueEvaluator.template them&lt;c&gt;().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, fromType));</span></span>
 <span id="L364"><span class="lineNum">     364</span>              :    }</span>
-<span id="L365"><span class="lineNum">     365</span> <span class="tlaGNC">   156293393 :    if (moveInfo.type == T_ep) {</span></span>
+<span id="L365"><span class="lineNum">     365</span> <span class="tlaGNC">   156293536 :    if (moveInfo.type == T_ep) {</span></span>
 <span id="L366"><span class="lineNum">     366</span> <span class="tlaGNC">       53071 :       const Square epSq = moveInfo.ep + (c == Co_White ? -8 : +8);</span></span>
 <span id="L367"><span class="lineNum">     367</span> <span class="tlaGNC">       53071 :       nnueEvaluator.template us&lt;c&gt;().erase(NNUEIndiceThem(moveInfo.king[c], epSq, P_wp));</span></span>
 <span id="L368"><span class="lineNum">     368</span> <span class="tlaGNC">       53071 :       nnueEvaluator.template them&lt;c&gt;().erase(NNUEIndiceUs(moveInfo.king[~c], epSq, P_wp));</span></span>
 <span id="L369"><span class="lineNum">     369</span>              :    }</span>
-<span id="L370"><span class="lineNum">     370</span> <span class="tlaGNC">   156240322 :    else if (toType != P_none) {</span></span>
-<span id="L371"><span class="lineNum">     371</span> <span class="tlaGNC">     7436389 :       nnueEvaluator.template us&lt;c&gt;().erase(NNUEIndiceThem(moveInfo.king[c], moveInfo.to, toType));</span></span>
-<span id="L372"><span class="lineNum">     372</span> <span class="tlaGNC">     7436389 :       nnueEvaluator.template them&lt;c&gt;().erase(NNUEIndiceUs(moveInfo.king[~c], moveInfo.to, toType));</span></span>
+<span id="L370"><span class="lineNum">     370</span> <span class="tlaGNC">   156240465 :    else if (toType != P_none) {</span></span>
+<span id="L371"><span class="lineNum">     371</span> <span class="tlaGNC">     7436363 :       nnueEvaluator.template us&lt;c&gt;().erase(NNUEIndiceThem(moveInfo.king[c], moveInfo.to, toType));</span></span>
+<span id="L372"><span class="lineNum">     372</span> <span class="tlaGNC">     7436363 :       nnueEvaluator.template them&lt;c&gt;().erase(NNUEIndiceUs(moveInfo.king[~c], moveInfo.to, toType));</span></span>
 <span id="L373"><span class="lineNum">     373</span>              :    }</span>
-<span id="L374"><span class="lineNum">     374</span> <span class="tlaGNC">   156293393 :    nnueEvaluator.dirty = false;</span></span>
+<span id="L374"><span class="lineNum">     374</span> <span class="tlaGNC">   156293536 :    nnueEvaluator.dirty = false;</span></span>
 <span id="L375"><span class="lineNum">     375</span>              :    STOP_AND_SUM_TIMER(UpdateNNUE)</span>
-<span id="L376"><span class="lineNum">     376</span> <span class="tlaGNC">   156293393 : }</span></span>
+<span id="L376"><span class="lineNum">     376</span> <span class="tlaGNC">   156293536 : }</span></span>
 <span id="L377"><span class="lineNum">     377</span>              : </span>
-<span id="L378"><span class="lineNum">     378</span> <span class="tlaGNC">     7945891 : template&lt;Color c&gt; void updateNNUEEvaluatorThemOnly(NNUEEvaluator&amp; nnueEvaluator, const MoveInfo&amp; moveInfo) {</span></span>
+<span id="L378"><span class="lineNum">     378</span> <span class="tlaGNC">     7945875 : template&lt;Color c&gt; void updateNNUEEvaluatorThemOnly(NNUEEvaluator&amp; nnueEvaluator, const MoveInfo&amp; moveInfo) {</span></span>
 <span id="L379"><span class="lineNum">     379</span>              :    START_TIMER</span>
-<span id="L380"><span class="lineNum">     380</span> <span class="tlaGNC">     7945891 :    const Piece fromType = Abs(moveInfo.fromP);</span></span>
-<span id="L381"><span class="lineNum">     381</span> <span class="tlaGNC">     7945891 :    const Piece toType = Abs(moveInfo.toP);</span></span>
+<span id="L380"><span class="lineNum">     380</span> <span class="tlaGNC">     7945875 :    const Piece fromType = Abs(moveInfo.fromP);</span></span>
+<span id="L381"><span class="lineNum">     381</span> <span class="tlaGNC">     7945875 :    const Piece toType = Abs(moveInfo.toP);</span></span>
 <span id="L382"><span class="lineNum">     382</span>              :    // Prefetch NNUE weight rows for all needed feature indices before incremental updates</span>
 <span id="L383"><span class="lineNum">     383</span>              : #ifdef WITH_NNUE_PREFETCH</span>
 <span id="L384"><span class="lineNum">     384</span>              :    nnueEvaluator.template them&lt;c&gt;().prefetch(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));</span>
@@ -459,24 +459,24 @@
 <span id="L397"><span class="lineNum">     397</span>              :       nnueEvaluator.template them&lt;c&gt;().prefetch(NNUEIndiceUs(moveInfo.king[~c], moveInfo.to, toType));</span>
 <span id="L398"><span class="lineNum">     398</span>              :    }</span>
 <span id="L399"><span class="lineNum">     399</span>              : #endif</span>
-<span id="L400"><span class="lineNum">     400</span> <span class="tlaGNC">     7945891 :    nnueEvaluator.template them&lt;c&gt;().erase(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));</span></span>
-<span id="L401"><span class="lineNum">     401</span> <span class="tlaGNC">     7945891 :    if (isPromotion(moveInfo.type)) {</span></span>
+<span id="L400"><span class="lineNum">     400</span> <span class="tlaGNC">     7945875 :    nnueEvaluator.template them&lt;c&gt;().erase(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));</span></span>
+<span id="L401"><span class="lineNum">     401</span> <span class="tlaGNC">     7945875 :    if (isPromotion(moveInfo.type)) {</span></span>
 <span id="L402"><span class="lineNum">     402</span> <span class="tlaUNC tlaBgUNC">           0 :       const Piece promPieceType = promShift(moveInfo.type);</span></span>
 <span id="L403"><span class="lineNum">     403</span> <span class="tlaUNC">           0 :       nnueEvaluator.template them&lt;c&gt;().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, promPieceType));</span></span>
 <span id="L404"><span class="lineNum">     404</span>              :    }</span>
 <span id="L405"><span class="lineNum">     405</span>              :    else {</span>
-<span id="L406"><span class="lineNum">     406</span> <span class="tlaGNC tlaBgGNC">     7945891 :       nnueEvaluator.template them&lt;c&gt;().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, fromType));</span></span>
+<span id="L406"><span class="lineNum">     406</span> <span class="tlaGNC tlaBgGNC">     7945875 :       nnueEvaluator.template them&lt;c&gt;().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, fromType));</span></span>
 <span id="L407"><span class="lineNum">     407</span>              :    }</span>
-<span id="L408"><span class="lineNum">     408</span> <span class="tlaGNC">     7945891 :    if (moveInfo.type == T_ep) {</span></span>
+<span id="L408"><span class="lineNum">     408</span> <span class="tlaGNC">     7945875 :    if (moveInfo.type == T_ep) {</span></span>
 <span id="L409"><span class="lineNum">     409</span> <span class="tlaUNC tlaBgUNC">           0 :       const Square epSq = moveInfo.ep + (c == Co_White ? -8 : +8);</span></span>
 <span id="L410"><span class="lineNum">     410</span> <span class="tlaUNC">           0 :       nnueEvaluator.template them&lt;c&gt;().erase(NNUEIndiceUs(moveInfo.king[~c], epSq, P_wp));</span></span>
 <span id="L411"><span class="lineNum">     411</span>              :    }</span>
-<span id="L412"><span class="lineNum">     412</span> <span class="tlaGNC tlaBgGNC">     7945891 :    else if (toType != P_none) {</span></span>
-<span id="L413"><span class="lineNum">     413</span> <span class="tlaGNC">      336189 :       nnueEvaluator.template them&lt;c&gt;().erase(NNUEIndiceUs(moveInfo.king[~c], moveInfo.to, toType));</span></span>
+<span id="L412"><span class="lineNum">     412</span> <span class="tlaGNC tlaBgGNC">     7945875 :    else if (toType != P_none) {</span></span>
+<span id="L413"><span class="lineNum">     413</span> <span class="tlaGNC">      336188 :       nnueEvaluator.template them&lt;c&gt;().erase(NNUEIndiceUs(moveInfo.king[~c], moveInfo.to, toType));</span></span>
 <span id="L414"><span class="lineNum">     414</span>              :    }</span>
-<span id="L415"><span class="lineNum">     415</span> <span class="tlaGNC">     7945891 :    nnueEvaluator.dirty = false;</span></span>
+<span id="L415"><span class="lineNum">     415</span> <span class="tlaGNC">     7945875 :    nnueEvaluator.dirty = false;</span></span>
 <span id="L416"><span class="lineNum">     416</span>              :    STOP_AND_SUM_TIMER(UpdateNNUE)</span>
-<span id="L417"><span class="lineNum">     417</span> <span class="tlaGNC">     7945891 : }</span></span>
+<span id="L417"><span class="lineNum">     417</span> <span class="tlaGNC">     7945875 : }</span></span>
 <span id="L418"><span class="lineNum">     418</span>              : #endif</span>
         </pre>
               </td>

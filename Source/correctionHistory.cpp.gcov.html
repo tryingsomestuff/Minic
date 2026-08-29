@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-08-29 21:03:23</td>
+            <td class="headerValue">2026-08-29 21:35:42</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
@@ -68,14 +68,14 @@
 <span id="L6"><span class="lineNum">       6</span>              : #include &quot;position.hpp&quot;</span>
 <span id="L7"><span class="lineNum">       7</span>              : #include &quot;searcher.hpp&quot;</span>
 <span id="L8"><span class="lineNum">       8</span>              : </span>
-<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC tlaBgGNC">     2623816 : ScoreType Searcher::correctionScore(const Position&amp; p) const {</span></span>
+<span id="L9"><span class="lineNum">       9</span> <span class="tlaGNC tlaBgGNC">     2624057 : ScoreType Searcher::correctionScore(const Position&amp; p) const {</span></span>
 <span id="L10"><span class="lineNum">      10</span>              :    int correction = 0;</span>
 <span id="L11"><span class="lineNum">      11</span>              : #ifdef WITH_PAWN_CORRHIST</span>
-<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC">     2623816 :    correction += pawnCorrHist.score(p.c, p.ph);</span></span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC">     2624057 :    correction += pawnCorrHist.score(p.c, p.ph);</span></span>
 <span id="L13"><span class="lineNum">      13</span>              : #endif</span>
 <span id="L14"><span class="lineNum">      14</span>              : #ifdef WITH_NONPAWN_CORRHIST</span>
-<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">     2623816 :    correction += nonPawnCorrHist.score(p.c, nonPawnKey(p, Co_White));</span></span>
-<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">     2623816 :    correction += nonPawnCorrHist.score(p.c, nonPawnKey(p, Co_Black));</span></span>
+<span id="L15"><span class="lineNum">      15</span> <span class="tlaGNC">     2624057 :    correction += nonPawnCorrHist.score(p.c, nonPawnKey(p, Co_White));</span></span>
+<span id="L16"><span class="lineNum">      16</span> <span class="tlaGNC">     2624057 :    correction += nonPawnCorrHist.score(p.c, nonPawnKey(p, Co_Black));</span></span>
 <span id="L17"><span class="lineNum">      17</span>              : #endif</span>
 <span id="L18"><span class="lineNum">      18</span>              : #ifdef WITH_MINOR_CORRHIST</span>
 <span id="L19"><span class="lineNum">      19</span>              :    correction += minorCorrHist.score(p.c, minorKey(p));</span>
@@ -83,23 +83,23 @@
 <span id="L21"><span class="lineNum">      21</span>              : #ifdef WITH_MAJOR_CORRHIST</span>
 <span id="L22"><span class="lineNum">      22</span>              :    correction += majorCorrHist.score(p.c, majorKey(p));</span>
 <span id="L23"><span class="lineNum">      23</span>              : #endif</span>
-<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">     2623816 :    return static_cast&lt;ScoreType&gt;(correction);</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaGNC">     2624057 :    return static_cast&lt;ScoreType&gt;(correction);</span></span>
 <span id="L25"><span class="lineNum">      25</span>              : }</span>
 <span id="L26"><span class="lineNum">      26</span>              : </span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">     2889958 : ScoreType Searcher::correctedEval(const Position&amp; p, ScoreType rawScore) const {</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">     2890196 : ScoreType Searcher::correctedEval(const Position&amp; p, ScoreType rawScore) const {</span></span>
 <span id="L28"><span class="lineNum">      28</span>              :    // never distort a mate/mated score (this also covers the isInCheck case, since a mated eval already is one)</span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">     2889958 :    if (isMateScore(rawScore)) return rawScore;</span></span>
-<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">     5247632 :    return clampScore(static_cast&lt;int&gt;(rawScore) + static_cast&lt;int&gt;(correctionScore(p)));</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">     2890196 :    if (isMateScore(rawScore)) return rawScore;</span></span>
+<span id="L30"><span class="lineNum">      30</span> <span class="tlaGNC">     5248114 :    return clampScore(static_cast&lt;int&gt;(rawScore) + static_cast&lt;int&gt;(correctionScore(p)));</span></span>
 <span id="L31"><span class="lineNum">      31</span>              : }</span>
 <span id="L32"><span class="lineNum">      32</span>              : </span>
-<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">      118434 : void Searcher::updateCorrectionHistory(const Position&amp; p, DepthType depth, ScoreType bestScore, ScoreType baselineEval) {</span></span>
-<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">      118434 :    const int diff = bestScore - baselineEval;</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaGNC">      118442 : void Searcher::updateCorrectionHistory(const Position&amp; p, DepthType depth, ScoreType bestScore, ScoreType baselineEval) {</span></span>
+<span id="L34"><span class="lineNum">      34</span> <span class="tlaGNC">      118442 :    const int diff = bestScore - baselineEval;</span></span>
 <span id="L35"><span class="lineNum">      35</span>              : #ifdef WITH_PAWN_CORRHIST</span>
-<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">      118434 :    pawnCorrHist.update(p.c, p.ph, depth, diff, SearchConfig::correctionHistoryMaxPawn);</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaGNC">      118442 :    pawnCorrHist.update(p.c, p.ph, depth, diff, SearchConfig::correctionHistoryMaxPawn);</span></span>
 <span id="L37"><span class="lineNum">      37</span>              : #endif</span>
 <span id="L38"><span class="lineNum">      38</span>              : #ifdef WITH_NONPAWN_CORRHIST</span>
-<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">      118434 :    nonPawnCorrHist.update(p.c, nonPawnKey(p, Co_White), depth, diff, SearchConfig::correctionHistoryMaxNonPawn);</span></span>
-<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">      118434 :    nonPawnCorrHist.update(p.c, nonPawnKey(p, Co_Black), depth, diff, SearchConfig::correctionHistoryMaxNonPawn);</span></span>
+<span id="L39"><span class="lineNum">      39</span> <span class="tlaGNC">      118442 :    nonPawnCorrHist.update(p.c, nonPawnKey(p, Co_White), depth, diff, SearchConfig::correctionHistoryMaxNonPawn);</span></span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaGNC">      118442 :    nonPawnCorrHist.update(p.c, nonPawnKey(p, Co_Black), depth, diff, SearchConfig::correctionHistoryMaxNonPawn);</span></span>
 <span id="L41"><span class="lineNum">      41</span>              : #endif</span>
 <span id="L42"><span class="lineNum">      42</span>              : #ifdef WITH_MINOR_CORRHIST</span>
 <span id="L43"><span class="lineNum">      43</span>              :    minorCorrHist.update(p.c, minorKey(p), depth, diff, SearchConfig::correctionHistoryMaxMinor);</span>
@@ -107,7 +107,7 @@
 <span id="L45"><span class="lineNum">      45</span>              : #ifdef WITH_MAJOR_CORRHIST</span>
 <span id="L46"><span class="lineNum">      46</span>              :    majorCorrHist.update(p.c, majorKey(p), depth, diff, SearchConfig::correctionHistoryMaxMajor);</span>
 <span id="L47"><span class="lineNum">      47</span>              : #endif</span>
-<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">      118434 : }</span></span>
+<span id="L48"><span class="lineNum">      48</span> <span class="tlaGNC">      118442 : }</span></span>
 <span id="L49"><span class="lineNum">      49</span>              : </span>
 <span id="L50"><span class="lineNum">      50</span>              : #endif // WITH_CORRECTION_HISTORY</span>
         </pre>
