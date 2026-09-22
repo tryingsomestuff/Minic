@@ -74,8 +74,6 @@ const std::string MinicVersion = "3.47";
 //#define DEBUG_HASH
 //#define DEBUG_PHASH
 //#define DEBUG_NONPAWNHASH
-//#define DEBUG_MINORHASH
-//#define DEBUG_MAJORHASH
 //#define DEBUG_MATERIAL
 //#define DEBUG_APPLY
 //#define DEBUG_GENERATION
