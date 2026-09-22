@@ -326,6 +326,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool forceN
    // in case we are not using a material table, we still need KPK, KRK and KBNK helper
    // but only for most standard chess variants with kings on the board
    // end game knowledge (helper or scaling)
+   // static const thread-safety overhead ok here
    if (allowEGEvaluation && kingIsMandatory && (p.mat[Co_White][M_t] + p.mat[Co_Black][M_t] < 5)) {
      static const auto matHashKPK = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KPK"));
      static const auto matHashKKP = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KKP"));
@@ -337,7 +338,6 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool forceN
      static const auto matHashKKLN = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KKLN"));
      static const auto matHashKDNK = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KDNK"));
      static const auto matHashKKDN = MaterialHash::getMaterialHash2(MaterialHash::materialFromString("KKDN"));
-     STOP_AND_SUM_TIMER(Eval)
      const Color winningSideEG = features.scores[F_material][EG] > 0 ? Co_White : Co_Black;
      context.stats.incr(Stats::sid_materialTableHelper);
      ScoreType materialTableScore = 0;
@@ -357,6 +357,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool forceN
         materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKmmK(p, winningSideEG, features.scores[F_material][EG], context.height_));
         matHelperHit = true;
      }
+     STOP_AND_SUM_TIMER(Eval)
      if (matHelperHit){
          return variantScore(materialTableScore, p.halfmoves, context.height_, p.c);
      }
