@@ -187,11 +187,25 @@ void EnergyMonitor::warnPermission(const std::string& p) {
 
 std::vector<EnergyDomain> EnergyMonitor::findEnergyDomains() const {
    std::vector<EnergyDomain> out;
-   for (const auto& p : std::filesystem::directory_iterator("/sys/class/powercap")) {
-      const auto energy = p.path() / "energy_uj";
-      const auto name   = p.path() / "name";
+   std::error_code ec;
+   auto it = std::filesystem::directory_iterator("/sys/class/powercap", ec);
+   const std::filesystem::directory_iterator end;
 
-      if (std::filesystem::exists(energy) && std::filesystem::exists(name)) {
+   for (; !ec && it != end; it.increment(ec)) {
+      const auto energy = it->path() / "energy_uj";
+      const auto name   = it->path() / "name";
+      const bool hasEnergy = std::filesystem::exists(energy, ec);
+      if (ec) {
+         ec.clear();
+         continue;
+      }
+      const bool hasName = std::filesystem::exists(name, ec);
+      if (ec) {
+         ec.clear();
+         continue;
+      }
+
+      if (hasEnergy && hasName) {
          EnergyDomain d;
          d.energy_path = energy.string();
          d.name        = readFile(name.string());
