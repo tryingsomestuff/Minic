@@ -12,4 +12,5 @@ void        init();
 void        xboard();
 
 void moveApplied(const bool success, const Move & m);
+bool replay(size_t nbmoves);
 } // namespace XBoard

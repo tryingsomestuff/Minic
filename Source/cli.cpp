@@ -26,6 +26,7 @@ void selfPlay(DepthType depth, uint64_t & nbPos);
 
 // see cli_SEETest.cpp
 bool TestSEE();
+bool TestGameInfo();
 
 void analyze(const Position& p, DepthType depth, bool openBenchOutput = false) {
    static double  benchms    = 0;
@@ -326,6 +327,8 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
    if (firstArg == "-see_test") {
       return TestSEE();
    }
+
+   if (firstArg == "-gameinfo_test") { return TestGameInfo(); }
 
    if (firstArg == "bench" || firstArg == "-bench") {
       DepthType d = 16;

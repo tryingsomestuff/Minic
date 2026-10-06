@@ -131,13 +131,14 @@ void Searcher::searchDriver(bool postMove) {
    }
 
    // check game history for potential situations (boom/moob)
-   if (isMainThread()) {
-      if (isBooming(p.halfmoves)) 
-         positionEvolution = stack[p.halfmoves-2].eval > MoveDifficultyUtil::emergencyAttackThreshold ? MoveDifficultyUtil::PE_boomingAttack : 
-                                                                                                        MoveDifficultyUtil::PE_boomingDefence;
-      else if (isMoobing(p.halfmoves))
-         positionEvolution = stack[p.halfmoves-2].eval > MoveDifficultyUtil::emergencyAttackThreshold ? MoveDifficultyUtil::PE_moobingAttack : 
-                                                                                                        MoveDifficultyUtil::PE_moobingDefence;
+   if (isMainThread() && !subSearch && postMove) {
+      const auto previousScore = p.halfmoves >= 2 ? COM::GetGameInfo().getSearchScore(p.halfmoves - 2) : std::nullopt;
+      if (previousScore && isBooming(p.halfmoves))
+         positionEvolution = *previousScore > MoveDifficultyUtil::emergencyAttackThreshold ? MoveDifficultyUtil::PE_boomingAttack
+                                                                                           : MoveDifficultyUtil::PE_boomingDefence;
+      else if (previousScore && isMoobing(p.halfmoves))
+         positionEvolution = *previousScore > MoveDifficultyUtil::emergencyAttackThreshold ? MoveDifficultyUtil::PE_moobingAttack
+                                                                                           : MoveDifficultyUtil::PE_moobingDefence;
    }
 
    if (isMainThread() || id() >= MAX_THREADS) {
@@ -460,11 +461,6 @@ pvsout:
             _data      = ThreadPool::instance()[bestThreadId]->getData();
             _data.best = _data.pv[0];
          }
-         // update stack data on all searcher with "real" score
-         // this way all stack[k (with k < p.halfmove)] will be "history" of the game accessible to searcher
-         for (auto& s : ThreadPool::instance()) {
-            s->stack[p.halfmoves].eval = _data.score;
-         }
       }
 
       // wait for "ponderhit" or "stop" in case search returned too soon
@@ -478,6 +474,8 @@ pvsout:
       ThreadPool::instance().stop();
       // and wait for them
       ThreadPool::instance().wait(true);
+
+      if (postMove && !subSearch && _data.depth > 0 && !_data.pv.empty()) { COM::GetGameInfo().setSearchScore(p, _data.score); }
 
       // gather various process stats
       Distributed::syncStat();

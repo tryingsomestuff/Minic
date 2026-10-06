@@ -27,6 +27,11 @@ NNUEEvaluator evaluator;
 std::mutex mutex;
 std::mutex mutexGUI;
 
+namespace {
+// Protocol and search threads share score history. Readers remain unsynchronized.
+std::mutex gameHistoryMutex;
+}
+
 void GameInfo::write(std::ostream & os) const{
    if (_gameStates.empty()) return;
    Logging::LogIt(Logging::logInfo) << "Writing game states (" + std::to_string(size()) + ")";
@@ -46,14 +51,55 @@ void GameInfo::write(std::ostream & os) const{
 }
 
 void GameInfo::clear(const Position & initial){
+   std::lock_guard lock(gameHistoryMutex);
    Logging::LogIt(Logging::logInfo) << "Clearing game states";
    _gameStates.clear();
    initialPos = initial;
+   initialSearchScore.reset();
 }
 
 void GameInfo::append(const GameStateInfo & stateInfo){
+   std::lock_guard lock(gameHistoryMutex);
    _gameStates.push_back(stateInfo);
    _gameStates.back().p.h = computeHash(_gameStates.back().p); // be sure to have an updated hash
+}
+
+void GameInfo::replace(GameInfo&& updated) {
+   std::lock_guard lock(gameHistoryMutex);
+   // Preserve searched-root scores along the unchanged prefix when replaying game moves.
+   if (GetFEN(initialPos) == GetFEN(updated.initialPos)) {
+      updated.initialSearchScore = initialSearchScore;
+      const size_t commonSize    = std::min(size(), updated.size());
+      for (size_t i = 0; i < commonSize; ++i) {
+         const auto& oldState = _gameStates[i];
+         auto&       newState = updated._gameStates[i];
+         if (oldState.lastMove != newState.lastMove || oldState.p.h != newState.p.h || oldState.p.fifty != newState.p.fifty) break;
+         newState.searchScore = oldState.searchScore;
+      }
+   }
+   *this = std::move(updated);
+}
+
+void GameInfo::setSearchScore(const Position& p, ScoreType score) {
+   std::lock_guard lock(gameHistoryMutex);
+   const auto      recorded = getPosition(p.halfmoves);
+   if (!recorded || computeHash(*recorded) != computeHash(p) || recorded->fifty != p.fifty) {
+      Logging::LogIt(Logging::logWarn) << "Cannot store search score: root does not match game history at ply " << p.halfmoves;
+      return;
+   }
+   const size_t offset = p.halfmoves - initialPos.halfmoves;
+   if (offset == 0) initialSearchScore = score;
+   else
+      _gameStates[offset - 1].searchScore = score;
+   Logging::LogIt(Logging::logInfo) << "Stored root search score at ply " << p.halfmoves << ": " << score;
+}
+
+std::optional<ScoreType> GameInfo::getSearchScore(uint16_t halfmove) const {
+   std::lock_guard lock(gameHistoryMutex);
+   if (halfmove < initialPos.halfmoves) return {};
+   const size_t offset = halfmove - initialPos.halfmoves;
+   if (offset > size()) return {};
+   return offset == 0 ? initialSearchScore : _gameStates[offset - 1].searchScore;
 }
 
 size_t GameInfo::size() const {
@@ -69,23 +115,26 @@ std::vector<Move> GameInfo::getMoves() const{
 }
 
 std::optional<Hash> GameInfo::getHash(uint16_t halfmove) const{
+   if (halfmove < initialPos.halfmoves) return {};
    const size_t startingPly = initialPos.halfmoves;
    const size_t offset = halfmove - startingPly;
-   if ( offset >= size()) return {};
+   if (offset > size()) return {};
    return offset == 0 ? computeHash(initialPos) : _gameStates[offset-1].p.h; // halfmove starts at 1, not 0 ...
 }
 
 std::optional<Move> GameInfo::getMove(uint16_t halfmove) const{
+   if (halfmove < initialPos.halfmoves) return {};
    const size_t startingPly = initialPos.halfmoves;
    const size_t offset = halfmove - startingPly;
-   if ( offset >= size()) return {};
+   if (offset > size()) return {};
    return offset == 0 ? INVALIDMOVE : _gameStates[offset-1].lastMove; // halfmove starts at 1, not 0 ...
 }
 
 std::optional<Position> GameInfo::getPosition(uint16_t halfmove) const{
+   if (halfmove < initialPos.halfmoves) return {};
    const size_t startingPly = initialPos.halfmoves;
    const size_t offset = halfmove - startingPly;
-   if ( offset >= size()) return {};
+   if (offset > size()) return {};
    return offset == 0 ? initialPos : _gameStates[offset-1].p; // halfmove starts at 1, not 0 ...
 }
 
@@ -102,6 +151,7 @@ void newGame() {
    position.associateEvaluator(evaluator);
 #endif
    readFEN(std::string(startPosition), position); // this set the COM::position position status
+   GetGameInfo().clear(position);
 
    // reset dynamic state depending on opponent
    DynamicConfig::ratingFactor      = 1.;

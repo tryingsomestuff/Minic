@@ -27,15 +27,23 @@ struct GameInfo {
     struct GameStateInfo {
        Position p;
        Move lastMove; // the move that has been played to reach this position
+       std::optional<ScoreType> searchScore;
     };
     
     std::vector<GameStateInfo> _gameStates;
     
     Position initialPos; ///@todo shall be RootPosition ??? This is the first position after a new game
+    std::optional<ScoreType> initialSearchScore;
 
     void clear(const Position & initial);
 
     void append(const GameStateInfo & stateInfo);
+
+    void replace(GameInfo&& updated);
+
+    void setSearchScore(const Position& p, ScoreType score);
+
+    [[nodiscard]] std::optional<ScoreType> getSearchScore(uint16_t halfmove) const;
 
     size_t size() const;
 

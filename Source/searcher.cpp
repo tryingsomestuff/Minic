@@ -82,23 +82,21 @@ void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
 }
 
 bool Searcher::isBooming(uint16_t halfmove){
-   assert(halfmove >= 0);
    if (halfmove < 4) { return false; }  // no booming at the beginning of the game of course
-   if (halfmove - 4 < rootHalfmoves) return false;
-   if (stack[halfmove-2].h == nullHash) { return false; } // no record in previous state
-   if (stack[halfmove-4].h == nullHash) { return false; } // no record in former state
+   const auto previous = COM::GetGameInfo().getSearchScore(halfmove - 2);
+   const auto former   = COM::GetGameInfo().getSearchScore(halfmove - 4);
+   if (!previous || !former || isMateScore(*previous) || isMateScore(*former)) return false;
    constexpr ScoreType boomMargin = 80;
-   return stack[halfmove-4].eval <= stack[halfmove-2].eval + boomMargin;
+   return *previous >= *former + boomMargin;
 }
 
 bool Searcher::isMoobing(uint16_t halfmove){
-   assert(halfmove >= 0);
    if (halfmove < 4) { return false; }  // no moobing at the beginning of the game of course
-   if (halfmove - 4 < rootHalfmoves) return false;
-   if (stack[halfmove-2].h == nullHash) { return false; } // no record in previous state
-   if (stack[halfmove-4].h == nullHash) { return false; } // no record in former state
+   const auto previous = COM::GetGameInfo().getSearchScore(halfmove - 2);
+   const auto former   = COM::GetGameInfo().getSearchScore(halfmove - 4);
+   if (!previous || !former || isMateScore(*previous) || isMateScore(*former)) return false;
    constexpr ScoreType moobMargin = 80;
-   return stack[halfmove-4].eval >= stack[halfmove-2].eval + moobMargin;
+   return *previous <= *former - moobMargin;
 }
 
 ScoreType Searcher::getCMHScore(const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr) const {

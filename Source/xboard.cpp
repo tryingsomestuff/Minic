@@ -73,7 +73,7 @@ bool receiveOppMove(const std::string& command) {
    }
    else {
       // backup game history
-      COM::GetGameInfo().append({COM::position, m});      
+      COM::GetGameInfo().append({COM::position, m, std::nullopt});
       // switch stm
       stm = opponent(stm);
    }
@@ -84,7 +84,7 @@ bool receiveOppMove(const std::string& command) {
 void moveApplied(const bool success, const Move & m) {
    if (success) {
       // backup game history
-      COM::GetGameInfo().append({COM::position, m});      
+      COM::GetGameInfo().append({COM::position, m, std::nullopt});
       // switch stm
       stm = opponent(stm);
    }
@@ -103,20 +103,23 @@ bool replay(size_t nbmoves) {
    // verify initial position
    if (!sideToMoveFromFEN(GetFEN(COM::GetGameInfo().initialPos))) return false;
    // reset game information
-   COM::GetGameInfo().clear(COM::position);
+   COM::GameInfo updatedHistory;
+   updatedHistory.clear(COM::position);
    // replay 
    for (size_t k = 0; k < nbmoves; ++k) {
       if (!COM::makeMove(vm[k], false, "")) { // make move
          Logging::LogIt(Logging::logInfo) << "Bad move ! " << ToString(vm[k]);
          Logging::LogIt(Logging::logInfo) << ToString(COM::position);
          mode = m_force;
+         COM::GetGameInfo().replace(std::move(updatedHistory));
          return false;
       }
       else {
          stm = opponent(stm);
-         COM::GetGameInfo().append({COM::position, vm[k]});
+         updatedHistory.append({COM::position, vm[k], std::nullopt});
       }
    }
+   COM::GetGameInfo().replace(std::move(updatedHistory));
    if (previousState == COM::st_analyzing) { mode = m_analyze; }
    return true;
 }

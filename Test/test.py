@@ -36,6 +36,15 @@ def run_program(input, *args):
         }, 
         id="see_test"),
     pytest.param(
+        b"",
+        ["-gameinfo_test"],
+        {
+           "returncode": 0,
+           "stdout": "",
+           "stderr": "",
+        },
+        id="gameinfo_test"),
+    pytest.param(
         b"uci\nisready\ngo depth 10\nwait\nquit\n", 
         ["-uci"], 
         {

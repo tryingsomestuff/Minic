@@ -24,6 +24,7 @@ Here are some shortcuts to navigate in this document :
    * [Syzygy EGT](#syzygy-egt)
    * [How to run](#how-to-run)
    * [Options](#options)
+   * [Technical developer documentation](https://github.com/tryingsomestuff/Minic/blob/master/doc/technical/README.md)
    * [Videos](#videos)
    * [Thanks](#thanks)
 

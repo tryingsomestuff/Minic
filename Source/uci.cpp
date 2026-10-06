@@ -89,13 +89,13 @@ void processCommand(const std::string & command) {
    else if (uciCommand == "position") {
       const auto startTimePos = Clock::now();
       COM::position.h   = nullHash; // invalidate position
+      COM::GameInfo updatedHistory;
       std::string type;
 
       while (iss >> type) {
          if (type == "startpos") { 
-            readFEN(std::string(startPosition), COM::position, false, true); 
-            // let's start by resetting history
-            COM::GetGameInfo().clear(COM::position);              
+            readFEN(std::string(startPosition), COM::position, false, true);
+            updatedHistory.clear(COM::position);
          }
          else if (type == "fen") {
             std::string fen;
@@ -105,8 +105,7 @@ void processCommand(const std::string & command) {
                fen += component + " ";
             }
             if (!readFEN(fen, COM::position, false, true)) Logging::LogIt(Logging::logFatal) << "Illegal FEN " << fen;
-            // let's start by resetting history
-            COM::GetGameInfo().clear(COM::position);              
+            updatedHistory.clear(COM::position);
          }
          else if (type == "moves") {
             if (COM::position.h != nullHash) {
@@ -122,7 +121,7 @@ void processCommand(const std::string & command) {
                      // in UCI mode, we expect current position to always being sent 
                      // using an initial position and a serie of moves
                      // Here, we append all game moves again
-                     COM::GetGameInfo().append({COM::position, m});                     
+                     updatedHistory.append({COM::position, m, std::nullopt});
                   }
                }
             }
@@ -130,6 +129,7 @@ void processCommand(const std::string & command) {
                Logging::LogIt(Logging::logGUI) << "info string no start position specified";
          }
       }
+      if (COM::position.h != nullHash) COM::GetGameInfo().replace(std::move(updatedHistory));
       // we take into account the time needed to parse input and get current position
       TimeMan::overHead = getTimeDiff(startTimePos);
    }
