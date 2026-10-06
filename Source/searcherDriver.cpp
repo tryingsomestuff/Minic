@@ -81,7 +81,6 @@ void Searcher::displayGUI(DepthType          depth,
 
 void Searcher::searchDriver(bool postMove) {
    //stopFlag = false; // shall be only done outside to avoid race condition
-   height_ = 0;
 
    if (isMainThread()) Distributed::sync(Distributed::_commStat2, "start of search driver");
 
@@ -124,7 +123,7 @@ void Searcher::searchDriver(bool postMove) {
    //if (isMainThread()) p.initCaslingPermHashTable(); // let's be sure ...
    {
       EvalData  eData;
-      ScoreType e = eval(p, eData, *this);
+      ScoreType e = eval(p, eData, *this, 0);
       assert(p.halfmoves < MAX_PLY && p.halfmoves >= 0);
       stack[p.halfmoves].h = computeHash(p);
       stack[p.halfmoves].eval = e;

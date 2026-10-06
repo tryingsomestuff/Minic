@@ -14,7 +14,9 @@
  *  - Counter : from/to
  */
 
-inline constexpr int MAX_CMH_PLY = 1;
+inline constexpr int MAX_CMH_PLY = 4;
+inline constexpr array1d<unsigned int, MAX_CMH_PLY> CMH_DISTANCE = {1, 2, 4, 6};
+inline constexpr array1d<int, MAX_CMH_PLY> CMH_WEIGHT = {8, 6, 4, 2};
 using CMHPtrArray = array1d<array1d<ScoreType, NbPiece*NbSquare> *, MAX_CMH_PLY>;
 
 struct KillerT {
@@ -47,7 +49,8 @@ struct HistoryT {
          for (int i = 0; i < MAX_CMH_PLY; ++i) {
             if (cmhPtr[i]) {
                ScoreType& item = (*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to];
-               item += static_cast<ScoreType>(s - HISTORY_DIV(item * Abs(s)));
+               const int bonus = s * CMH_WEIGHT[i] / CMH_WEIGHT[0];
+               item += static_cast<ScoreType>(bonus - HISTORY_DIV(item * Abs(bonus)));
             }
          }
       }

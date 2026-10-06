@@ -367,7 +367,7 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
             p.resetNNUEEvaluator(evaluator);
 #endif
             EvalData d;
-            DISCARD eval(p, d, ThreadPool::instance().main());
+            DISCARD eval(p, d, ThreadPool::instance().main(), 0);
          }
       auto ms = getTimeDiff(startTime);
       Logging::LogIt(Logging::logInfo) << "Eval speed (with EG material hash): " << static_cast<double>(data.size()) * loops / (static_cast<double>(ms) * 1000) << " Meval/s";
@@ -381,7 +381,7 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
             p.resetNNUEEvaluator(evaluator);
 #endif
             EvalData d;
-            DISCARD eval(p, d, ThreadPool::instance().main(), false, false);
+            DISCARD eval(p, d, ThreadPool::instance().main(), 0, false, false);
          }
       ms = getTimeDiff(startTime);
       Logging::LogIt(Logging::logInfo) << "Eval speed : " << static_cast<double>(data.size()) * loops / (static_cast<double>(ms) * 1000) << " Meval/s";
@@ -538,7 +538,7 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
    if (firstArg == "-eval") {
       EvalData data;
       if (DynamicConfig::useNNUE) DynamicConfig::forceNNUE = true;
-      const ScoreType score = eval(p, data, ThreadPool::instance().main(), false, true, true);
+      const ScoreType score = eval(p, data, ThreadPool::instance().main(), 0, false, true, true);
       Logging::LogIt(Logging::logInfo) << "eval " << score << " phase " << data.gp;
       return true;
    }
@@ -546,7 +546,7 @@ bool cliManagement(const std::string & firstArg, int argc, char** argv) {
    if (firstArg == "-evalHCE") {
       EvalData data;
       if (DynamicConfig::useNNUE) DynamicConfig::useNNUE = false;
-      const ScoreType score = eval(p, data, ThreadPool::instance().main(), false, true, true);
+      const ScoreType score = eval(p, data, ThreadPool::instance().main(), 0, false, true, true);
       Logging::LogIt(Logging::logInfo) << "eval " << score << " phase " << data.gp;
       return true;
    }

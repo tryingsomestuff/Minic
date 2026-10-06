@@ -120,7 +120,12 @@ struct Searcher {
 
    FORCE_FINLINE Position& initRootPositionOnStack(const Position& rootPosition) {
       assert(rootPosition.halfmoves < MAX_PLY);
-      auto& rootData = stack[rootPosition.halfmoves];
+      rootHalfmoves = rootPosition.halfmoves;
+      // stack data before root position can be garbage
+      for (unsigned int ply = 0; ply < rootHalfmoves; ++ply) {
+         stack[ply] = StackData{};
+      }
+      auto& rootData = stack[rootHalfmoves];
       rootData.p = rootPosition;
 #ifdef WITH_NNUE
       rootData.p.associateEvaluator(rootData.evaluator); // stole the evaluator
@@ -182,7 +187,7 @@ struct Searcher {
    EvalScore contempt       = 0;
    bool      subSearch      = false;
    bool      isStoppableCoSearcher = false; 
-   DepthType height_        = 0; ///@todo use this everywhere, instead of passing height in pvs and qsearch call ?
+   uint16_t rootHalfmoves   = 0;
 
 #ifdef WITH_GENFILE
    std::ofstream genStream;

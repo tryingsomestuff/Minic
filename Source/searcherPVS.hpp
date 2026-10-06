@@ -463,15 +463,11 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // some evaluation are used inside search
    EvalData evalData;
 
-   // height is updated recursively in pvs and qsearch calls 
-   // but also given to Searcher itself in order to be available inside eval (which have "context").
-   // @todo simplify this using only one solution !
-   height_ = height;
    pvsData.theirTurn = height%2;
    pvsData.rootnode = height == 0;
 
    // we cannot search deeper than MAX_DEPTH, if so just return static evaluation in this case
-   if (height >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, evalData, *this);
+   if (height >= MAX_DEPTH - 1 || depth >= MAX_DEPTH - 1) return eval(p, evalData, *this, height);
 
    // if not at root we check for draws (3rep, fifty and material)
    if (!pvsData.rootnode){
@@ -624,7 +620,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          // if this is a winning/losing EGT position, we add up static evaluation
          // this allow to go for mate better or to defend longer
          if (abs(tbScore) == SyzygyTb::TB_WIN_SCORE) {
-            tbScore += eval(p, evalData, *this);
+            tbScore += eval(p, evalData, *this, height);
             tbScore = clampScore(tbScore);
          }
          else if (abs(tbScore) == SyzygyTb::TB_CURSED_SCORE) {
@@ -652,10 +648,10 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    }
    // skip eval: if nullmove just applied we can hack
    // but this won't work with asymetric HalfKA NNUE
-   else if (!DynamicConfig::useNNUE && pvsData.previousMoveIsNullMove && height > 0){
+   else if (!DynamicConfig::useNNUE && pvsData.previousMoveIsNullMove && height > 0 && p.halfmoves > rootHalfmoves){
       evalScore = 2 * EvalConfig::tempo - stack[p.halfmoves - 1].eval;
 #ifdef DEBUG_STATICEVAL
-      checkEval(p,evalScore,*this,"null move trick (pvs)");
+      checkEval(p,evalScore,*this,height,"null move trick (pvs)");
 #endif
    }
    else {
@@ -676,15 +672,15 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
             stats.incr(Stats::sid_materialTableMissSearch);
          }
 #ifdef DEBUG_STATICEVAL
-         checkEval(p,evalScore,*this,"from TT (pvs)");
+         checkEval(p,evalScore,*this,height,"from TT (pvs)");
 #endif
       }
       // if no TT hit call evaluation
       else {
          stats.incr(Stats::sid_ttscmiss);
-         evalScore = eval(p, evalData, *this);
+         evalScore = eval(p, evalData, *this, height);
 #ifdef DEBUG_STATICEVAL
-         checkEval(p,evalScore,*this,"from eval (pvs)");
+         checkEval(p,evalScore,*this,height,"from eval (pvs)");
  #endif
       }
    }
@@ -812,7 +808,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // is the reported static eval better than a move before in the search tree ?
    // ! be carefull pvsData.improving implies not being in check !
-   pvsData.improving = (!pvsData.isInCheck && height > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves - 2].eval);
+   pvsData.improving = (!pvsData.isInCheck && height > 1 && p.halfmoves >= rootHalfmoves + 2 && stack[p.halfmoves].eval >= stack[p.halfmoves - 2].eval);
 
    // in end game situations, some prudence is required with pruning
    pvsData.isNotPawnEndGame = p.mat[p.c][M_t] > 0;
@@ -1009,7 +1005,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    stack[p.halfmoves].threat = refutation;
 
    // verify threat evolution for Botvinnik-Markoff extension 
-   const MiniMove formerRefutation = height > 1 ? stack[p.halfmoves - 2].threat : INVALIDMINIMOVE;
+   const MiniMove formerRefutation = height > 1 && p.halfmoves >= rootHalfmoves + 2 ? stack[p.halfmoves - 2].threat : INVALIDMINIMOVE;
    pvsData.BMextension = DynamicConfig::useNNUE && height > 1 && 
                          isValidMove(refutation) && isValidMove(formerRefutation) &&
                          (sameMove(refutation, formerRefutation) ||

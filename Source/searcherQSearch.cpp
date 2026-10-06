@@ -3,12 +3,9 @@
 #include "searcher.hpp"
 
 ScoreType Searcher::qsearchNoPruning(ScoreType alpha, ScoreType beta, const Position& p, DepthType height, DepthType& seldepth, PVList* pv) {
-   // is updated recursively in pvs and qsearch calls but also affected to Searcher data in order to be available inside eval.
-   height_ = height;
-
    EvalData evalData;
    ++stats.counters[Stats::sid_qnodes];
-   const ScoreType evalScore = eval(p, evalData, *this, true);
+   const ScoreType evalScore = eval(p, evalData, *this, height, true);
 
    if (evalScore >= beta) return evalScore;
    if (evalScore > alpha) alpha = evalScore;
@@ -73,14 +70,11 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    ///@todo more validation !!
    assert(p.halfmoves - 1 < MAX_PLY && p.halfmoves - 1 >= 0);
 
-   // is updated recursively in pvs and qsearch calls but also affected to Searcher data in order to be available inside eval.
-   height_ = height;
-
    // some evaluation are used inside search
    EvalData evalData;
 
    // we cannot search deeper than MAX_DEPTH, if so just return static evaluation in this case
-   if (height >= MAX_DEPTH - 1 ) return eval(p, evalData, *this);
+   if (height >= MAX_DEPTH - 1 ) return eval(p, evalData, *this, height);
 
    // no time verification in qsearch, too slow
    if (stopFlag) return STOPSCORE;
@@ -135,10 +129,10 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    }
    // skip eval if nullmove just applied, we can hack using opposite of opponent score corrected by tempo
    // But this may don't work well with (a too) asymetric HalfKA NNUE
-   else if (!DynamicConfig::useNNUE && p.lastMove == NULLMOVE && height > 0){
+   else if (!DynamicConfig::useNNUE && p.lastMove == NULLMOVE && height > 0 && p.halfmoves > rootHalfmoves){
       evalScore = 2 * EvalConfig::tempo - stack[p.halfmoves - 1].eval;
 #ifdef DEBUG_STATICEVAL
-      checkEval(p,evalScore,*this,"null move trick (qsearch)");
+      checkEval(p,evalScore,*this,height,"null move trick (qsearch)");
 #endif
       stats.incr(Stats::sid_qEvalNullMoveTrick);
    }
@@ -148,7 +142,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
          stats.incr(Stats::sid_ttschits);
          evalScore = e.e;
 #ifdef DEBUG_STATICEVAL
-         checkEval(p,evalScore,*this,"from TT (qsearch)");
+         checkEval(p,evalScore,*this,height,"from TT (qsearch)");
 #endif
          // in this case we force mid game value in sorting ...
          // anyway, this affects only quiet move sorting, so here only for check evasion ...
@@ -157,9 +151,9 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
       else {
          // we tried everthing ... now this position must be evaluated
          stats.incr(Stats::sid_ttscmiss);
-         evalScore = eval(p, evalData, *this);
+         evalScore = eval(p, evalData, *this, height);
 #ifdef DEBUG_STATICEVAL
-         checkEval(p,evalScore,*this,"from eval (qsearch)");
+         checkEval(p,evalScore,*this,height,"from eval (qsearch)");
 #endif
       }
    }

@@ -12,7 +12,7 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
    bool irreversible = false;
    //std::cout << "***************** " << k << " " << h << " " << GetFEN(p) << std::endl;
    // look in stack first
-   for ( ; k >= 0; k-=2) {
+   for ( ; k >= rootHalfmoves; k-=2) {
       //std::cout << "stack " << k << " " << stack[k].h << " " << count << " " << ToString(stack[k].p.lastMove) << " " << GetFEN(stack[k].p) << std::endl;
       if (stack[k].h == nullHash) break; // no more "history" in stack (will look at game state later)
       if (stack[k].h == h){
@@ -29,9 +29,12 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
       }
       // irreversible moves - check both k-1 and k positions
       if (k > 0) {
-         const Move prevMove = stack[k-1].p.lastMove;
-         if (isValidMove(prevMove) && 
-             (isCapture(prevMove) || PieceTools::getPieceType(stack[k-1].p, Move2To(prevMove)) == P_wp)){
+         std::optional<Position> gamePosition;
+         if (k == rootHalfmoves) gamePosition = COM::GetGameInfo().getPosition(k-1);
+         const Position* previous = k > rootHalfmoves ? &stack[k-1].p : gamePosition ? &*gamePosition : nullptr;
+         const Move prevMove = previous ? previous->lastMove : INVALIDMOVE;
+         if (isValidMove(prevMove) &&
+             (isCapture(prevMove) || PieceTools::getPieceType(*previous, Move2To(prevMove)) == P_wp)){
                irreversible=true;
                break;
          }
@@ -43,7 +46,7 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
             break;
       }
    }
-   // then double check in game history
+   // Continue through pre-root game history
    while(!irreversible && k>=0){
       const std::optional<Hash> curh = COM::GetGameInfo().getHash(k);
       if (!curh.has_value()) break;

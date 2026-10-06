@@ -233,7 +233,8 @@ void pgnparse__(std::ifstream& is, std::ofstream& os) {
          ++i;
          ++game.n;
          game.p.push_back(game.p[i - 1]);
-         if (!applyMove(game.p[i], game.moves[i - 1])) {
+         const MoveInfo moveInfo(game.p[i], game.moves[i - 1]);
+         if (!applyMove(game.p[i], moveInfo)) {
             read = false;
             Logging::LogIt(Logging::logError) << "Unable to apply move " + ToString(game.p[i]);
             break;
@@ -253,7 +254,7 @@ void pgnparse__(std::ifstream& is, std::ofstream& os) {
          //std::cout << score << std::endl;
          if (ss == -INFSCORE || hashes.find(computeHash(p) || Abs(ss) > 350) != hashes.end()) continue; // do not insert same position twice ...
          hashes.insert(computeHash(p));
-         const ScoreType seval = eval(p, data, ThreadPool::instance().main());
+         const ScoreType seval = eval(p, data, ThreadPool::instance().main(), 0);
          //if (e%100==0) std::cout << "eval " << seval << std::endl;
          if (Abs(seval) < PGNGame::equalMargin) {
             ++e;

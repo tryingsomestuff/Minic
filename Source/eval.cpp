@@ -141,7 +141,7 @@ ScoreType evalAntiChess(const Position &p, EvalData &data, [[maybe_unused]] Sear
 }
 
 #ifdef WITH_NNUE
-ScoreType NNUEEVal(const Position & p, EvalData &data, Searcher &context, EvalFeatures &features, bool secondTime = false){
+ScoreType NNUEEVal(const Position & p, EvalData &data, Searcher &context, EvalFeatures &features, DepthType height, bool secondTime = false){
    START_TIMER
    if (DynamicConfig::armageddon) features.scalingFactor = 1.f; ///@todo better
    /*
@@ -188,11 +188,11 @@ ScoreType NNUEEVal(const Position & p, EvalData &data, Searcher &context, EvalFe
    context.stats.incr(secondTime ? Stats::sid_evalNNUE2 : Stats::sid_evalNNUE);
    // apply variants scoring if requiered
    STOP_AND_SUM_TIMER(NNUE)
-   return variantScore(nnueScore, p.halfmoves, context.height_, p.c);   
+   return variantScore(nnueScore, p.halfmoves, height, p.c);
 }
 #endif
 
-ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool forceNNUE, bool allowEGEvaluation, bool display) {
+ScoreType eval(const Position &p, EvalData &data, Searcher &context, DepthType height, bool forceNNUE, bool allowEGEvaluation, bool display) {
    START_TIMER
 
    if (DynamicConfig::antichess) return evalAntiChess(p, data, context, allowEGEvaluation, display);
@@ -205,7 +205,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool forceN
    if ( (p.occupancy() & ~p.allKing()) == emptyBitBoard ){
       if (kingIsMandatory ){ 
          // drawScore take some variants into account like armageddon
-         return context.drawScore(p, context.height_);
+         return context.drawScore(p, height);
       }
       else {
          ///@todo implements things for some variants ?
@@ -265,15 +265,15 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool forceN
                STOP_AND_SUM_TIMER(Eval)
                context.stats.incr(Stats::sid_materialTableHelper);
                const ScoreType materialTableScore =
-                   (white2Play ? +1 : -1) * (MaterialHash::helperTable[matHash](p, winningSideEG, features.scores[F_material][EG], context.height_));
-               return variantScore(materialTableScore, p.halfmoves, context.height_, p.c);
+                   (white2Play ? +1 : -1) * (MaterialHash::helperTable[matHash](p, winningSideEG, features.scores[F_material][EG], height));
+               return variantScore(materialTableScore, p.halfmoves, height, p.c);
             }
             // real FIDE draws (shall not happens for now in fact ///@todo !!!)
             else if (MEntry.t == MaterialHash::Ter_Draw) {
                if (!isPosInCheck(p)) {
                   STOP_AND_SUM_TIMER(Eval)
                   context.stats.incr(Stats::sid_materialTableDraw);
-                  return context.drawScore(p, context.height_); // drawScore take armageddon into account
+                  return context.drawScore(p, height); // drawScore take armageddon into account
                }
             }
             // non FIDE draws
@@ -281,7 +281,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool forceN
                if (!isPosInCheck(p)) {
                   STOP_AND_SUM_TIMER(Eval)
                   context.stats.incr(Stats::sid_materialTableDraw2);
-                  return context.drawScore(p, context.height_); // drawScore take armageddon into account
+                  return context.drawScore(p, height); // drawScore take armageddon into account
                }
             }
             // apply some scaling (more later...)
@@ -345,21 +345,21 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool forceN
      bool matHelperHit = false;
 #if !defined(WITH_SMALL_MEMORY)
      if (matHash2 == matHashKPK || matHash2 == matHashKKP){
-        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKPK(p, winningSideEG, features.scores[F_material][EG], context.height_));
+        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKPK(p, winningSideEG, features.scores[F_material][EG], height));
         matHelperHit = true;
      }
 #endif
      if (matHash2 == matHashKQK || matHash2 == matHashKKQ || matHash2 == matHashKRK || matHash2 == matHashKKR){
-        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKXK(p, winningSideEG, features.scores[F_material][EG], context.height_));
+        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKXK(p, winningSideEG, features.scores[F_material][EG], height));
         matHelperHit = true;
      }
      if (matHash2 == matHashKLNK || matHash2 == matHashKKLN || matHash2 == matHashKDNK || matHash2 == matHashKKDN){
-        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKmmK(p, winningSideEG, features.scores[F_material][EG], context.height_));
+        materialTableScore = (white2Play ? +1 : -1) * (MaterialHash::helperKmmK(p, winningSideEG, features.scores[F_material][EG], height));
         matHelperHit = true;
      }
      STOP_AND_SUM_TIMER(Eval)
      if (matHelperHit){
-         return variantScore(materialTableScore, p.halfmoves, context.height_, p.c);
+         return variantScore(materialTableScore, p.halfmoves, height, p.c);
      }
    }
 #endif
@@ -377,7 +377,7 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool forceN
       if (EvalScore score; DynamicConfig::forceNNUE || forceNNUE ||
         !isLazyHigh(nnueThreshold, features, score)) {
          STOP_AND_SUM_TIMER(Eval)
-         ScoreType nnueEval = NNUEEVal(p, data, context, features);
+         ScoreType nnueEval = NNUEEVal(p, data, context, features, height);
 
          // random factor in opening if requiered
          if (p.halfmoves < 10 && DynamicConfig::randomOpen != 0){
@@ -969,14 +969,14 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, bool forceN
 
    data.evalDone = true;
    // apply variante scoring if requiered
-   const ScoreType hceScore = variantScore(ret, p.halfmoves, context.height_, p.c);
+   const ScoreType hceScore = variantScore(ret, p.halfmoves, height, p.c);
 
 #ifdef WITH_NNUE
    const ScoreType nnueThreshold2 = ScaleScore(EvalScore(DynamicConfig::NNUEThreshold2, DynamicConfig::NNUEThreshold2EG), data.gp);
    if ( DynamicConfig::useNNUE && !forbiddenNNUE && Abs(hceScore) <= nnueThreshold2 ){
       // if HCE is small (there is something more than just material value going on ...), fall back to NNUE;
       context.stats.incr(evalNNUE2GpBucket(data.gp));
-      const ScoreType nnueScore = NNUEEVal(p, data, context, features, true);
+      const ScoreType nnueScore = NNUEEVal(p, data, context, features, height, true);
       STOP_AND_SUM_TIMER(Eval)
       return nnueScore;
    }

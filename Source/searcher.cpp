@@ -68,11 +68,14 @@ TimeType Searcher::getCurrentMoveMs()const{
 void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
    cmhPtr.fill(nullptr);
    for (unsigned int k = 0; k < MAX_CMH_PLY; ++k) {
-      assert(static_cast<int>(ply) - static_cast<int>(2*k) < MAX_PLY && static_cast<int>(ply) - static_cast<int>(2*k) >= 0);
-      if (ply > 2*k && isValidMove(stack[ply - 2*k].p.lastMove)) {
-         const Position & pRef = stack[ply - 2*k].p;
+      if (ply < CMH_DISTANCE[k]) continue;
+      const unsigned int contextPly = ply - (CMH_DISTANCE[k] - 1);
+      assert(contextPly < MAX_PLY);
+      if (contextPly < rootHalfmoves) continue;
+      if (isValidMove(stack[contextPly].p.lastMove)) {
+         const Position & pRef = stack[contextPly].p;
          const Square to = correctedMove2ToKingDest(pRef.lastMove);
-         const int ptIdx = isEnPassant(pRef.lastMove) ? PieceIdx(P_wp) : PieceIdx(pRef.board_const(to));
+         const int ptIdx = PieceIdx(pRef.board_const(to));
          cmhPtr[k] = &historyT.counter_history[ptIdx][to];
       }
    }
@@ -81,6 +84,7 @@ void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
 bool Searcher::isBooming(uint16_t halfmove){
    assert(halfmove >= 0);
    if (halfmove < 4) { return false; }  // no booming at the beginning of the game of course
+   if (halfmove - 4 < rootHalfmoves) return false;
    if (stack[halfmove-2].h == nullHash) { return false; } // no record in previous state
    if (stack[halfmove-4].h == nullHash) { return false; } // no record in former state
    constexpr ScoreType boomMargin = 80;
@@ -90,6 +94,7 @@ bool Searcher::isBooming(uint16_t halfmove){
 bool Searcher::isMoobing(uint16_t halfmove){
    assert(halfmove >= 0);
    if (halfmove < 4) { return false; }  // no moobing at the beginning of the game of course
+   if (halfmove - 4 < rootHalfmoves) return false;
    if (stack[halfmove-2].h == nullHash) { return false; } // no record in previous state
    if (stack[halfmove-4].h == nullHash) { return false; } // no record in former state
    constexpr ScoreType moobMargin = 80;
@@ -97,39 +102,23 @@ bool Searcher::isMoobing(uint16_t halfmove){
 }
 
 ScoreType Searcher::getCMHScore(const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr) const {
-   ScoreType ret = 0;
+   int weightedScore = 0;
+   int totalWeight = 0;
    for (int i = 0; i < MAX_CMH_PLY; i++) {
-      if (cmhPtr[i]) { ret += (*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to]; }
+      if (cmhPtr[i]) {
+         weightedScore += CMH_WEIGHT[i] * (*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to];
+         totalWeight += CMH_WEIGHT[i];
+      }
    }
-   return ret/MAX_CMH_PLY;
+   return totalWeight ? static_cast<ScoreType>(weightedScore / totalWeight) : 0;
 }
 
 bool Searcher::isCMHGood(const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr, const ScoreType threshold) const {
-   for (int i = 0; i < MAX_CMH_PLY; i++) {
-      if (cmhPtr[i]) {
-         const auto cmhScore = (*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to];
-         if (cmhScore >= threshold){
-               /*
-               std::cout << ToString(p) << std::endl;
-               std::cout << SquareNames[from] << std::endl;
-               std::cout << SquareNames[to] << std::endl;
-               std::cout << cmhScore << std::endl;
-               */
-               return true;
-         }
-      }
-   }
-   return false;
+   return cmhPtr[0] && (*cmhPtr[0])[PieceIdx(p.board_const(from)) * NbSquare + to] >= threshold;
 }
 
 bool Searcher::isCMHBad(const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr, const ScoreType threshold) const {
-   int nbBad = 0;
-   for (int i = 0; i < MAX_CMH_PLY; i++) {
-      if (cmhPtr[i]) {
-         if ((*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to] < threshold) ++nbBad;
-      }
-   }
-   return nbBad == MAX_CMH_PLY;
+   return cmhPtr[0] && (*cmhPtr[0])[PieceIdx(p.board_const(from)) * NbSquare + to] < threshold;
 }
 
 ScoreType Searcher::drawScore(const Position& p, DepthType height) const {
@@ -420,7 +409,7 @@ void Searcher::writeToGenFile(const Position& p, bool getQuietPos, const ThreadD
 #endif
          // evaluate quiet leaf position
          EvalData eData;
-         e = eval(pLeaf, eData, cos);
+         e = eval(pLeaf, eData, cos, clampDepth(pLeaf.halfmoves - p.halfmoves));
 
          DynamicConfig::disableTT = false; // use TT here
          if (Abs(e) < 1000) {

@@ -83,7 +83,7 @@ double Sigmoid(Position& p) {
 
    // eval
    EvalData data;
-   double s = eval(p, data, ThreadPool::instance().main());
+   double s = eval(p, data, ThreadPool::instance().main(), 0);
    s *= (p.c == Co_White ? +1 : -1);
 
    return Sigmoid(s);
@@ -99,14 +99,18 @@ double E(const std::vector<EvalTuning::InputData>& data, size_t miniBatchSize) {
 
    auto worker = [&](size_t begin, size_t end, std::atomic<double>& acc) {
       double ee = 0;
+#ifdef WITH_NNUE
       NNUEEvaluator evaluator;
+#endif
       for (size_t k = begin; k != end; ++k) {
          Position* p = data[k].p.get();
          assert(p);
+#ifdef WITH_NNUE
          if (DynamicConfig::useNNUE){
             p->associateEvaluator(evaluator);
             p->resetNNUEEvaluator(p->evaluator());
          }
+#endif
          ee += std::pow((data[k].result + 1) * 0.5 - Sigmoid(*p), 2);
          //std::cout << "result " << data[k].result << " " << Sigmoid(data[k].result) << " sigmoid " << Sigmoid(*p) << std::endl;
          //ee += std::pow(Sigmoid(data[k].result) - Sigmoid(*p), 2);

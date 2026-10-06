@@ -53,7 +53,7 @@ void threadedWork(F&& worker, const size_t nbthreads, const uint64_t size, Argum
    for (auto&& i : threads) { i.join(); }
 }
 
-bool checkEval(const Position & p, ScoreType e, Searcher & context, const std::string & txt);
+bool checkEval(const Position & p, ScoreType e, Searcher & context, DepthType height, const std::string & txt);
 
 [[nodiscard]] std::string showAlgAbr(const Move m, const Position& p);
 
