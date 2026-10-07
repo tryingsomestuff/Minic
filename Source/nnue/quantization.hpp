@@ -19,7 +19,7 @@ template<bool Q> struct Quantization {
 
 // When quantization is activated (on read) we try to store weights and
 // do computations using only integers, smaller being best for speed
-// but there is some constrains : see doc/
+// but there is some constrains : see Doc/technical/nnue-reference.md
 template<> struct Quantization<true> {
    using WT = float;
    using WIT = int16_t;

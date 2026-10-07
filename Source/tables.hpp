@@ -16,7 +16,7 @@
 
 inline constexpr int MAX_CMH_PLY = 4;
 inline constexpr array1d<unsigned int, MAX_CMH_PLY> CMH_DISTANCE = {1, 2, 4, 6};
-inline constexpr array1d<int, MAX_CMH_PLY> CMH_WEIGHT = {8, 6, 4, 2};
+inline constexpr array1d<int, MAX_CMH_PLY> CMH_WEIGHT = {8, 0, 0, 0};
 using CMHPtrArray = array1d<array1d<ScoreType, NbPiece*NbSquare> *, MAX_CMH_PLY>;
 
 struct KillerT {
