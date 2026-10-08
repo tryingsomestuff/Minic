@@ -443,6 +443,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                         bool                         isInCheck_,
                         bool                         cutNode_,
                         const std::vector<MiniMove>* skipMoves) {
+   assert(height == p.halfmoves - rootHalfmoves);
 
    // stopFlag management and time check. Only on main thread and not at each node (see PERIODICCHECK)
    if (isMainThread() || isStoppableCoSearcher) timeCheck();
@@ -648,7 +649,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    }
    // skip eval: if nullmove just applied we can hack
    // but this won't work with asymetric HalfKA NNUE
-   else if (!DynamicConfig::useNNUE && pvsData.previousMoveIsNullMove && height > 0 && p.halfmoves > rootHalfmoves){
+   else if (!DynamicConfig::useNNUE && pvsData.previousMoveIsNullMove && height > 0) {
       evalScore = 2 * EvalConfig::tempo - stack[p.halfmoves - 1].eval;
 #ifdef DEBUG_STATICEVAL
       checkEval(p,evalScore,*this,height,"null move trick (pvs)");
@@ -808,7 +809,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
 
    // is the reported static eval better than a move before in the search tree ?
    // ! be carefull pvsData.improving implies not being in check !
-   pvsData.improving = (!pvsData.isInCheck && height > 1 && p.halfmoves >= rootHalfmoves + 2 && stack[p.halfmoves].eval >= stack[p.halfmoves - 2].eval);
+   pvsData.improving = (!pvsData.isInCheck && height > 1 && stack[p.halfmoves].eval >= stack[p.halfmoves - 2].eval);
 
    // in end game situations, some prudence is required with pruning
    pvsData.isNotPawnEndGame = p.mat[p.c][M_t] > 0;
@@ -880,7 +881,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
                   stats.incr(Stats::sid_nullMoveTry3);
                   nullMoveMinPly = height + 3*nullDepth/4;
                   nullMoveVerifColor = p.c;
-                  nullscore = pvs<false>(beta - 1, beta, p, nullDepth, height+1, nullPV, seldepth, extensions, pvsData.isInCheck, false);
+                  nullscore = pvs<false>(beta - 1, beta, p, nullDepth, height, nullPV, seldepth, extensions, pvsData.isInCheck, false);
                   nullMoveMinPly = 0;
                   nullMoveVerifColor = Co_None;
                   if (stopFlag) return STOPSCORE;
@@ -1004,8 +1005,8 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
    // backup refutation from null move heuristic
    stack[p.halfmoves].threat = refutation;
 
-   // verify threat evolution for Botvinnik-Markoff extension 
-   const MiniMove formerRefutation = height > 1 && p.halfmoves >= rootHalfmoves + 2 ? stack[p.halfmoves - 2].threat : INVALIDMINIMOVE;
+   // verify threat evolution for Botvinnik-Markoff extension
+   const MiniMove formerRefutation = height > 1 ? stack[p.halfmoves - 2].threat : INVALIDMINIMOVE;
    pvsData.BMextension = DynamicConfig::useNNUE && height > 1 && 
                          isValidMove(refutation) && isValidMove(formerRefutation) &&
                          (sameMove(refutation, formerRefutation) ||

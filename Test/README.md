@@ -48,6 +48,9 @@ whether exchanges meet their specified score thresholds.
 
 Checks optional root-search scores, UCI history replay and branch
 invalidation, XBoard rewind, new-game resets, and booming/moobing thresholds.
+Also checks repetition-history reads with no move preceding the initial position,
+and that the initial position still counts toward repetition, including threefold
+repetition at PV nodes.
 Scores belong to searched roots and use the side-to-move perspective; unsearched
 positions remain unscored. Only completed search results are recorded, after SMP
 result selection, separately from the search stack's static evaluations.

@@ -66,6 +66,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
                             bool            qRoot,
                             bool            pvnode,
                             int8_t          isInCheckHint) {
+   assert(height == p.halfmoves - rootHalfmoves);
 
    ///@todo more validation !!
    assert(p.halfmoves - 1 < MAX_PLY && p.halfmoves - 1 >= 0);
@@ -129,7 +130,7 @@ ScoreType Searcher::qsearch(ScoreType       alpha,
    }
    // skip eval if nullmove just applied, we can hack using opposite of opponent score corrected by tempo
    // But this may don't work well with (a too) asymetric HalfKA NNUE
-   else if (!DynamicConfig::useNNUE && p.lastMove == NULLMOVE && height > 0 && p.halfmoves > rootHalfmoves){
+   else if (!DynamicConfig::useNNUE && p.lastMove == NULLMOVE && height > 0) {
       evalScore = 2 * EvalConfig::tempo - stack[p.halfmoves - 1].eval;
 #ifdef DEBUG_STATICEVAL
       checkEval(p,evalScore,*this,height,"null move trick (qsearch)");

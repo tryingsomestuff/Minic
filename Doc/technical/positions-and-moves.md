@@ -62,9 +62,12 @@ Thus the starting position has `halfmoves = 1`. `moves` is the fullmove counter;
 `fifty` counts reversible halfmoves since the last pawn move/capture.
 
 The search stack is indexed by **absolute `halfmoves`**, whereas killers and
-search limits use **relative `height`**. Ordinary children advance both by one,
-but same-position verification/exclusion searches have their own height/depth
-arguments. Do not universally replace one coordinate with the other.
+search limits use **relative `height`**. PVS and its pruning quiescence search
+assert `height == halfmoves - rootHalfmoves`. Real moves and null moves advance
+both coordinates by one; same-position searches (null-move verification, IID
+and singular-extension probes) preserve height while changing depth or windows.
+Relative-height guards therefore also enforce the corresponding stack boundary.
+Standalone `qsearchNoPruning()` tools do not use this root-relative contract.
 
 `initRootPositionOnStack()` records `rootHalfmoves`, clears pre-root stack slots
 and initializes the root's evaluator. Real game history is in `GameInfo`, not in

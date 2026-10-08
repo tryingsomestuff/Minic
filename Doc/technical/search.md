@@ -91,7 +91,9 @@ The intended separation is important even where existing TT writes use the
 mutable `evalScore` variable; see [tables](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/tables-and-history.md) for that caveat.
 
 `improving` compares the raw static stack score with the same side's score two
-position plies earlier, outside check and only with a valid search ancestor.
+position plies earlier, outside check and only when `height > 1`. The asserted
+root-relative height invariant guarantees that this ancestor is not before
+the root.
 It is not currently a corrected-evaluation or NNUE-uncertainty comparison.
 
 ### Threats, danger and inactive context signals

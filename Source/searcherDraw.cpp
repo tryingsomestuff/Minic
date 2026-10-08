@@ -61,7 +61,7 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
       // irreversible moves - check both k-1 and k
       if (k>0){
          const auto m = COM::GetGameInfo().getMove(k-1);
-         if (m.has_value()){
+         if (m.has_value() && isValidMove(*m)) {
             const Move move = m.value();
             if (isCapture(move)){
                irreversible=true;
@@ -75,7 +75,7 @@ bool Searcher::isRep(const Position& p, bool isPV) const {
          }
       }
       const auto m = COM::GetGameInfo().getMove(k);
-      if (m.has_value()){
+      if (m.has_value() && isValidMove(*m)) {
          const Move move = m.value();
          if (isCapture(move)){
             irreversible=true;

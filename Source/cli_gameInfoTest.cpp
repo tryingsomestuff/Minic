@@ -88,6 +88,23 @@ bool TestGameInfo() {
    UCI::processCommand("position fen " + fen);
    check(!history.getSearchScore(currentPly), "new game clears scores");
 
+   UCI::processCommand("position startpos moves g1f3 g8f6 b1c3 b8c6");
+   searcher.initRootPositionOnStack(COM::position);
+   check(!searcher.isRep(COM::position, false), "initial history entry without a previous move");
+
+   UCI::processCommand("position startpos moves g1f3 g8f6 b1c3 b8c6 f3g1");
+   searcher.initRootPositionOnStack(COM::position);
+   check(!searcher.isRep(COM::position, false), "history entry preceded by the initial position");
+
+   UCI::processCommand("position startpos moves g1f3 g8f6 f3g1 f6g8");
+   searcher.initRootPositionOnStack(COM::position);
+   check(searcher.isRep(COM::position, false), "initial position counts toward repetition");
+   check(!searcher.isRep(COM::position, true), "one prior occurrence is insufficient at PV");
+
+   UCI::processCommand("position startpos moves g1f3 g8f6 f3g1 f6g8 g1f3 g8f6 f3g1 f6g8");
+   searcher.initRootPositionOnStack(COM::position);
+   check(searcher.isRep(COM::position, true), "initial position counts toward threefold repetition");
+
    Logging::LogIt(Logging::logInfo) << "GameInfo tests: " << errors << " errors";
    return errors == 0;
 }
