@@ -2,6 +2,7 @@
 
 #include "definition.hpp"
 #include "position.hpp"
+#include "searchConfig.hpp"
 #include "transposition.hpp"
 
 /*!
@@ -14,10 +15,8 @@
  *  - Counter : from/to
  */
 
-inline constexpr int MAX_CMH_PLY = 4;
-inline constexpr array1d<unsigned int, MAX_CMH_PLY> CMH_DISTANCE = {1, 2, 4, 6};
-inline constexpr array1d<int, MAX_CMH_PLY> CMH_WEIGHT = {8, 0, 0, 0};
-using CMHPtrArray = array1d<array1d<ScoreType, NbPiece*NbSquare> *, MAX_CMH_PLY>;
+inline constexpr array1d<unsigned int, SearchConfig::MAX_CMH_PLY> CMH_DISTANCE = {1, 2, 4, 6};
+using CMHPtrArray = array1d<array1d<ScoreType, NbPiece*NbSquare> *, SearchConfig::MAX_CMH_PLY>;
 
 struct KillerT {
    array2d<Move,MAX_DEPTH,2> killers;
@@ -46,10 +45,11 @@ struct HistoryT {
          const Piece     pp = p.board_const(from);
          history[c][from][to] += static_cast<ScoreType>(s - HISTORY_DIV(history[c][from][to] * Abs(s)));
          historyP[PieceIdx(pp)][to] += static_cast<ScoreType>(s - HISTORY_DIV(historyP[PieceIdx(pp)][to] * Abs(s)));
-         for (int i = 0; i < MAX_CMH_PLY; ++i) {
+         const int cmhWeightBase = SearchConfig::CMHWeight[0];
+         for (int i = 0; i < SearchConfig::MAX_CMH_PLY; ++i) {
             if (cmhPtr[i]) {
                ScoreType& item = (*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to];
-               const int bonus = s * CMH_WEIGHT[i] / CMH_WEIGHT[0];
+               const int bonus = s * SearchConfig::CMHWeight[i] / cmhWeightBase;
                item += static_cast<ScoreType>(bonus - HISTORY_DIV(item * Abs(bonus)));
             }
          }

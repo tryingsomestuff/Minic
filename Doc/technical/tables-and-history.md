@@ -131,6 +131,9 @@ The largest move-history structure is `counter_history`: a colored
 piece/destination context by colored piece/destination candidate. Multiple CMH
 distances use the same storage, so adding pointers is different from multiplying
 the table by a distance dimension.
+Their scoring weights are configured by `SearchConfig::CMHWeight` and exposed
+as `CMHWeight0` through `CMHWeight3` when search tuning is enabled; the first
+weight must remain positive because it normalizes CMH update bonuses.
 
 Correction tables have direct-mapped `[side][key & mask]` buckets without
 full-key tags. Collisions intentionally blend observations. The active

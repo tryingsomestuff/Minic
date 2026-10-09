@@ -112,6 +112,8 @@ extern CONST_SEARCH_TUNING ScoreType dangerLimitReduction;
 extern CONST_SEARCH_TUNING ScoreType dangerDivisor;
 extern CONST_SEARCH_TUNING ScoreType failLowRootMargin;
 extern CONST_SEARCH_TUNING ScoreType CMHMargin;
+inline constexpr int MAX_CMH_PLY = 4;
+extern CONST_SEARCH_TUNING array1d<int, MAX_CMH_PLY> CMHWeight;
 
 extern CONST_SEARCH_TUNING ScoreType deltaBadMargin;
 extern CONST_SEARCH_TUNING ScoreType deltaBadSEEThreshold;

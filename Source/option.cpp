@@ -209,21 +209,6 @@ void displayOptionsSPSA() {
       }
 }
 
-#define SETVALUE(TYPEIN, TYPEOUT)                        \
-   {                                                     \
-      TYPEIN v;                                          \
-      str >> std::boolalpha >> v;                        \
-      *static_cast<TYPEOUT*>(keyRef.value) = (TYPEOUT)v; \
-   }                                                     \
-   break;
-#define SETVALUESTR(TYPEIN, TYPEOUT)                     \
-   {                                                     \
-      TYPEIN v;                                          \
-      getline(str, v);                                   \
-      *static_cast<TYPEOUT*>(keyRef.value) = (TYPEOUT)v; \
-   }                                                     \
-   break;
-
 bool SetValue(const std::string& key, const std::string& val) {
    KeyBase& keyRef = GetKey(key);
    if (!keyRef.hotPlug && ThreadPool::instance().main().searching()) {
@@ -236,14 +221,66 @@ bool SetValue(const std::string& key, const std::string& val) {
       else if (value == "1")
          value = "true";
    }
-   std::stringstream str(value);
+   const auto setBoolean = [&](bool& target) {
+      bool parsedValue = false;
+      std::stringstream stream(value);
+      if (!(stream >> std::boolalpha >> parsedValue)) {
+         Logging::LogIt(Logging::logWarn) << "Rejected invalid boolean option " << key << "=" << val;
+         return false;
+      }
+      stream >> std::ws;
+      if (!stream.eof()) {
+         Logging::LogIt(Logging::logWarn) << "Rejected invalid boolean option " << key << "=" << val;
+         return false;
+      }
+      target = parsedValue;
+      return true;
+   };
+   const auto setBoundedInteger = [&]<typename T>(T& target) {
+      long long parsedValue = 0;
+      std::stringstream stream(value);
+      if (!(stream >> parsedValue)) {
+         Logging::LogIt(Logging::logWarn) << "Rejected invalid integer option " << key << "=" << val;
+         return false;
+      }
+      stream >> std::ws;
+      if (!stream.eof()) {
+         Logging::LogIt(Logging::logWarn) << "Rejected invalid integer option " << key << "=" << val;
+         return false;
+      }
+      if (keyRef.type == k_ull && parsedValue < 0) {
+         Logging::LogIt(Logging::logWarn) << "Rejected negative unsigned option " << key << "=" << parsedValue;
+         return false;
+      }
+      if (parsedValue < keyRef.vmin || parsedValue > keyRef.vmax) {
+         Logging::LogIt(Logging::logWarn) << "Rejected out-of-range option " << key << "=" << parsedValue
+                                          << " (expected " << keyRef.vmin << ".." << keyRef.vmax << ")";
+         return false;
+      }
+      target = static_cast<T>(parsedValue);
+      return true;
+   };
    switch (keyRef.type) {
-      case k_bool: SETVALUE(bool, bool)
-      case k_depth: SETVALUE(int, DepthType)
-      case k_int: SETVALUE(int, int)
-      case k_score: SETVALUE(int, ScoreType)
-      case k_ull: SETVALUE(int, uint64_t)
-      case k_string: SETVALUESTR(std::string, std::string)
+      case k_bool:
+         if (!setBoolean(*static_cast<bool*>(keyRef.value))) return false;
+         break;
+      case k_depth:
+         if (!setBoundedInteger(*static_cast<DepthType*>(keyRef.value)))
+            return false;
+         break;
+      case k_int:
+         if (!setBoundedInteger(*static_cast<int*>(keyRef.value)))
+            return false;
+         break;
+      case k_score:
+         if (!setBoundedInteger(*static_cast<ScoreType*>(keyRef.value)))
+            return false;
+         break;
+      case k_ull:
+         if (!setBoundedInteger(*static_cast<uint64_t*>(keyRef.value)))
+            return false;
+         break;
+      case k_string: *static_cast<std::string*>(keyRef.value) = value; break;
       case k_bad:
       default: Logging::LogIt(Logging::logError) << "Bad key type"; return false;
    }
@@ -363,6 +400,9 @@ void registerCOMOptions() { // options exposed to GUI
 
    _keys.emplace_back(k_depth, w_spin, "CMHMaxDepth0"                      , &SearchConfig::CMHMaxDepth[0]                      , DepthType(0)    , DepthType(30)      );
    _keys.emplace_back(k_depth, w_spin, "CMHMaxDepth1"                      , &SearchConfig::CMHMaxDepth[1]                      , DepthType(0)    , DepthType(30)      );
+   for (size_t i = 0; i < SearchConfig::MAX_CMH_PLY; ++i) {
+      _keys.emplace_back(k_int, w_spin, "CMHWeight" + std::to_string(i), &SearchConfig::CMHWeight[i], i == 0 ? 1 : 0, 16);
+   }
 
 #ifdef WITH_CORRECTION_HISTORY
    _keys.emplace_back(k_int,   w_spin, "CorrectionHistoryDepthCap"         , &SearchConfig::correctionHistoryDepthCap           , (int)1          , (int)64            );

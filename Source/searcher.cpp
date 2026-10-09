@@ -67,7 +67,7 @@ TimeType Searcher::getCurrentMoveMs()const{
 
 void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
    cmhPtr.fill(nullptr);
-   for (unsigned int k = 0; k < MAX_CMH_PLY; ++k) {
+   for (unsigned int k = 0; k < SearchConfig::MAX_CMH_PLY; ++k) {
       if (ply < CMH_DISTANCE[k]) continue;
       const unsigned int contextPly = ply - (CMH_DISTANCE[k] - 1);
       assert(contextPly < MAX_PLY);
@@ -102,10 +102,10 @@ bool Searcher::isMoobing(uint16_t halfmove){
 ScoreType Searcher::getCMHScore(const Position& p, const Square from, const Square to, const CMHPtrArray& cmhPtr) const {
    int weightedScore = 0;
    int totalWeight = 0;
-   for (int i = 0; i < MAX_CMH_PLY; i++) {
+   for (int i = 0; i < SearchConfig::MAX_CMH_PLY; i++) {
       if (cmhPtr[i]) {
-         weightedScore += CMH_WEIGHT[i] * (*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to];
-         totalWeight += CMH_WEIGHT[i];
+         weightedScore += SearchConfig::CMHWeight[i] * (*cmhPtr[i])[PieceIdx(p.board_const(from)) * NbSquare + to];
+         totalWeight += SearchConfig::CMHWeight[i];
       }
    }
    return totalWeight ? static_cast<ScoreType>(weightedScore / totalWeight) : 0;

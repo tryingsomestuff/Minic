@@ -55,6 +55,7 @@ CONST_SEARCH_TUNING ScoreType dangerDivisor             = 183;
 
 CONST_SEARCH_TUNING ScoreType failLowRootMargin         = 118;
 CONST_SEARCH_TUNING ScoreType CMHMargin                 = -256;
+CONST_SEARCH_TUNING array1d<int, MAX_CMH_PLY> CMHWeight = {8, 0, 0, 0};
 
 CONST_SEARCH_TUNING ScoreType deltaBadMargin            = 169;
 CONST_SEARCH_TUNING ScoreType deltaBadSEEThreshold      = 20;
@@ -108,4 +109,3 @@ CONST_SEARCH_TUNING int correctionHistoryMaxHorizon = 24;
 //CONST_SEARCH_TUNING ScoreType randomAggressiveReductionFactor = 2;
 
 } // namespace SearchConfig
-
