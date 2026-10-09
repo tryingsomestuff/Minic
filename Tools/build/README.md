@@ -1,6 +1,10 @@
 ## Build scripts
 
-TODO
+Builds made through these scripts identify themselves with the base version,
+the six-character Git commit, and an optional `-dirty` suffix (for example,
+`3.47-af45d8-dirty`). The dirty marker covers tracked worktree/index changes
+and untracked files under `Source`; generated build outputs in submodules are
+ignored. Builds outside a Git checkout report `unknown` as the commit.
 
 ## Android debug
 

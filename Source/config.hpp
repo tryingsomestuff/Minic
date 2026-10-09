@@ -1,4 +1,18 @@
-const std::string MinicVersion = "3.47";
+#ifndef MINIC_GIT_COMMIT
+#   define MINIC_GIT_COMMIT "unknown"
+#endif
+#ifndef MINIC_GIT_DIRTY
+#   define MINIC_GIT_DIRTY 0
+#endif
+
+const std::string MinicBaseVersion = "3.47";
+const std::string MinicVersion =
+   MinicBaseVersion + "-" + MINIC_GIT_COMMIT + (MINIC_GIT_DIRTY ? "-dirty" : "");
+
+[[maybe_unused]] static std::string MinicVersionWithProcessCount(const int processCount) {
+   if (processCount <= 1) return MinicVersion;
+   return MinicVersion + "_" + std::to_string(processCount) + "proc";
+}
 
 #if defined(ARDUINO) || defined(ESP32)
 #   define WITH_SMALL_MEMORY

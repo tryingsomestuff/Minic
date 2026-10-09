@@ -107,6 +107,19 @@ else
       mkdir -p ${buildDir}
    fi
 
+   gitCommit=$(git -C "$dir" rev-parse --short=6 HEAD 2>/dev/null || echo unknown)
+   gitDirty=0
+   if [ "$gitCommit" != "unknown" ]; then
+      if ! git -C "$dir" diff --quiet --ignore-submodules=dirty HEAD -- ||
+         [ -n "$(git -C "$dir" ls-files --others --exclude-standard -- Source)" ]; then
+         gitDirty=1
+      fi
+   fi
+   buildInfo=$buildDir/minic_build_info.h
+   printf '#define MINIC_GIT_COMMIT "%s"\n#define MINIC_GIT_DIRTY %s\n' \
+      "$gitCommit" "$gitDirty" > "$buildInfo"
+   d="$d -include $buildInfo"
+
    do_sep
    echo "Compiler info"
    which $CXX
