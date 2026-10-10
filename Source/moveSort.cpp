@@ -36,11 +36,11 @@ void MoveSorter::computeScore(Move& m) const {
 
    // previous root best at root
    if (height == 0 && sameMove(context.previousBest, m)){
-      s += 15000;
+      s += SearchConfig::rootBestMoveBonus;
    }
    // TT move
    else if (e && sameMove(e->m, m)){
-      s += 14000;
+      s += SearchConfig::ttMoveBonus;
    }
    else {
       // king evasion ///@todo try again ??
@@ -63,42 +63,43 @@ void MoveSorter::computeScore(Move& m) const {
             const ScoreType see = Searcher::SEE(p, m);
             s += see;
             // recapture bonus
-            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += 512;
+            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += SearchConfig::recaptureBonus;
             // too bad capture are ordered last (-7000)
             if (/*see + pstScore < 0 &&*/ see < DynamicConfig::badCapLimit) s -= 2 * MoveScoring[T_capture];
          }
          else { // without SEE
             // recapture (> max MVVLVA value)
-            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += 512;
+            if (isValidMove(p.lastMove) && isCapture(p.lastMove) && to == Move2To(p.lastMove)) s += SearchConfig::recaptureBonus;
             // MVVLVA [0 400] 
             s += SearchConfig::capMMLVAMultiplicator * SearchConfig::MvvLvaScores[ppOpp - 1][pp - 1];
             // cap history (HISTORY_MAX = 1024)
-            s += context.historyT.historyCap[PieceIdx(p.board_const(from))][to][ppOpp-1] / SearchConfig::capHistoryDivisor;
+            s += context.historyT.getCaptureHistory(p.board_const(from), to, ppOpp) / SearchConfig::capHistoryDivisor;
          }
       }
 
       // standard moves and castling
       else if (t == T_std || isCastling(m)) {
-         if (sameMove(m, context.killerT.killers[height][0])) s += 1900; // quiet killer
+         if (sameMove(m, context.killerT.killers[height][0])) s += SearchConfig::killer0Bonus; // quiet killer
          else if (sameMove(m, context.killerT.killers[height][1]))
-            s += 1300; // quiet killer
+            s += SearchConfig::killer1Bonus; // quiet killer
          else if (height > 1 && sameMove(m, context.killerT.killers[height - 2][0]))
-            s += 1700; // quiet killer
+            s += SearchConfig::previousPlyKiller0Bonus; // quiet killer
          //else if (height > 1 && sameMove(m, context.killerT.killers[height - 2][1]))
-         //   s += 1400; // quiet killer
+         //   s += SearchConfig::previousPlyKiller1Bonus; // quiet killer
          else if (isValidMove(p.lastMove) && sameMove(context.counterT.counter[Move2From(p.lastMove)][correctedMove2ToKingDest(p.lastMove)], m)) // in sync with CounterT::update()
-            s += 1500; // quiet counter
+            s += SearchConfig::counterMoveBonus; // quiet counter
          else {
             ///@todo give another try to tune those ratio!
             // History
             const Square correctedTo = correctedMove2ToKingDest(m);
             const Piece pp = p.board_const(from);
-            s += context.historyT.history[p.c][from][correctedTo] / SearchConfig::quietHistoryDivisor1;     // +/- HISTORY_MAX = 1024
-            s += context.historyT.historyP[PieceIdx(pp)][correctedTo] / SearchConfig::quietHistoryDivisor2; // +/- HISTORY_MAX = 1024
-            s += context.getCMHScore(p, from, correctedTo, cmhPtr) / SearchConfig::quietHistoryDivisor3;    // +/- HISTORY_MAX = 1024
+            s += context.historyT.getFromToHistory(p.c, from, correctedTo) / SearchConfig::fromToHistoryDivisor; // +/- HISTORY_MAX = 1024
+            s += context.historyT.getPieceToHistory(pp, correctedTo) / SearchConfig::pieceToHistoryDivisor;      // +/- HISTORY_MAX = 1024
+            s += context.historyT.getPawnHistory(p, pp, correctedTo) / SearchConfig::pawnHistoryDivisor;         // +/- HISTORY_MAX = 1024
+            s += context.getCMHScore(p, from, correctedTo, cmhPtr) / SearchConfig::cmhHistoryDivisor;            // +/- HISTORY_MAX = 1024
             if (!isCastling(m)) {
                // move (safely) leaving threat square from null move search
-               if (!isInCheck && refutation != INVALIDMINIMOVE && from == correctedMove2ToKingDest(refutation) && Searcher::SEE_GE(p, m, -80)) s += 512;
+               if (!isInCheck && refutation != INVALIDMINIMOVE && from == correctedMove2ToKingDest(refutation) && Searcher::SEE_GE(p, m, -80)) s += SearchConfig::threatEscapeBonus;
                // always use PST to compensate low value history
                const std::span<const EvalScore> pst = EvalConfig::PST[Abs(pp) - 1];
                s += (ScaleScore(pst[ColorSquarePstHelper<C>(correctedTo)] - pst[ColorSquarePstHelper<C>(from)], gp))/2;

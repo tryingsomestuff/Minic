@@ -253,7 +253,7 @@ Searcher::depthPolicy( [[maybe_unused]] const Position & p,
          if constexpr (enableCapHistoryReduction) {
             const Square to = Move2To(m); // ok this is a std capture (no ep)
             const int hScore = HISTORY_DIV(SearchConfig::lmrCapHistoryFactor *
-               historyT.historyCap[PieceIdx(p.board_const(Move2From(m)))][to][Abs(p.board_const(to)) - 1]);
+               historyT.getCaptureHistory(p.board_const(Move2From(m)), to, p.board_const(to)));
             reduction -= std::max(-2, std::min(2, hScore));
          }
 
@@ -1332,7 +1332,7 @@ ScoreType Searcher::pvs(ScoreType                    alpha,
          else{
             // capture history pruning (only std cap)
             if (pvsData.capHistoryPruning && isPrunableCap &&
-               historyT.historyCap[PieceIdx(p.board_const(Move2From(*it)))][to][Abs(p.board_const(to))-1] < SearchConfig::captureHistoryPruningCoeff.threshold(depth, evalData.gp, pvsData.improving, pvsData.cutNode)){
+               historyT.getCaptureHistory(p.board_const(Move2From(*it)), to, p.board_const(to)) < SearchConfig::captureHistoryPruningCoeff.threshold(depth, evalData.gp, pvsData.improving, pvsData.cutNode)){
                stats.incr(Stats::sid_capHistPruning);
                continue;
             }

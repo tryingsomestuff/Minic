@@ -217,10 +217,17 @@ constexpr ScoreType HISTORY_DIV(const int x) {
    assert (Abs(ret) < std::numeric_limits<ScoreType>::max());
    return ret;
 }
+constexpr ScoreType HISTORY_UPDATE(const ScoreType item, const int bonus) {
+   assert(item >= -HISTORY_MAX && item <= HISTORY_MAX);
+   const int boundedBonus = std::clamp(bonus, -static_cast<int>(HISTORY_MAX), static_cast<int>(HISTORY_MAX));
+   const int updated = item + boundedBonus - HISTORY_DIV(item * Abs(boundedBonus));
+   assert(updated >= -HISTORY_MAX && updated <= HISTORY_MAX);
+   return static_cast<ScoreType>(updated);
+}
 constexpr ScoreType SQR(const ScoreType x)        { return x * x;}
 constexpr ScoreType HSCORE(const DepthType depth) {
-   const int ret = SQR(std::min(static_cast<int>(depth), 32)) * 4;
-   assert (ret < std::numeric_limits<ScoreType>::max());
+   const int ret = SQR(std::min(static_cast<int>(depth), 16)) * 4;
+   assert(ret >= 0 && ret <= HISTORY_MAX);
    return static_cast<ScoreType>(ret);}
 
 enum Color : uint8_t { Co_White = 0, Co_Black = 1, Co_None = 2, Co_End = Co_None };

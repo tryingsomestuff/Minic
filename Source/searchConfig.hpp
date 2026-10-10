@@ -115,6 +115,8 @@ extern CONST_SEARCH_TUNING ScoreType CMHMargin;
 inline constexpr int MAX_CMH_PLY = 4;
 extern CONST_SEARCH_TUNING array1d<int, MAX_CMH_PLY> CMHWeight;
 
+inline constexpr int PAWN_HISTORY_BUCKETS = 512;
+
 extern CONST_SEARCH_TUNING ScoreType deltaBadMargin;
 extern CONST_SEARCH_TUNING ScoreType deltaBadSEEThreshold;
 extern CONST_SEARCH_TUNING ScoreType deltaGoodMargin;
@@ -140,13 +142,24 @@ extern CONST_SEARCH_TUNING ScoreType lazySortThresholdQS;
 
 extern CONST_SEARCH_TUNING int       distributedTTBufSize;
 
+extern CONST_SEARCH_TUNING ScoreType rootBestMoveBonus;
+extern CONST_SEARCH_TUNING ScoreType ttMoveBonus;
+extern CONST_SEARCH_TUNING ScoreType recaptureBonus;
+extern CONST_SEARCH_TUNING ScoreType killer0Bonus;
+extern CONST_SEARCH_TUNING ScoreType killer1Bonus;
+extern CONST_SEARCH_TUNING ScoreType previousPlyKiller0Bonus;
+extern CONST_SEARCH_TUNING ScoreType previousPlyKiller1Bonus;
+extern CONST_SEARCH_TUNING ScoreType counterMoveBonus;
+extern CONST_SEARCH_TUNING ScoreType threatEscapeBonus;
+
 extern CONST_SEARCH_TUNING int       capPSTScoreDivisor;
 extern CONST_SEARCH_TUNING int       capMMLVAMultiplicator;
 extern CONST_SEARCH_TUNING int       capHistoryDivisor;
 
-extern CONST_SEARCH_TUNING int       quietHistoryDivisor1;
-extern CONST_SEARCH_TUNING int       quietHistoryDivisor2;
-extern CONST_SEARCH_TUNING int       quietHistoryDivisor3;
+extern CONST_SEARCH_TUNING int       fromToHistoryDivisor;
+extern CONST_SEARCH_TUNING int       pieceToHistoryDivisor;
+extern CONST_SEARCH_TUNING int       pawnHistoryDivisor;
+extern CONST_SEARCH_TUNING int       cmhHistoryDivisor;
 
 #ifdef WITH_CORRECTION_HISTORY
 extern CONST_SEARCH_TUNING int correctionHistoryDepthCap;

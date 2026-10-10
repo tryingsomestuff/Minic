@@ -83,13 +83,24 @@ CONST_SEARCH_TUNING ScoreType lazySortThresholdQS   = -512;
 
 CONST_SEARCH_TUNING int       distributedTTBufSize  = 16;
 
+CONST_SEARCH_TUNING ScoreType rootBestMoveBonus     = 15000;
+CONST_SEARCH_TUNING ScoreType ttMoveBonus           = 14000;
+CONST_SEARCH_TUNING ScoreType recaptureBonus        = 512;
+CONST_SEARCH_TUNING ScoreType killer0Bonus          = 1900;
+CONST_SEARCH_TUNING ScoreType killer1Bonus          = 1300;
+CONST_SEARCH_TUNING ScoreType previousPlyKiller0Bonus = 1700;
+CONST_SEARCH_TUNING ScoreType previousPlyKiller1Bonus = 1400;
+CONST_SEARCH_TUNING ScoreType counterMoveBonus      = 1500;
+CONST_SEARCH_TUNING ScoreType threatEscapeBonus     = 512;
+
 CONST_SEARCH_TUNING int       capPSTScoreDivisor    = 2;
 CONST_SEARCH_TUNING int       capMMLVAMultiplicator = 2;
 CONST_SEARCH_TUNING int       capHistoryDivisor     = 4;
 
-CONST_SEARCH_TUNING int       quietHistoryDivisor1  = 3;
-CONST_SEARCH_TUNING int       quietHistoryDivisor2  = 3;
-CONST_SEARCH_TUNING int       quietHistoryDivisor3  = 3;
+CONST_SEARCH_TUNING int       fromToHistoryDivisor  = 3;
+CONST_SEARCH_TUNING int       pieceToHistoryDivisor = 3;
+CONST_SEARCH_TUNING int       pawnHistoryDivisor    = 3;
+CONST_SEARCH_TUNING int       cmhHistoryDivisor     = 3;
 
 #ifdef WITH_CORRECTION_HISTORY
 CONST_SEARCH_TUNING int correctionHistoryDepthCap   = 16;

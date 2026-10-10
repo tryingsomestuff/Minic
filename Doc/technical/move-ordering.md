@@ -41,6 +41,14 @@ captures. `score()` skips lists with fewer than two entries.
 | TT move | Add 14000 if it was not the previous-best case. |
 
 The bonuses are additive: there is no single universal score for "the TT move".
+Active fixed bonuses are search parameters, exposed as UCI options in search-tuning builds:
+`rootBestMoveBonus` (15000), `ttMoveBonus` (14000), `recaptureBonus` (512),
+`killer0Bonus` (1900), `killer1Bonus` (1300), `previousPlyKiller0Bonus` (1700,
+the first killer at height minus two), `counterMoveBonus` (1500), and
+`threatEscapeBonus` (512). Defaults preserve the existing scoring.
+`previousPlyKiller1Bonus` (1400) also parameterizes the second killer at height
+minus two, but that scoring branch remains commented out, so its option has
+no effect unless the branch is enabled.
 For example, a TT capture keeps its type base. Source comments that give older
 bonus values are not the current implementation.
 
@@ -88,14 +96,27 @@ counter-move table is not the continuation-history table.
 Without a killer/counter match:
 
 ```text
-score += from/to history / quietHistoryDivisor1
-       + piece/to history / quietHistoryDivisor2
-       + weighted CMH / quietHistoryDivisor3
+score += from/to history / fromToHistoryDivisor
+       + piece/to history / pieceToHistoryDivisor
+       + pawn-hash/piece/destination history / PawnHistoryDivisor
+       + weighted CMH / cmhHistoryDivisor
 ```
 
-All three divisors currently equal 3. Non-castling moves also receive half the
-PST improvement. This provides a positional prior while learned histories are
-small.
+The three existing divisors and `PawnHistoryDivisor` currently equal 3.
+Pawn history uses a 512-entry direct-mapped bucket table keyed by the low bits
+of Minic's cached `p.ph`, then colored moved piece and destination square.
+`p.ph` includes both kings as well as pawns, unlike pawn-only keys used by some
+other engines. Its update uses the same depth bonus and bounded gravity as
+from/to and piece/to histories, with no separate learning-rate scale.
+Non-castling moves also receive half the PST improvement.
+This provides a positional prior while learned histories are small.
+
+Pawn history is only included in the generic quiet-history branch; killer and
+counter moves retain their existing priority and bypass generic quiet history.
+It is learned through `HistoryT::update()` for positive beta-cutoff updates and
+negative updates to earlier quiet moves. Like other histories, it persists
+between searches and is cleared by game/forced-history resets. The 512 x 13 x
+64 `ScoreType` table costs 832 KiB per worker.
 
 A safe move leaving the square threatened by the null-move refutation can gain
 512, provided it is not in check and `SEE_GE(..., -80)` succeeds. Castling
@@ -139,18 +160,30 @@ From/to, piece/to and capture history initialize to zero; continuation entries
 initialize to -1. Killers/counters reset every search, while history tables
 normally persist through searches in the same game.
 
+`getFromToHistory`, `getPieceToHistory`, `getCaptureHistory` and
+`getPawnHistory` provide mutable and const-reference access to entries.
+Piece indices include color; capture-history victim indices use only the
+captured piece kind. Destinations are supplied by callers: these accessors
+do not perform castling correction. CMH continues to use cached row pointers.
+
 The depth bonus and gravity update are:
 
 ```text
-HSCORE(depth) = 4 * min(depth, 32)^2
+HSCORE(depth) = 4 * min(depth, 16)^2
 bonus        = sign * HSCORE(depth)
-item        += bonus - ((item * abs(bonus)) >> HISTORY_POWER)
+boundedBonus = clamp(bonus, -1024, 1024)
+item        += boundedBonus - ((item * abs(boundedBonus)) >> HISTORY_POWER)
 HISTORY_POWER = 10
 ```
 
-The damping scale is `HISTORY_MAX = 1024`. It is not an explicit saturation
-clamp on every possible update: use the formula and caller's bonus/depth
-constraints rather than assuming arbitrary inputs cannot overshoot.
+The damping scale is `HISTORY_MAX = 1024`. Capping the depth at 16 keeps
+`HSCORE` within that range while preserving the original factor of 4.
+`HISTORY_UPDATE` also caps effective bonuses after contextual weighting:
+CMH ratios can otherwise exceed 1024.
+The original gravity formula then preserves `[-1024,1024]` without clamping
+stored entries, and a zero bonus leaves the entry unchanged. Updates through
+depth 16 with unscaled bonuses retain the old behavior; larger bonuses now
+saturate at 1024. This change needs a separate playing-strength comparison.
 
 Quiet history updates require `T_std`: castling and quiet promotions do not
 use that update function. Capture history accepts `isCaptureNoEP`, which includes

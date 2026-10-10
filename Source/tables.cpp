@@ -31,6 +31,7 @@ void HistoryT::initHistory() {
    Logging::LogIt(Logging::logInfo) << "Init history";
    Logging::LogIt(Logging::logInfo) << "Size of history table " << sizeof(history) / 1024 << "Kb";
    Logging::LogIt(Logging::logInfo) << "Size of history piece table " << sizeof(historyP) << "b";
+   Logging::LogIt(Logging::logInfo) << "Size of pawn history table " << sizeof(pawnHistory) / 1024 << "Kb";
    Logging::LogIt(Logging::logInfo) << "Size of history capture table " << sizeof(historyCap) / 1024 << "Kb";
    Logging::LogIt(Logging::logInfo) << "Size of history counter table " << sizeof(counter_history) / 1024 << "Kb";
    for (int i = 0; i < NbSquare; ++i)
@@ -40,6 +41,11 @@ void HistoryT::initHistory() {
    for (int i = 0; i < NbPiece; ++i)
       for (int k = 0; k < NbSquare; ++k)
          historyP[i][k] = 0;
+
+   for (int i = 0; i < SearchConfig::PAWN_HISTORY_BUCKETS; ++i)
+      for (int j = 0; j < NbPiece; ++j)
+         for (int k = 0; k < NbSquare; ++k)
+            pawnHistory[i][j][k] = 0;
 
    for (int i = 0; i < NbPiece; ++i)
       for (int j = 0; j < NbSquare; ++j)

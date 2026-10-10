@@ -134,6 +134,10 @@ the table by a distance dimension.
 Their scoring weights are configured by `SearchConfig::CMHWeight` and exposed
 as `CMHWeight0` through `CMHWeight3` when search tuning is enabled; the first
 weight must remain positive because it normalizes CMH update bonuses.
+Pawn move history is a separate 512-bucket table per worker, indexed by the
+low bits of Minic's pawn-and-king hash, colored moved piece and destination.
+Its 832 KiB per-worker cost is separate from the pawn evaluation cache and
+pawn correction history.
 
 Correction tables have direct-mapped `[side][key & mask]` buckets without
 full-key tags. Collisions intentionally blend observations. The active

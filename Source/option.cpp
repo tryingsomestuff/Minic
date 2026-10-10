@@ -468,13 +468,24 @@ void registerCOMOptions() { // options exposed to GUI
 
    _keys.emplace_back(k_int  , w_spin, "distributedTTBufSize"              , &SearchConfig::distributedTTBufSize                , 4               , 8192               );
 
+   _keys.emplace_back(k_score, w_spin, "rootBestMoveBonus"                 , &SearchConfig::rootBestMoveBonus                   , ScoreType(0)    , ScoreType(20000)   );
+   _keys.emplace_back(k_score, w_spin, "ttMoveBonus"                       , &SearchConfig::ttMoveBonus                         , ScoreType(0)    , ScoreType(20000)   );
+   _keys.emplace_back(k_score, w_spin, "recaptureBonus"                    , &SearchConfig::recaptureBonus                      , ScoreType(0)    , ScoreType(4096)    );
+   _keys.emplace_back(k_score, w_spin, "killer0Bonus"                      , &SearchConfig::killer0Bonus                        , ScoreType(0)    , ScoreType(4096)    );
+   _keys.emplace_back(k_score, w_spin, "killer1Bonus"                      , &SearchConfig::killer1Bonus                        , ScoreType(0)    , ScoreType(4096)    );
+   _keys.emplace_back(k_score, w_spin, "previousPlyKiller0Bonus"           , &SearchConfig::previousPlyKiller0Bonus             , ScoreType(0)    , ScoreType(4096)    );
+   _keys.emplace_back(k_score, w_spin, "previousPlyKiller1Bonus"           , &SearchConfig::previousPlyKiller1Bonus             , ScoreType(0)    , ScoreType(4096)    );
+   _keys.emplace_back(k_score, w_spin, "counterMoveBonus"                  , &SearchConfig::counterMoveBonus                    , ScoreType(0)    , ScoreType(4096)    );
+   _keys.emplace_back(k_score, w_spin, "threatEscapeBonus"                 , &SearchConfig::threatEscapeBonus                   , ScoreType(0)    , ScoreType(4096)    );
+
    _keys.emplace_back(k_int  , w_spin, "capPSTScoreDivisor"                , &SearchConfig::capPSTScoreDivisor                  , 1               , 16                 );
    _keys.emplace_back(k_int  , w_spin, "capMMLVAMultiplicator"             , &SearchConfig::capMMLVAMultiplicator               , 1               , 16                 );
    _keys.emplace_back(k_int  , w_spin, "capHistoryDivisor"                 , &SearchConfig::capHistoryDivisor                   , 1               , 16                 );
 
-   _keys.emplace_back(k_int  , w_spin, "quietHistoryDivisor1"              , &SearchConfig::quietHistoryDivisor1                , 1               , 16                 );
-   _keys.emplace_back(k_int  , w_spin, "quietHistoryDivisor2"              , &SearchConfig::quietHistoryDivisor2                , 1               , 16                 );
-   _keys.emplace_back(k_int  , w_spin, "quietHistoryDivisor3"              , &SearchConfig::quietHistoryDivisor3                , 1               , 16                 );
+   _keys.emplace_back(k_int  , w_spin, "fromToHistoryDivisor"              , &SearchConfig::fromToHistoryDivisor                , 1               , 16                 );
+   _keys.emplace_back(k_int  , w_spin, "pieceToHistoryDivisor"             , &SearchConfig::pieceToHistoryDivisor               , 1               , 16                 );
+   _keys.emplace_back(k_int  , w_spin, "cmhHistoryDivisor"                 , &SearchConfig::cmhHistoryDivisor                   , 1               , 16                 );
+   _keys.emplace_back(k_int  , w_spin, "PawnHistoryDivisor"                , &SearchConfig::pawnHistoryDivisor                  , 1               , 16                 );
 
 
 

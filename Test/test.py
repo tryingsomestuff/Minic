@@ -45,6 +45,15 @@ def run_program(input, *args):
         },
         id="gameinfo_test"),
     pytest.param(
+        b"",
+        ["-pawnhistory_test"],
+        {
+           "returncode": 0,
+           "stdout": "",
+           "stderr": "",
+        },
+        id="pawnhistory_test"),
+    pytest.param(
         b"uci\nisready\ngo depth 10\nwait\nquit\n", 
         ["-uci"], 
         {

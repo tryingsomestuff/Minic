@@ -1,50 +1,20 @@
 {
-  "CorrectionHistoryDepthCap": {
-    "max": 24,
-    "min": 8,
-    "step": 2,
-    "value": 16
-  },
-  "CorrectionHistoryDepthScale": {
-    "max": 32,
-    "min": 4,
-    "step": 1,
-    "value": 16
-  },
-  "CorrectionHistoryMaxPawn": {
-    "max": 160,
-    "min": 16,
-    "step": 8,
-    "value": 32
-  },
-  "CorrectionHistoryMaxNonPawn": {
-    "max": 128,
-    "min": 8,
-    "step": 8,
-    "value": 44
-  },
-  "aspirationMinDepth": {
-    "max": 12,
-    "min": 2,
-    "step": 1,
-    "value": 4
-  },
-  "aspirationInit": {
-    "max": 30,
+  "CMHWeight1": {
+    "value": 0,
     "min": 0,
-    "step": 2,
-    "value": 5
+    "max": 8,
+    "step": 1
   },
-  "aspirationDepthInit": {
-    "max": 150,
+  "CMHWeight2": {
+    "value": 0,
     "min": 0,
-    "step": 8,
-    "value": 40
+    "max": 8,
+    "step": 1
   },
-  "aspirationDepthCoef": {
-    "max": 10,
+  "CMHWeight3": {
+    "value": 0,
     "min": 0,
-    "step": 1,
-    "value": 3
+    "max": 8,
+    "step": 1
   }
 }
