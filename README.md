@@ -10,7 +10,7 @@
 Minic is a chess engine I'm developing to learn about chess programming and modern C++ (please see this lovely [wiki](https://www.chessprogramming.org/Main_Page) for more details on chess programming).  
 
 Minic has no graphical interface (GUI) but is compatible with both the [CECP](https://www.gnu.org/software/xboard/engine-intf.html) (xboard) and [UCI](http://wbec-ridderkerk.nl/html/UCIProtocol.html) protocols, so you can use it in your favorite software (for instance [Cutechess](https://github.com/cutechess/cutechess), [Arena](http://www.playwitharena.de/), [Banksia](https://banksiagui.com/), [Winboard/Xboard](https://www.gnu.org/software/xboard/), [c-chess-cli](https://github.com/lucasart/c-chess-cli), ...).  
-Minic is currently one of the 15 best engines in major [rating](https://www.computerchess.org.uk/ccrl/4040/index.html) lists and the strongest French one.
+Minic is currently around the top 70 of the major [rating](https://www.computerchess.org.uk/ccrl/4040/index.html) lists (around 3530 on the CCRL 40/15 scale and 3660 on the CCRL Blitz scale, October 2026) and is one of the strongest French engines.
 
 Here are some shortcuts to navigate in this document :
 
@@ -96,7 +96,7 @@ In brief, Minic NNUE world is vastly inspired from what others are doing and is 
 
 ## Testing and strength
 
-Minic is currently in the top 20 engines with an Elo rating around 3400 on the [CCRL scale](https://www.computerchess.org.uk/ccrl/404/cgi/compare_engines.cgi?class=Open+source+single-CPU+engines&print=Rating+list&print=Results+table&print=LOS+table&table_size=12&cross_tables_for_best_versions_only=1).
+Minic is currently around rank 70 with an Elo rating around 3530 (4 cores) / 3460 (single core) on the [CCRL 40/15 scale](https://www.computerchess.org.uk/ccrl/4040/index.html), and around rank 60 with 3660 (8 cores) on the [CCRL Blitz scale](https://www.computerchess.org.uk/ccrl/404/), as of October 2026.
 
 ### Various NNUE nets strength
 
@@ -184,14 +184,14 @@ Minic random-mover (level = 0) stats are the following :
 ## Rating Lists & competitions
 
 ### Progress
-Here is 4 years of CCRL progress (single thread)
+Here is 4 years of CCRL progress (single thread, chart as of 2022)
 ![image](https://user-images.githubusercontent.com/5878710/172205840-b4bce912-7497-4bfd-9a82-ab08d19265b6.png)
 
 
 ### CCRL
-- 40/15: Minic 3.31 + Natural Naughtiness is tested at 3447 on the [CCRL 40/15 scale, 4 cores](https://www.computerchess.org.uk/ccrl/4040/)  
-- Blitz: Minic 3.31 + Natural Naughtiness is tested at 3609 on the [CCRL BLITZ scale, 8 cores](https://www.computerchess.org.uk/ccrl/404/)  
-- FRC: Minic 3.32 + Natural Naughtiness is tested at 3591 on the [CCRL FRC list](https://www.computerchess.org.uk/ccrl/404FRC/)  
+- 40/15: Minic 3.41 64-bit is tested at 3529 (rank 70) on the [CCRL 40/15 scale, 4 cores](https://www.computerchess.org.uk/ccrl/4040/), list computed on October 9, 2026  
+- Blitz: Minic 3.40 64-bit is tested at 3660 (rank 58) on the [CCRL BLITZ scale, 8 cores](https://www.computerchess.org.uk/ccrl/404/), list computed on October 3, 2026  
+- FRC: Minic 3.41 64-bit is tested at 3704 (rank 54) on the [CCRL FRC list](https://www.computerchess.org.uk/ccrl/404FRC/), list computed on October 4, 2026  
 
 ### CEGT
 - 40/4: Minic 3.27 + Natural Naughtiness is tested at 3409 on the [CEGT 40/4 list](http://www.cegt.net/40_4_Ratinglist/40_4_single/rangliste.html)  
@@ -224,7 +224,7 @@ Here is 4 years of CCRL progress (single thread)
 
 ### TCEC stats
 
-TCEC hardware: Minic is at 3440 (https://tcec-chess.com/bayeselo.txt)
+TCEC hardware: Minic is at 3456 (October 2026) (https://tcec-chess.com/bayeselo.txt)
 
 ### TCEC
 
@@ -241,6 +241,8 @@ TCEC22: 2nd/8 in League 2, 8th/8 in League 1 (well tried ;) )  (https://www.ches
 TCEC23: 3rd/12 in League 1 ! (https://tcec-chess.com/#div=l1&game=1&season=23)  
 TCEC24: 9th/12 in League 1 ! (https://tcec-chess.com/#div=l1&game=1&season=24)  
 TCEC25: 8th/12 in League 1 ! (https://tcec-chess.com/#div=l1&game=1&season=25)
+
+Since then Minic kept taking part in TCEC: in the leagues of seasons 26, 27 and 28, in the Swiss events 7 to 10 and in the Cup events 14 to 16. In season 29 it finished 37th in Swiss 9 (https://wiki.chessdom.org/index.php?title=Current_Engine_Status), and in season 30 Minic 3.45 is playing the "Playoff &amp; Swiss 10" event (https://tcec-chess.com/).
 
 ## Release process
 WARNING : the former Dist directory has been REMOVED from the repository because it was starting to be too big. Unofficial releases are not available here anymore. All releases (including unofficial ones) are available in a new repo here: https://github.com/tryingsomestuff/Minic-Dist, also available as a git submodule.
