@@ -31,18 +31,18 @@
             <td class="headerValue">coverage</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntryMed">85.1&nbsp;%</td>
+            <td class="headerCovTableEntryMed">76.9&nbsp;%</td>
             <td class="headerCovTableEntry">134</td>
-            <td class="headerCovTableEntry">114</td>
+            <td class="headerCovTableEntry">103</td>
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-10-02 08:14:07</td>
+            <td class="headerValue">2026-10-20 10:21:22</td>
             <td></td>
             <td class="headerItem">Functions:</td>
-            <td class="headerCovTableEntryHi">94.4&nbsp;%</td>
+            <td class="headerCovTableEntryMed">83.3&nbsp;%</td>
             <td class="headerCovTableEntry">18</td>
-            <td class="headerCovTableEntry">17</td>
+            <td class="headerCovTableEntry">15</td>
           </tr>
                   <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
                 </table>
@@ -80,7 +80,7 @@
 <span id="L18"><span class="lineNum">      18</span>              : </span>
 <span id="L19"><span class="lineNum">      19</span>              : GameInfo gameInfo;</span>
 <span id="L20"><span class="lineNum">      20</span>              : </span>
-<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC tlaBgGNC">      119710 : GameInfo &amp; GetGameInfo(){ return gameInfo; }</span></span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaGNC tlaBgGNC">      138055 : GameInfo &amp; GetGameInfo(){ return gameInfo; }</span></span>
 <span id="L22"><span class="lineNum">      22</span>              : </span>
 <span id="L23"><span class="lineNum">      23</span>              : #ifdef WITH_NNUE</span>
 <span id="L24"><span class="lineNum">      24</span>              : NNUEEvaluator evaluator;</span>
@@ -113,10 +113,10 @@
 <span id="L51"><span class="lineNum">      51</span> <span class="tlaGNC">          10 :    initialPos = initial;</span></span>
 <span id="L52"><span class="lineNum">      52</span> <span class="tlaGNC">          10 : }</span></span>
 <span id="L53"><span class="lineNum">      53</span>              : </span>
-<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">           9 : void GameInfo::append(const GameStateInfo &amp; stateInfo){</span></span>
-<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">           9 :    _gameStates.push_back(stateInfo);</span></span>
-<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">           9 :    _gameStates.back().p.h = computeHash(_gameStates.back().p); // be sure to have an updated hash</span></span>
-<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">           9 : }</span></span>
+<span id="L54"><span class="lineNum">      54</span> <span class="tlaGNC">          10 : void GameInfo::append(const GameStateInfo &amp; stateInfo){</span></span>
+<span id="L55"><span class="lineNum">      55</span> <span class="tlaGNC">          10 :    _gameStates.push_back(stateInfo);</span></span>
+<span id="L56"><span class="lineNum">      56</span> <span class="tlaGNC">          10 :    _gameStates.back().p.h = computeHash(_gameStates.back().p); // be sure to have an updated hash</span></span>
+<span id="L57"><span class="lineNum">      57</span> <span class="tlaGNC">          10 : }</span></span>
 <span id="L58"><span class="lineNum">      58</span>              : </span>
 <span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">           2 : size_t GameInfo::size() const {</span></span>
 <span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">           2 :    return _gameStates.size();</span></span>
@@ -130,28 +130,28 @@
 <span id="L68"><span class="lineNum">      68</span> <span class="tlaGNC">           2 :    return moves;</span></span>
 <span id="L69"><span class="lineNum">      69</span> <span class="tlaUNC tlaBgUNC">           0 : }</span></span>
 <span id="L70"><span class="lineNum">      70</span>              : </span>
-<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC tlaBgGNC">      119535 : std::optional&lt;Hash&gt; GameInfo::getHash(uint16_t halfmove) const{</span></span>
-<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">      119535 :    const size_t startingPly = initialPos.halfmoves;</span></span>
-<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">      119535 :    const size_t offset = halfmove - startingPly;</span></span>
-<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">      119535 :    if ( offset &gt;= size()) return {};</span></span>
-<span id="L75"><span class="lineNum">      75</span> <span class="tlaGNC">          75 :    return offset == 0 ? computeHash(initialPos) : _gameStates[offset-1].p.h; // halfmove starts at 1, not 0 ...</span></span>
+<span id="L71"><span class="lineNum">      71</span> <span class="tlaGNC tlaBgGNC">      138029 : std::optional&lt;Hash&gt; GameInfo::getHash(uint16_t halfmove) const{</span></span>
+<span id="L72"><span class="lineNum">      72</span> <span class="tlaGNC">      138029 :    const size_t startingPly = initialPos.halfmoves;</span></span>
+<span id="L73"><span class="lineNum">      73</span> <span class="tlaGNC">      138029 :    const size_t offset = halfmove - startingPly;</span></span>
+<span id="L74"><span class="lineNum">      74</span> <span class="tlaGNC">      138029 :    if ( offset &gt;= size()) return {};</span></span>
+<span id="L75"><span class="lineNum">      75</span> <span class="tlaUNC tlaBgUNC">           0 :    return offset == 0 ? computeHash(initialPos) : _gameStates[offset-1].p.h; // halfmove starts at 1, not 0 ...</span></span>
 <span id="L76"><span class="lineNum">      76</span>              : }</span>
 <span id="L77"><span class="lineNum">      77</span>              : </span>
-<span id="L78"><span class="lineNum">      78</span> <span class="tlaGNC">          75 : std::optional&lt;Move&gt; GameInfo::getMove(uint16_t halfmove) const{</span></span>
-<span id="L79"><span class="lineNum">      79</span> <span class="tlaGNC">          75 :    const size_t startingPly = initialPos.halfmoves;</span></span>
-<span id="L80"><span class="lineNum">      80</span> <span class="tlaGNC">          75 :    const size_t offset = halfmove - startingPly;</span></span>
-<span id="L81"><span class="lineNum">      81</span> <span class="tlaGNC">          75 :    if ( offset &gt;= size()) return {};</span></span>
-<span id="L82"><span class="lineNum">      82</span> <span class="tlaGNC">          75 :    return offset == 0 ? INVALIDMOVE : _gameStates[offset-1].lastMove; // halfmove starts at 1, not 0 ...</span></span>
+<span id="L78"><span class="lineNum">      78</span> <span class="tlaUNC">           0 : std::optional&lt;Move&gt; GameInfo::getMove(uint16_t halfmove) const{</span></span>
+<span id="L79"><span class="lineNum">      79</span> <span class="tlaUNC">           0 :    const size_t startingPly = initialPos.halfmoves;</span></span>
+<span id="L80"><span class="lineNum">      80</span> <span class="tlaUNC">           0 :    const size_t offset = halfmove - startingPly;</span></span>
+<span id="L81"><span class="lineNum">      81</span> <span class="tlaUNC">           0 :    if ( offset &gt;= size()) return {};</span></span>
+<span id="L82"><span class="lineNum">      82</span> <span class="tlaUNC">           0 :    return offset == 0 ? INVALIDMOVE : _gameStates[offset-1].lastMove; // halfmove starts at 1, not 0 ...</span></span>
 <span id="L83"><span class="lineNum">      83</span>              : }</span>
 <span id="L84"><span class="lineNum">      84</span>              : </span>
-<span id="L85"><span class="lineNum">      85</span> <span class="tlaGNC">          75 : std::optional&lt;Position&gt; GameInfo::getPosition(uint16_t halfmove) const{</span></span>
-<span id="L86"><span class="lineNum">      86</span> <span class="tlaGNC">          75 :    const size_t startingPly = initialPos.halfmoves;</span></span>
-<span id="L87"><span class="lineNum">      87</span> <span class="tlaGNC">          75 :    const size_t offset = halfmove - startingPly;</span></span>
-<span id="L88"><span class="lineNum">      88</span> <span class="tlaGNC">          75 :    if ( offset &gt;= size()) return {};</span></span>
-<span id="L89"><span class="lineNum">      89</span> <span class="tlaGNC">          75 :    return offset == 0 ? initialPos : _gameStates[offset-1].p; // halfmove starts at 1, not 0 ...</span></span>
+<span id="L85"><span class="lineNum">      85</span> <span class="tlaUNC">           0 : std::optional&lt;Position&gt; GameInfo::getPosition(uint16_t halfmove) const{</span></span>
+<span id="L86"><span class="lineNum">      86</span> <span class="tlaUNC">           0 :    const size_t startingPly = initialPos.halfmoves;</span></span>
+<span id="L87"><span class="lineNum">      87</span> <span class="tlaUNC">           0 :    const size_t offset = halfmove - startingPly;</span></span>
+<span id="L88"><span class="lineNum">      88</span> <span class="tlaUNC">           0 :    if ( offset &gt;= size()) return {};</span></span>
+<span id="L89"><span class="lineNum">      89</span> <span class="tlaUNC">           0 :    return offset == 0 ? initialPos : _gameStates[offset-1].p; // halfmove starts at 1, not 0 ...</span></span>
 <span id="L90"><span class="lineNum">      90</span>              : }</span>
 <span id="L91"><span class="lineNum">      91</span>              : </span>
-<span id="L92"><span class="lineNum">      92</span> <span class="tlaGNC">          26 : void newGame() {</span></span>
+<span id="L92"><span class="lineNum">      92</span> <span class="tlaGNC tlaBgGNC">          26 : void newGame() {</span></span>
 <span id="L93"><span class="lineNum">      93</span>              : </span>
 <span id="L94"><span class="lineNum">      94</span>              :    // write previous game</span>
 <span id="L95"><span class="lineNum">      95</span> <span class="tlaGNC">          26 :    if (DynamicConfig::pgnOut){</span></span>
@@ -219,19 +219,19 @@
 <span id="L157"><span class="lineNum">     157</span>              : </span>
 <span id="L158"><span class="lineNum">     158</span>              :    // if possible, get a ponder move</span>
 <span id="L159"><span class="lineNum">     159</span> <span class="tlaGNC">         159 :    if (ponderMove != INVALIDMOVE) {</span></span>
-<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">         154 :       Position p2 = position;</span></span>
+<span id="L160"><span class="lineNum">     160</span> <span class="tlaGNC">         155 :       Position p2 = position;</span></span>
 <span id="L161"><span class="lineNum">     161</span>              : #ifdef WITH_NNUE</span>
-<span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">         154 :       NNUEEvaluator evaluator2;</span></span>
+<span id="L162"><span class="lineNum">     162</span> <span class="tlaGNC">         155 :       NNUEEvaluator evaluator2;</span></span>
 <span id="L163"><span class="lineNum">     163</span>              :       p2.associateEvaluator(evaluator2);</span>
-<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">         154 :       p2.resetNNUEEvaluator(p2.evaluator());</span></span>
+<span id="L164"><span class="lineNum">     164</span> <span class="tlaGNC">         155 :       p2.resetNNUEEvaluator(p2.evaluator());</span></span>
 <span id="L165"><span class="lineNum">     165</span>              : #endif</span>
 <span id="L166"><span class="lineNum">     166</span>              :       // apply best move and verify ponder move is ok</span>
-<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">         154 :       const MoveInfo moveInfo(p2, move);</span></span>
-<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">         154 :       if (!(applyMove(p2, moveInfo) &amp;&amp; isPseudoLegal(p2, ponderMove))) {</span></span>
+<span id="L167"><span class="lineNum">     167</span> <span class="tlaGNC">         155 :       const MoveInfo moveInfo(p2, move);</span></span>
+<span id="L168"><span class="lineNum">     168</span> <span class="tlaGNC">         155 :       if (!(applyMove(p2, moveInfo) &amp;&amp; isPseudoLegal(p2, ponderMove))) {</span></span>
 <span id="L169"><span class="lineNum">     169</span> <span class="tlaUNC tlaBgUNC">           0 :          Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;Illegal ponder move &quot; &lt;&lt; ToString(ponderMove) &lt;&lt; &quot; &quot; &lt;&lt; ToString(p2);</span></span>
 <span id="L170"><span class="lineNum">     170</span> <span class="tlaUNC">           0 :          ponderMove = INVALIDMOVE; // do be sure ...</span></span>
 <span id="L171"><span class="lineNum">     171</span>              :       }</span>
-<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC tlaBgGNC">         154 :    }</span></span>
+<span id="L172"><span class="lineNum">     172</span> <span class="tlaGNC tlaBgGNC">         155 :    }</span></span>
 <span id="L173"><span class="lineNum">     173</span>              : </span>
 <span id="L174"><span class="lineNum">     174</span>              :    bool ret = true;</span>
 <span id="L175"><span class="lineNum">     175</span>              : </span>
@@ -240,7 +240,7 @@
 <span id="L178"><span class="lineNum">     178</span>              :    // in searching only mode we have to return a move to GUI</span>
 <span id="L179"><span class="lineNum">     179</span>              :    // but uci protocol also expect a bestMove when pondering or analysing to wake up the GUI</span>
 <span id="L180"><span class="lineNum">     180</span> <span class="tlaGNC">         159 :    if (state == st_searching || state == st_pondering || state == st_analyzing) {</span></span>
-<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">         161 :       const std::string tag = Logging::ct == Logging::CT_uci ? &quot;bestmove&quot; : &quot;move&quot;;</span></span>
+<span id="L181"><span class="lineNum">     181</span> <span class="tlaGNC">         162 :       const std::string tag = Logging::ct == Logging::CT_uci ? &quot;bestmove&quot; : &quot;move&quot;;</span></span>
 <span id="L182"><span class="lineNum">     182</span> <span class="tlaGNC">         318 :       Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;sending move to GUI &quot; &lt;&lt; ToString(move);</span></span>
 <span id="L183"><span class="lineNum">     183</span> <span class="tlaGNC">         159 :       if (move == INVALIDMOVE) {</span></span>
 <span id="L184"><span class="lineNum">     184</span>              :          // game ends (check mated / stalemate) **or** stop at the very begining of pondering</span>
@@ -282,7 +282,7 @@
 <span id="L220"><span class="lineNum">     220</span> <span class="tlaGNC">         164 :    const bool b = applyMove(position, moveInfo); // this update the COM::position position status</span></span>
 <span id="L221"><span class="lineNum">     221</span> <span class="tlaGNC">         164 :    if (disp &amp;&amp; m != INVALIDMOVE) {</span></span>
 <span id="L222"><span class="lineNum">     222</span> <span class="tlaGNC">         310 :       Logging::LogIt(Logging::logGUI) &lt;&lt; tag &lt;&lt; &quot; &quot; &lt;&lt; ToString(m)</span></span>
-<span id="L223"><span class="lineNum">     223</span> <span class="tlaGNC">         619 :                                       &lt;&lt; (Logging::ct == Logging::CT_uci &amp;&amp; isValidMove(pondermove) ? (&quot; ponder &quot; + ToString(pondermove)) : &quot;&quot;);</span></span>
+<span id="L223"><span class="lineNum">     223</span> <span class="tlaGNC">         618 :                                       &lt;&lt; (Logging::ct == Logging::CT_uci &amp;&amp; isValidMove(pondermove) ? (&quot; ponder &quot; + ToString(pondermove)) : &quot;&quot;);</span></span>
 <span id="L224"><span class="lineNum">     224</span>              :    }</span>
 <span id="L225"><span class="lineNum">     225</span> <span class="tlaGNC">         328 :    Logging::LogIt(Logging::logInfo) &lt;&lt; ToString(position);</span></span>
 <span id="L226"><span class="lineNum">     226</span> <span class="tlaGNC">         164 :    return b;</span></span>

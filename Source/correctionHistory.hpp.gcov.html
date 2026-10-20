@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-10-02 08:14:07</td>
+            <td class="headerValue">2026-10-20 10:21:22</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryHi">-</td>
@@ -82,15 +82,15 @@
 <span id="L20"><span class="lineNum">      20</span>              : </span>
 <span id="L21"><span class="lineNum">      21</span>              :    // current correction (in centipawns) to apply to the static eval for that bucket</span>
 <span id="L22"><span class="lineNum">      22</span>              :    [[nodiscard]] FORCE_FINLINE ScoreType score(Color c, Hash key) const {</span>
-<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC tlaBgGNC">     1967897 :       return static_cast&lt;ScoreType&gt;(table[c][key &amp; (size - 1)]);</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaGNC tlaBgGNC">     3361995 :       return static_cast&lt;ScoreType&gt;(table[c][key &amp; (size - 1)]);</span></span>
 <span id="L24"><span class="lineNum">      24</span>              :    }</span>
 <span id="L25"><span class="lineNum">      25</span>              : </span>
 <span id="L26"><span class="lineNum">      26</span>              :    FORCE_FINLINE void update(Color c, Hash key, DepthType depth, int evalDiff, int correctionMax) {</span>
-<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">      253434 :       ScoreType &amp; item = table[c][key &amp; (size - 1)];</span></span>
-<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">      253434 :       const int depthWeight = std::min(static_cast&lt;int&gt;(depth), SearchConfig::correctionHistoryDepthCap);</span></span>
-<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">      253434 :       const int change = std::clamp(evalDiff * depthWeight / SearchConfig::correctionHistoryDepthScale,</span></span>
+<span id="L27"><span class="lineNum">      27</span> <span class="tlaGNC">      437799 :       ScoreType &amp; item = table[c][key &amp; (size - 1)];</span></span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaGNC">      437799 :       const int depthWeight = std::min(static_cast&lt;int&gt;(depth), SearchConfig::correctionHistoryDepthCap);</span></span>
+<span id="L29"><span class="lineNum">      29</span> <span class="tlaGNC">      437799 :       const int change = std::clamp(evalDiff * depthWeight / SearchConfig::correctionHistoryDepthScale,</span></span>
 <span id="L30"><span class="lineNum">      30</span>              :                                      -correctionMax, correctionMax);</span>
-<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">      253434 :       item = static_cast&lt;ScoreType&gt;(item + change - (item * Abs(change)) / correctionMax);</span></span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaGNC">      437799 :       item = static_cast&lt;ScoreType&gt;(item + change - (item * Abs(change)) / correctionMax);</span></span>
 <span id="L32"><span class="lineNum">      32</span>              :    }</span>
 <span id="L33"><span class="lineNum">      33</span>              : </span>
 <span id="L34"><span class="lineNum">      34</span>              : };</span>
