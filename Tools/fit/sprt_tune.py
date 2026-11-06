@@ -8,9 +8,9 @@ best known configuration using cutechess-cli's built-in `-sprt` termination
 criterion, which implements the same sequential probability ratio test (SPRT)
 used by chess engine testing frameworks such as OpenBench/Fishtest
 (https://github.com/AndyGrant/OpenBench): the match is stopped as soon as the
-log-likelihood ratio crosses the acceptance bound for H1 ("the change is an
-improvement of at least elo0") or the rejection bound for H0 ("the change is
-not an improvement of at least elo1").
+log-likelihood ratio crosses the acceptance bound for H1 (candidate Elo gain
+is modeled at elo1) or the rejection bound for H0 (candidate Elo gain is
+modeled at elo0).
 
 Two sub-commands are provided:
 
@@ -58,6 +58,7 @@ Example
 """
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -198,11 +199,19 @@ def tail_new_lines(path, offsets):
     return new_text.splitlines(keepends=True)
 
 
-def write_slurm_script(args, script_path, out_file, cutechess_argv):
+def slurm_job_name(candidate_opts):
+    """Short Slurm job name sprt_XXXXXX, where XXXXXX is a SHA-1 prefix of all the
+    candidate parameter values, so the same configuration always gets the same name.
+    The detailed per-job names are only used for the script/output/PGN files."""
+    digest = hashlib.sha1("\n".join(candidate_opts).encode()).hexdigest()
+    return f"sprt_{digest[:6]}"
+
+
+def write_slurm_script(args, script_path, out_file, cutechess_argv, job_name):
     cpus = args.slurm_cpus_per_task or args.concurrency
     lines = [
         "#!/bin/bash",
-        f"#SBATCH --job-name={script_path.stem}",
+        f"#SBATCH --job-name={job_name}",
         f"#SBATCH --output={out_file}",
         f"#SBATCH --time={args.slurm_time}",
         f"#SBATCH --cpus-per-task={cpus}",
@@ -214,6 +223,10 @@ def write_slurm_script(args, script_path, out_file, cutechess_argv):
     if args.slurm_extra:
         lines.extend(f"#SBATCH {tok}" for tok in shlex.split(args.slurm_extra))
     lines.append("")
+    # a "lib" directory next to cutechess-cli holds its bundled shared libraries (Qt, ...)
+    bundled_lib = Path(cutechess_argv[0]).resolve().parent / "lib"
+    if bundled_lib.is_dir():
+        lines.append(f"export LD_LIBRARY_PATH={shlex.quote(str(bundled_lib))}${{LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}}")
     lines.append(" ".join(shlex.quote(a) for a in cutechess_argv))
     lines.append("")
     script_path.write_text("\n".join(lines))
@@ -350,7 +363,12 @@ def cmd_discover(args):
 def load_state(state_path, params_path):
     if os.path.exists(state_path):
         with open(state_path) as f:
-            return json.load(f), True
+            state = json.load(f)
+        for p in state["params"].values():
+            if p.get("converged"):
+                p["converged"] = False
+                p["last_fail_direction"] = None
+        return state, True
 
     if not os.path.exists(params_path):
         raise SystemExit(
@@ -645,7 +663,7 @@ def run_match_slurm(args, param_name, base_value, candidate_value, candidate_opt
                     "-pgnout", str(pgn_file),
                 ]
                 script_path = work_dir / f"{job_name}.sh"
-                write_slurm_script(args, script_path, out_file, argv)
+                write_slurm_script(args, script_path, out_file, argv, slurm_job_name(candidate_opts))
                 job_id = submit_slurm_job(script_path)
                 job_ids.append(job_id)
                 out_files.append(out_file)
@@ -761,11 +779,9 @@ def run_match(args, param_name, base_value, candidate_value, candidate_opts, bas
 
 def shrink_step(p):
     new_step = p["step"] // 2
-    if new_step < p.get("min_step", 1):
-        p["converged"] = True
-    else:
-        p["step"] = new_step
-        p["last_fail_direction"] = None
+    p["step"] = max(p.get("min_step", 1), new_step)
+    p["converged"] = False
+    p["last_fail_direction"] = None
 
 
 def run_one_test(args, params, name, p):
@@ -821,11 +837,7 @@ def cmd_tune(args):
     tests_done = 0
     try:
         while args.max_tests == 0 or tests_done < args.max_tests:
-            active = [n for n in order if not state["params"][n].get("converged")]
-            if not active:
-                print("All parameters converged (step shrunk below min_step in both directions). Stopping.")
-                break
-
+            active = order
             cursor = state.get("cursor", 0)
             name = active[cursor % len(active)]
             state["cursor"] = cursor + 1
@@ -851,12 +863,11 @@ def cmd_tune(args):
 
             print(
                 "  -> {status} (llr={llr}, +{w}-{l}={d} / {g} games); "
-                "{name} now {value} (step {step}{conv})".format(
+                "{name} now {value} (step {step})".format(
                     status=outcome["status"],
                     llr=outcome["llr"],
                     w=outcome["wins"], l=outcome["losses"], d=outcome["draws"], g=outcome["games"],
                     name=name, value=p["value"], step=p["step"],
-                    conv=", converged" if p["converged"] else "",
                 ),
                 flush=True,
             )
@@ -901,25 +912,25 @@ def build_arg_parser():
     p_tune.add_argument("--best-out", default=str(DEFAULT_BEST_FILE), help="Where to write the current best known values (name -> value)")
     p_tune.add_argument("--book", default=str(DEFAULT_BOOK), help="Opening book (.epd or .pgn) used for the matches")
     p_tune.add_argument("--cutechess", default=DEFAULT_CUTECHESS, help="Path to the cutechess-cli executable")
-    p_tune.add_argument("--tc", default="10+0.1", help="Time control passed to cutechess-cli, e.g. '10+0.1'")
-    p_tune.add_argument("--concurrency", type=int, default=8, help="Number of concurrent games")
-    p_tune.add_argument("--rounds-cap", type=int, default=10000, help="Upper bound on rounds (game pairs); the SPRT bound normally stops the match earlier")
-    p_tune.add_argument("--elo0", type=float, default=0.0, help="H1: the change gains at least this many elo")
-    p_tune.add_argument("--elo1", type=float, default=2.0, help="H0: the change does not gain this many elo")
-    p_tune.add_argument("--alpha", type=float, default=0.2, help="Type I error rate")
-    p_tune.add_argument("--beta", type=float, default=0.2, help="Type II error rate")
+    p_tune.add_argument("--tc", default="3+0.05", help="Time control passed to cutechess-cli, e.g. '3+0.1'")
+    p_tune.add_argument("--concurrency", type=int, default=16, help="Number of concurrent games")
+    p_tune.add_argument("--rounds-cap", type=int, default=60000, help="Upper bound on rounds (game pairs); the SPRT bound normally stops the match earlier")
+    p_tune.add_argument("--elo0", type=float, default=0.0, help="H0: candidate Elo gain relative to base")
+    p_tune.add_argument("--elo1", type=float, default=2.0, help="H1: candidate Elo gain relative to base")
+    p_tune.add_argument("--alpha", type=float, default=0.05, help="Type I error rate")
+    p_tune.add_argument("--beta", type=float, default=0.05, help="Type II error rate")
     p_tune.add_argument("--max-tests", type=int, default=0, help="Stop after this many parameter tests (0 = run forever, until Ctrl+C or convergence)")
     p_tune.add_argument("--log", default=str(DEFAULT_LOG_FILE), help="Full cutechess-cli output is appended here for every test, updated live as games finish")
     p_tune.add_argument("--status", default=str(DEFAULT_STATUS_FILE), help="JSON file with the live status (games, score, elo, llr) of the currently running match, refreshed as games finish")
-    p_tune.add_argument("--rating-interval", type=int, default=100, help="Print/refresh Elo+SPRT status every N finished games (passed to cutechess-cli -ratinginterval)")
+    p_tune.add_argument("--rating-interval", type=int, default=1000, help="Print/refresh Elo+SPRT status every N finished games (passed to cutechess-cli -ratinginterval)")
     p_tune.add_argument("--pgn-out", default=str(DEFAULT_PGN_FILE), help="PGN of the last match (overwritten after every test)")
     p_tune.add_argument("--executor", choices=["local", "slurm"], default="local", help="'local' runs one cutechess-cli process on this machine (default); 'slurm' splits each test's games across --slurm-jobs parallel sbatch jobs for massive concurrency across a cluster, aggregating results and checking the SPRT bounds after each batch")
-    p_tune.add_argument("--slurm-jobs", type=int, default=4, help="Number of parallel Slurm jobs to split each SPRT decision-batch's games across (only used with --executor slurm)")
-    p_tune.add_argument("--slurm-batch-games", type=int, default=200, help="Games per SPRT decision-batch (split evenly across --slurm-jobs); after each batch the aggregated LLR is checked against the SPRT bounds before deciding whether to submit another batch (only used with --executor slurm)")
+    p_tune.add_argument("--slurm-jobs", type=int, default=50, help="Number of parallel Slurm jobs to split each SPRT decision-batch's games across (only used with --executor slurm)")
+    p_tune.add_argument("--slurm-batch-games", type=int, default=20000, help="Games per SPRT decision-batch (split evenly across --slurm-jobs); after each batch the aggregated LLR is checked against the SPRT bounds before deciding whether to submit another batch (only used with --executor slurm)")
     p_tune.add_argument("--slurm-cpus-per-task", type=int, default=None, help="--cpus-per-task passed to sbatch for each sub-job (default: same as --concurrency)")
     p_tune.add_argument("--slurm-partition", default=None, help="--partition passed to sbatch")
     p_tune.add_argument("--slurm-account", default=None, help="--account passed to sbatch")
-    p_tune.add_argument("--slurm-time", default="00:30:00", help="--time passed to sbatch (e.g. 'HH:MM:SS' or 'D-HH:MM:SS')")
+    p_tune.add_argument("--slurm-time", default="00:40:00", help="--time passed to sbatch (e.g. 'HH:MM:SS' or 'D-HH:MM:SS')")
     p_tune.add_argument("--slurm-extra", default=None, help="Extra raw sbatch directives, space separated (e.g. '--gres=gpu:0 --mem=4G'), each becomes its own #SBATCH line")
     p_tune.add_argument("--slurm-poll-interval", type=int, default=15, help="Seconds between polls of Slurm job state / tailing of job output files")
     p_tune.add_argument("--slurm-work-dir", default=str(DEFAULT_SLURM_WORK_DIR), help="Directory for generated sbatch scripts and per-job output/PGN files")
