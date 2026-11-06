@@ -121,7 +121,7 @@ bool readFEN(const std::string& fen, RootPosition& p, bool silent, bool withMove
                else {
                   p.castling |= (c == Co_White ? C_wqs : C_bqs);
                }
-               if (found && !DynamicConfig::FRC) {
+               if (!DynamicConfig::FRC) {
                   Logging::LogIt(Logging::logInfo) << "FRC position found (castling letters), activating FRC";
                   DynamicConfig::FRC = true; // force FRC !
                }
