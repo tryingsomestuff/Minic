@@ -579,7 +579,7 @@ bool test(const std::string& option) {
 
    if (option == "MATE") {
       std::vector<std::string> positions;
-      if (!readEPDFile("Book_and_Test/TestSuite/dmzx.edp", positions)) { return false; }
+      if (!readEPDFile("Book_and_Test/TestSuite/dmzx.epd", positions)) { return false; }
 
       std::vector<int> timeControls = {15000}; //mseconds
       std::vector<int> scores       = {1};
