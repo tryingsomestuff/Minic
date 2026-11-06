@@ -1,20 +1,902 @@
 {
-  "CMHWeight1": {
-    "value": 0,
+  "CMHMargin": {
+    "max": 2048,
+    "min": -2024,
+    "step": 102,
+    "value": -256
+  },
+  "CMHMaxDepth0": {
+    "max": 30,
     "min": 0,
-    "max": 8,
-    "step": 1
+    "step": 1,
+    "value": 4
+  },
+  "CMHMaxDepth1": {
+    "max": 30,
+    "min": 0,
+    "step": 1,
+    "value": 4
+  },
+  "CMHWeight1": {
+    "max": 16,
+    "min": 0,
+    "step": 1,
+    "value": 0
   },
   "CMHWeight2": {
-    "value": 0,
+    "max": 16,
     "min": 0,
-    "max": 8,
-    "step": 1
+    "step": 1,
+    "value": 0
   },
   "CMHWeight3": {
-    "value": 0,
+    "max": 16,
     "min": 0,
+    "step": 1,
+    "value": 0
+  },
+  "CorrectionHistoryDepthCap": {
+    "max": 64,
+    "min": 1,
+    "step": 2,
+    "value": 16
+  },
+  "CorrectionHistoryDepthScale": {
+    "max": 64,
+    "min": 1,
+    "step": 2,
+    "value": 16
+  },
+  "CorrectionHistoryMaxNonPawn": {
+    "max": 1024,
+    "min": 1,
+    "step": 26,
+    "value": 44
+  },
+  "CorrectionHistoryMaxPawn": {
+    "max": 1024,
+    "min": 1,
+    "step": 26,
+    "value": 32
+  },
+  "NNUEScaling": {
+    "max": 256,
+    "min": 32,
+    "step": 6,
+    "value": 48
+  },
+  "NNUEThreshold": {
+    "max": 1500,
+    "min": 0,
+    "step": 38,
+    "value": 638
+  },
+  "NNUEThreshold2": {
+    "max": 1500,
+    "min": 0,
+    "step": 38,
+    "value": 344
+  },
+  "NNUEThreshold2EG": {
+    "max": 1500,
+    "min": 0,
+    "step": 38,
+    "value": 315
+  },
+  "NNUEThresholdEG": {
+    "max": 1500,
+    "min": 0,
+    "step": 38,
+    "value": 638
+  },
+  "PawnHistoryDivisor": {
+    "max": 16,
+    "min": 1,
+    "step": 1,
+    "value": 3
+  },
+  "aspirationDepthCoef": {
+    "max": 10,
+    "min": -10,
+    "step": 1,
+    "value": 3
+  },
+  "aspirationDepthInit": {
+    "max": 150,
+    "min": -150,
+    "step": 8,
+    "value": 40
+  },
+  "aspirationInit": {
+    "max": 30,
+    "min": 0,
+    "step": 1,
+    "value": 5
+  },
+  "aspirationMinDepth": {
+    "max": 30,
+    "min": 0,
+    "step": 1,
+    "value": 4
+  },
+  "badCapLimit": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -80
+  },
+  "betaMarginDynamicHistory": {
+    "max": 1500,
+    "min": 0,
+    "step": 38,
+    "value": 170
+  },
+  "capHistoryDivisor": {
+    "max": 16,
+    "min": 1,
+    "step": 1,
+    "value": 4
+  },
+  "capMMLVAMultiplicator": {
+    "max": 16,
+    "min": 1,
+    "step": 1,
+    "value": 2
+  },
+  "capPSTScoreDivisor": {
+    "max": 16,
+    "min": 1,
+    "step": 1,
+    "value": 2
+  },
+  "captureHistoryPruningBonus0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 265
+  },
+  "captureHistoryPruningBonus1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 304
+  },
+  "captureHistoryPruningInit0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 5
+  },
+  "captureHistoryPruningInit1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 9
+  },
+  "captureHistoryPruningMaxDepth0": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 4
+  },
+  "captureHistoryPruningMaxDepth1": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 3
+  },
+  "captureHistoryPruningMinDepth0": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 0
+  },
+  "captureHistoryPruningMinDepth1": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 0
+  },
+  "captureHistoryPruningSlopeDepth0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -121
+  },
+  "captureHistoryPruningSlopeDepth1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -126
+  },
+  "captureHistoryPruningSlopeGP0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -8
+  },
+  "captureHistoryPruningSlopeGP1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 22
+  },
+  "cmhHistoryDivisor": {
+    "max": 16,
+    "min": 1,
+    "step": 1,
+    "value": 3
+  },
+  "counterMoveBonus": {
+    "max": 4096,
+    "min": 0,
+    "step": 102,
+    "value": 1500
+  },
+  "dangerDivisor": {
+    "max": 256,
+    "min": 1,
+    "step": 8,
+    "value": 183
+  },
+  "deltaBadMargin": {
+    "max": 500,
+    "min": 0,
+    "step": 12,
+    "value": 169
+  },
+  "deltaBadSEEThreshold": {
+    "max": 200,
+    "min": -200,
+    "step": 10,
+    "value": 20
+  },
+  "deltaGoodMargin": {
+    "max": 500,
+    "min": 0,
+    "step": 12,
+    "value": 47
+  },
+  "deltaGoodSEEThreshold": {
+    "max": 1000,
+    "min": 0,
+    "step": 25,
+    "value": 162
+  },
+  "failHighReductionBonus0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 303
+  },
+  "failHighReductionBonus1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 233
+  },
+  "failHighReductionInit0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 119
+  },
+  "failHighReductionInit1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 139
+  },
+  "failHighReductionSlopeDepth0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -54
+  },
+  "failHighReductionSlopeDepth1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 7
+  },
+  "failHighReductionSlopeGP0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -25
+  },
+  "failHighReductionSlopeGP1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 13
+  },
+  "fromToHistoryDivisor": {
+    "max": 16,
+    "min": 1,
+    "step": 1,
+    "value": 3
+  },
+  "futilityPruningBonus0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 155
+  },
+  "futilityPruningBonus1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 605
+  },
+  "futilityPruningInit0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 7
+  },
+  "futilityPruningInit1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 6
+  },
+  "futilityPruningMaxDepth0": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 10
+  },
+  "futilityPruningMaxDepth1": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 10
+  },
+  "futilityPruningMinDepth0": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 0
+  },
+  "futilityPruningMinDepth1": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 0
+  },
+  "futilityPruningSlopeDepth0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 161
+  },
+  "futilityPruningSlopeDepth1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 170
+  },
+  "futilityPruningSlopeGP0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -3
+  },
+  "futilityPruningSlopeGP1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -6
+  },
+  "historyPruningBonus0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 247
+  },
+  "historyPruningBonus1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 306
+  },
+  "historyPruningInit0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 8
+  },
+  "historyPruningInit1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -12
+  },
+  "historyPruningMaxDepth0": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 2
+  },
+  "historyPruningMaxDepth1": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 1
+  },
+  "historyPruningMinDepth0": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 0
+  },
+  "historyPruningMinDepth1": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 0
+  },
+  "historyPruningSlopeDepth0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -13
+  },
+  "historyPruningSlopeDepth1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 9
+  },
+  "historyPruningSlopeGP0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 16
+  },
+  "historyPruningSlopeGP1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -37
+  },
+  "iirMinDepth": {
+    "max": 32,
+    "min": 1,
+    "step": 1,
+    "value": 3
+  },
+  "iirReduction": {
+    "max": 5,
+    "min": 0,
+    "step": 1,
+    "value": 1
+  },
+  "killer0Bonus": {
+    "max": 4096,
+    "min": 0,
+    "step": 102,
+    "value": 1900
+  },
+  "killer1Bonus": {
+    "max": 4096,
+    "min": 0,
+    "step": 102,
+    "value": 1300
+  },
+  "lazySortThreshold": {
+    "max": 2048,
+    "min": -2048,
+    "step": 102,
+    "value": -491
+  },
+  "lmrCapHistoryFactor": {
+    "max": 64,
+    "min": 1,
+    "step": 2,
+    "value": 9
+  },
+  "lmrMinDepth": {
+    "max": 30,
+    "min": 0,
+    "step": 1,
+    "value": 2
+  },
+  "nullMoveDynamicDivisor": {
+    "max": 1500,
+    "min": 1,
+    "step": 37,
+    "value": 147
+  },
+  "nullMoveMargin": {
+    "max": 500,
+    "min": -500,
+    "step": 25,
+    "value": 18
+  },
+  "nullMoveMinDepth": {
+    "max": 30,
+    "min": 0,
+    "step": 1,
+    "value": 2
+  },
+  "nullMoveReductionDepthDivisor": {
+    "max": 10,
+    "min": 1,
+    "step": 1,
+    "value": 6
+  },
+  "nullMoveReductionInit": {
+    "max": 10,
+    "min": 1,
+    "step": 1,
+    "value": 5
+  },
+  "nullMoveVerifDepth": {
+    "max": 30,
+    "min": 0,
+    "step": 1,
+    "value": 6
+  },
+  "pieceToHistoryDivisor": {
+    "max": 16,
+    "min": 1,
+    "step": 1,
+    "value": 3
+  },
+  "previousPlyKiller0Bonus": {
+    "max": 4096,
+    "min": 0,
+    "step": 102,
+    "value": 1700
+  },
+  "probCutMargin": {
+    "max": 1500,
+    "min": -500,
+    "step": 50,
+    "value": 124
+  },
+  "probCutMarginSlope": {
+    "max": 1500,
+    "min": -500,
+    "step": 50,
+    "value": -53
+  },
+  "probCutMaxMoves": {
+    "max": 30,
+    "min": 0,
+    "step": 1,
+    "value": 5
+  },
+  "probCutMinDepth": {
+    "max": 30,
+    "min": 0,
+    "step": 1,
+    "value": 10
+  },
+  "probCutSearchDepthFactor": {
+    "max": 30,
+    "min": 1,
+    "step": 1,
+    "value": 3
+  },
+  "razoringBonus0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 279
+  },
+  "razoringBonus1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 651
+  },
+  "razoringInit0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 123
+  },
+  "razoringInit1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 119
+  },
+  "razoringMaxDepth0": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 2
+  },
+  "razoringMaxDepth1": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 2
+  },
+  "razoringMinDepth0": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 0
+  },
+  "razoringMinDepth1": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 0
+  },
+  "razoringSlopeDepth0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 69
+  },
+  "razoringSlopeDepth1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 66
+  },
+  "razoringSlopeGP0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -22
+  },
+  "razoringSlopeGP1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 17
+  },
+  "recaptureBonus": {
+    "max": 4096,
+    "min": 0,
+    "step": 102,
+    "value": 512
+  },
+  "rootBestMoveBonus": {
+    "max": 20000,
+    "min": 0,
+    "step": 500,
+    "value": 15000
+  },
+  "seeCapDangerDivisor": {
+    "max": 32,
+    "min": 1,
+    "step": 1,
+    "value": 8
+  },
+  "seeCaptureFactor": {
+    "max": 1500,
+    "min": 0,
+    "step": 38,
+    "value": 180
+  },
+  "seeCaptureInit": {
+    "max": 500,
+    "min": -500,
+    "step": 25,
+    "value": 65
+  },
+  "seeQThreshold": {
+    "max": 200,
+    "min": -200,
+    "step": 10,
+    "value": -50
+  },
+  "seeQuietDangerDivisor": {
+    "max": 32,
+    "min": 1,
+    "step": 1,
+    "value": 11
+  },
+  "seeQuietFactor": {
+    "max": 1500,
+    "min": 0,
+    "step": 38,
+    "value": 61
+  },
+  "seeQuietInit": {
+    "max": 500,
+    "min": -500,
+    "step": 25,
+    "value": 32
+  },
+  "singularExtensionDepth": {
+    "max": 30,
+    "min": 0,
+    "step": 1,
+    "value": 8
+  },
+  "singularExtensionDepthMinus": {
+    "max": 30,
+    "min": 1,
+    "step": 1,
+    "value": 5
+  },
+  "staticNullMoveBonus0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 404
+  },
+  "staticNullMoveBonus1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 112
+  },
+  "staticNullMoveInit0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -15
+  },
+  "staticNullMoveInit1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -32
+  },
+  "staticNullMoveMaxDepth0": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 6
+  },
+  "staticNullMoveMaxDepth1": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 6
+  },
+  "staticNullMoveMinDepth0": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 0
+  },
+  "staticNullMoveMinDepth1": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 0
+  },
+  "staticNullMoveSlopeDepth0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 82
+  },
+  "staticNullMoveSlopeDepth1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 75
+  },
+  "staticNullMoveSlopeGP0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 149
+  },
+  "staticNullMoveSlopeGP1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 21
+  },
+  "threatBonus0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 259
+  },
+  "threatBonus1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 261
+  },
+  "threatEscapeBonus": {
+    "max": 4096,
+    "min": 0,
+    "step": 102,
+    "value": 512
+  },
+  "threatInit0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 33
+  },
+  "threatInit1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 10
+  },
+  "threatMaxDepth0": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 2
+  },
+  "threatMaxDepth1": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 2
+  },
+  "threatMinDepth0": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 0
+  },
+  "threatMinDepth1": {
+    "max": 127,
+    "min": 0,
+    "step": 3,
+    "value": 0
+  },
+  "threatSlopeDepth0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 24
+  },
+  "threatSlopeDepth1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 18
+  },
+  "threatSlopeGP0": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": -15
+  },
+  "threatSlopeGP1": {
+    "max": 1500,
+    "min": -1500,
+    "step": 75,
+    "value": 40
+  },
+  "ttAlphaCutDepth": {
     "max": 8,
-    "step": 1
+    "min": 1,
+    "step": 1,
+    "value": 1
+  },
+  "ttAlphaCutMargin": {
+    "max": 1000,
+    "min": 0,
+    "step": 25,
+    "value": 60
+  },
+  "ttBetaCutDepth": {
+    "max": 8,
+    "min": 1,
+    "step": 1,
+    "value": 1
+  },
+  "ttBetaCutMargin": {
+    "max": 1000,
+    "min": 0,
+    "step": 25,
+    "value": 64
+  },
+  "ttMoveBonus": {
+    "max": 20000,
+    "min": 0,
+    "step": 500,
+    "value": 14000
   }
 }
