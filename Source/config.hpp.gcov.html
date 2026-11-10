@@ -1,0 +1,179 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - coverage - Source/config.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">Source</a> - config.hpp<span style="font-size: 80%;"> (source / <a href="config.hpp.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">coverage</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">66.7&nbsp;%</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">2</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2026-11-10 10:41:53</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">1</td>
+            <td class="headerCovTableEntry">1</td>
+          </tr>
+                  <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : #ifndef MINIC_GIT_COMMIT</span>
+<span id="L2"><span class="lineNum">       2</span>              : #   define MINIC_GIT_COMMIT &quot;unknown&quot;</span>
+<span id="L3"><span class="lineNum">       3</span>              : #endif</span>
+<span id="L4"><span class="lineNum">       4</span>              : #ifndef MINIC_GIT_DIRTY</span>
+<span id="L5"><span class="lineNum">       5</span>              : #   define MINIC_GIT_DIRTY 0</span>
+<span id="L6"><span class="lineNum">       6</span>              : #endif</span>
+<span id="L7"><span class="lineNum">       7</span>              : </span>
+<span id="L8"><span class="lineNum">       8</span>              : const std::string MinicBaseVersion = &quot;3.47&quot;;</span>
+<span id="L9"><span class="lineNum">       9</span>              : const std::string MinicVersion =</span>
+<span id="L10"><span class="lineNum">      10</span>              :    MinicBaseVersion + &quot;-&quot; + MINIC_GIT_COMMIT + (MINIC_GIT_DIRTY ? &quot;-dirty&quot; : &quot;&quot;);</span>
+<span id="L11"><span class="lineNum">      11</span>              : </span>
+<span id="L12"><span class="lineNum">      12</span> <span class="tlaGNC tlaBgGNC">           2 : [[maybe_unused]] static std::string MinicVersionWithProcessCount(const int processCount) {</span></span>
+<span id="L13"><span class="lineNum">      13</span> <span class="tlaGNC">           2 :    if (processCount &lt;= 1) return MinicVersion;</span></span>
+<span id="L14"><span class="lineNum">      14</span> <span class="tlaUNC tlaBgUNC">           0 :    return MinicVersion + &quot;_&quot; + std::to_string(processCount) + &quot;proc&quot;;</span></span>
+<span id="L15"><span class="lineNum">      15</span>              : }</span>
+<span id="L16"><span class="lineNum">      16</span>              : </span>
+<span id="L17"><span class="lineNum">      17</span>              : #if defined(ARDUINO) || defined(ESP32)</span>
+<span id="L18"><span class="lineNum">      18</span>              : #   define WITH_SMALL_MEMORY</span>
+<span id="L19"><span class="lineNum">      19</span>              : #endif</span>
+<span id="L20"><span class="lineNum">      20</span>              : </span>
+<span id="L21"><span class="lineNum">      21</span>              : // *** options</span>
+<span id="L22"><span class="lineNum">      22</span>              : #define WITH_UCI    // include or not UCI protocol support</span>
+<span id="L23"><span class="lineNum">      23</span>              : #define WITH_XBOARD // include or not XBOARB protocol support</span>
+<span id="L24"><span class="lineNum">      24</span>              : #if !defined(WITH_SMALL_MEMORY)</span>
+<span id="L25"><span class="lineNum">      25</span>              : #define WITH_MAGIC  // use magic bitboard or HB ones</span>
+<span id="L26"><span class="lineNum">      26</span>              : #define WITH_NNUE   // include or not NNUE support</span>
+<span id="L27"><span class="lineNum">      27</span>              : //#define WITH_NNUE_UNCERTAINTY // include uncertainty output head in NNUE</span>
+<span id="L28"><span class="lineNum">      28</span>              : #define WITH_STATS  // produce or not search statistics</span>
+<span id="L29"><span class="lineNum">      29</span>              : //#define WITH_BETACUTSTATS // activate beta cutoff statistics</span>
+<span id="L30"><span class="lineNum">      30</span>              : #define WITH_MATERIAL_TABLE // use (and build ! cost 27Mb) or not the material table</span>
+<span id="L31"><span class="lineNum">      31</span>              : //#define WITH_MPI    // support &quot;distributed&quot; version or not</span>
+<span id="L32"><span class="lineNum">      32</span>              : #define WITH_ASYNC_ANALYZE // support ASYNC call for CLI analysis</span>
+<span id="L33"><span class="lineNum">      33</span>              : #ifndef _MSC_VER</span>
+<span id="L34"><span class="lineNum">      34</span>              : #define WITH_SYZYGY // include or not syzgy ETG support</span>
+<span id="L35"><span class="lineNum">      35</span>              : #endif // _MSC_VER</span>
+<span id="L36"><span class="lineNum">      36</span>              : #endif // WITH_SMALL_MEMORY</span>
+<span id="L37"><span class="lineNum">      37</span>              : //#define WITH_FMTLIB</span>
+<span id="L38"><span class="lineNum">      38</span>              : </span>
+<span id="L39"><span class="lineNum">      39</span>              : //#define WITHOUT_FILESYSTEM              // some compiler don't support whole std:filesystem</span>
+<span id="L40"><span class="lineNum">      40</span>              : //#define LIMIT_THREADS_TO_PHYSICAL_CORES // in order to restrict thread to the number of physical core</span>
+<span id="L41"><span class="lineNum">      41</span>              : //#define REPRODUCTIBLE_RESULTS           // clear state table betwwen all new search (not only all new games)</span>
+<span id="L42"><span class="lineNum">      42</span>              : #ifndef __ANDROID__</span>
+<span id="L43"><span class="lineNum">      43</span>              : #define USE_SIMD_INTRIN                   // on simd architectures, use a hand written dot product</span>
+<span id="L44"><span class="lineNum">      44</span>              : #endif</span>
+<span id="L45"><span class="lineNum">      45</span>              : </span>
+<span id="L46"><span class="lineNum">      46</span>              : // *** Optim (?)</span>
+<span id="L47"><span class="lineNum">      47</span>              : #define USE_PARTIAL_SORT        // do not sort every move in move list</span>
+<span id="L48"><span class="lineNum">      48</span>              : //#define WITH_NNUE_PREFETCH    // prefetch NNUE rows before incremental updates</span>
+<span id="L49"><span class="lineNum">      49</span>              : //#define WITH_EVALSCORE_AS_INT // in fact just as slow as my basic impl ...</span>
+<span id="L50"><span class="lineNum">      50</span>              : </span>
+<span id="L51"><span class="lineNum">      51</span>              : // *** Add-ons</span>
+<span id="L52"><span class="lineNum">      52</span>              : #if !defined(WITH_SMALL_MEMORY)</span>
+<span id="L53"><span class="lineNum">      53</span>              : #ifndef DEBUG_TOOL</span>
+<span id="L54"><span class="lineNum">      54</span>              : #define DEBUG_TOOL // forced</span>
+<span id="L55"><span class="lineNum">      55</span>              : #endif</span>
+<span id="L56"><span class="lineNum">      56</span>              : #define WITH_TEST_SUITE</span>
+<span id="L57"><span class="lineNum">      57</span>              : //#define WITH_PGN_PARSER</span>
+<span id="L58"><span class="lineNum">      58</span>              : #endif // WITH_SMALL_MEMORY</span>
+<span id="L59"><span class="lineNum">      59</span>              : </span>
+<span id="L60"><span class="lineNum">      60</span>              : // *** NNUE learning things</span>
+<span id="L61"><span class="lineNum">      61</span>              : #ifndef WITHOUT_FILESYSTEM</span>
+<span id="L62"><span class="lineNum">      62</span>              : #define WITH_GENFILE</span>
+<span id="L63"><span class="lineNum">      63</span>              : #endif</span>
+<span id="L64"><span class="lineNum">      64</span>              : </span>
+<span id="L65"><span class="lineNum">      65</span>              : #ifdef WITH_NNUE</span>
+<span id="L66"><span class="lineNum">      66</span>              : #ifndef WITHOUT_FILESYSTEM</span>
+<span id="L67"><span class="lineNum">      67</span>              : #define WITH_DATA2BIN</span>
+<span id="L68"><span class="lineNum">      68</span>              : #endif</span>
+<span id="L69"><span class="lineNum">      69</span>              : #endif</span>
+<span id="L70"><span class="lineNum">      70</span>              : </span>
+<span id="L71"><span class="lineNum">      71</span>              : // *** Tuning</span>
+<span id="L72"><span class="lineNum">      72</span>              : //#define WITH_TIMER</span>
+<span id="L73"><span class="lineNum">      73</span>              : //#define WITH_SEARCH_TUNING</span>
+<span id="L74"><span class="lineNum">      74</span>              : //#define WITH_EVAL_TUNING</span>
+<span id="L75"><span class="lineNum">      75</span>              : //#define WITH_PIECE_TUNING</span>
+<span id="L76"><span class="lineNum">      76</span>              : </span>
+<span id="L77"><span class="lineNum">      77</span>              : #define WITH_CORRECTION_HISTORY</span>
+<span id="L78"><span class="lineNum">      78</span>              : #ifdef WITH_CORRECTION_HISTORY</span>
+<span id="L79"><span class="lineNum">      79</span>              : #define WITH_PAWN_CORRHIST      // pawn+king structure</span>
+<span id="L80"><span class="lineNum">      80</span>              : #define WITH_NONPAWN_CORRHIST   // non-pawn material, one key per color (king excluded)</span>
+<span id="L81"><span class="lineNum">      81</span>              : //#define WITH_HORIZON_CORRHIST   // depth-context correction (depth/volatility/tt/node-type)</span>
+<span id="L82"><span class="lineNum">      82</span>              : #endif // WITH_CORRECTION_HISTORY</span>
+<span id="L83"><span class="lineNum">      83</span>              : </span>
+<span id="L84"><span class="lineNum">      84</span>              : // *** Debug</span>
+<span id="L85"><span class="lineNum">      85</span>              : //#define VERBOSE_EVAL</span>
+<span id="L86"><span class="lineNum">      86</span>              : //#define DEBUG_NNUE_UPDATE</span>
+<span id="L87"><span class="lineNum">      87</span>              : //#define DEBUG_BACKTRACE</span>
+<span id="L88"><span class="lineNum">      88</span>              : //#define DEBUG_HASH</span>
+<span id="L89"><span class="lineNum">      89</span>              : //#define DEBUG_PHASH</span>
+<span id="L90"><span class="lineNum">      90</span>              : //#define DEBUG_NONPAWNHASH</span>
+<span id="L91"><span class="lineNum">      91</span>              : //#define DEBUG_MATERIAL</span>
+<span id="L92"><span class="lineNum">      92</span>              : //#define DEBUG_APPLY</span>
+<span id="L93"><span class="lineNum">      93</span>              : //#define DEBUG_GENERATION</span>
+<span id="L94"><span class="lineNum">      94</span>              : //#define DEBUG_GENERATION_LEGAL // not compatible with DEBUG_PSEUDO_LEGAL</span>
+<span id="L95"><span class="lineNum">      95</span>              : //#define DEBUG_BITBOARD</span>
+<span id="L96"><span class="lineNum">      96</span>              : //#define DEBUG_PSEUDO_LEGAL // not compatible with DEBUG_GENERATION_LEGAL</span>
+<span id="L97"><span class="lineNum">      97</span>              : //#define DEBUG_HASH_ENTRY</span>
+<span id="L98"><span class="lineNum">      98</span>              : //#define DEBUG_KING_CAP</span>
+<span id="L99"><span class="lineNum">      99</span>              : //#define DEBUG_PERFT</span>
+<span id="L100"><span class="lineNum">     100</span>              : //#define DEBUG_STATICEVAL</span>
+<span id="L101"><span class="lineNum">     101</span>              : //#define DEBUG_EVALSYM</span>
+<span id="L102"><span class="lineNum">     102</span>              : //#define DEBUG_TT_CHECK</span>
+<span id="L103"><span class="lineNum">     103</span>              : //#define DEBUG_FIFTY_COLLISION</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
