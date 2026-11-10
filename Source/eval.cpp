@@ -483,10 +483,6 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, DepthType h
       pe.danger[Co_Black] -= countBit(pe.pawnTargets[Co_Black] & kingZone[Co_Black]) * EvalConfig::kingAttWeight[EvalConfig::katt_defence][0];
       pe.danger[Co_Black] += countBit(pe.pawnTargets[Co_White] & kingZone[Co_Black]) * EvalConfig::kingAttWeight[EvalConfig::katt_attack][0];
 
-      // pawn passer
-      evalPawnPasser<Co_White>(p, pe.passed[Co_White], pe.score);
-      evalPawnPasser<Co_Black>(p, pe.passed[Co_Black], pe.score);
-
       // pawn protected
       evalPawnProtected<Co_White>(pe.passed[Co_White] & pe.pawnTargets[Co_White], pe.score);
       evalPawnProtected<Co_Black>(pe.passed[Co_Black] & pe.pawnTargets[Co_Black], pe.score);
@@ -599,6 +595,10 @@ ScoreType eval(const Position &p, EvalData &data, Searcher &context, DepthType h
    const Searcher::PawnEntry &pe = *pePtr; // let's use a ref instead of a pointer
    // add computed or hash score for pawn structure
    features.scores[F_pawnStruct] += pe.score;
+
+   // passer eval depends on some position stuff, can't be cached
+   evalPawnPasser<Co_White>(p, pe.passed[Co_White], features.scores[F_pawnStruct]);
+   evalPawnPasser<Co_Black>(p, pe.passed[Co_Black], features.scores[F_pawnStruct]);
 
    // update global things with freshy gotten pawn entry stuff
    kdanger[Co_White] += pe.danger[Co_White];
