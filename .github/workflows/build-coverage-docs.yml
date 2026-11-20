@@ -1,4 +1,4 @@
-name: Build + Coverage
+name: Build + Coverage + Documentation
 
 on:
   push:
@@ -15,6 +15,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install documentation tools
+      run: python -m pip install Markdown
 
     - name: Install GCC and coverage tools
       run: |
@@ -33,12 +40,16 @@ jobs:
         name: coverage-report
         path: coverage-dir/rapport
 
-    - name: Debug coverage output
-      run: ls -R coverage-dir/rapport
+    - name: Build GitHub Pages site
+      run: |
+        mkdir -p _site/coverage _site/technical
+        cp Doc/index.html _site/index.html
+        cp -a coverage-dir/rapport/. _site/coverage/
+        python Doc/technical/build_html.py --output _site/technical/index.html
 
-    - name: Deploy coverage to GitHub Pages
+    - name: Deploy site to GitHub Pages
       if: github.ref == 'refs/heads/master'
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: coverage-dir/rapport
+        publish_dir: _site

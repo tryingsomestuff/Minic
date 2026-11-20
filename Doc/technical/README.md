@@ -55,6 +55,18 @@ documented explicitly; their existence is not evidence of strength or correctnes
 
 ## Build an HTML version
 
+The [GitHub Pages site](https://tryingsomestuff.github.io/Minic/) provides a
+landing page linking to the [coverage report](https://tryingsomestuff.github.io/Minic/coverage/)
+and [this complete guide](https://tryingsomestuff.github.io/Minic/technical/).
+The GitHub Actions workflow builds both on pushes and pull requests targeting
+`master`, and publishes the site on pushes to `master`. The published layout is:
+
+```text
+index.html             Landing page (Doc/index.html)
+coverage/              Complete coverage report and its assets
+technical/index.html   All technical documentation chapters
+```
+
 With Python 3 and [Python-Markdown](https://python-markdown.github.io/) installed,
 run from the repository root:
 

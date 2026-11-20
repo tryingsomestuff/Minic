@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Like run_tournament_self but uses full engine paths instead of cutechess conf names.
+# Usage: run_tournament_self_path /path/to/engine1 /path/to/engine2 [name1] [name2]
+#
+# Arguments:
+#   $1  full path to engine 1 binary
+#   $2  full path to engine 2 binary
+#   $3  (optional) display name for engine 1  (default: basename of $1)
+#   $4  (optional) display name for engine 2  (default: basename of $2)
+
+dir=$(readlink -f $(dirname $0)/../../)
+
+CUTECHESS=/home/vivien/cutechess-1.4.0/cutechess-cli
+
+ENGINE1=${1:?'ERROR: engine 1 path required as $1'}
+ENGINE2=${2:?'ERROR: engine 2 path required as $2'}
+NAME1=${3:-$(basename "$ENGINE1")}
+NAME2=${4:-$(basename "$ENGINE2")}
+
+engines=""
+engines="$engines -engine name=$NAME1 cmd=$ENGINE1 dir=$(dirname $ENGINE1) proto=uci"
+engines="$engines -engine name=$NAME2 cmd=$ENGINE2 dir=$(dirname $ENGINE2) proto=uci"
+
+echo $engines
+
+$CUTECHESS $engines -each option.Threads=1 tc=5+0.1 timemargin=50 -rounds 999999 -pgnout pgn_$(date +"%Y_%m_%d"_%H%M%S).out -ratinginterval 10 -repeat -openings file=$dir/Book_and_Test/UHO_Lichess_4852_v1.epd format=epd order=random plies=100 -recover -concurrency 8 > tournament_self_path.log 2>&1 &
