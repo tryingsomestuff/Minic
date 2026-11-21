@@ -87,8 +87,13 @@ for (const char& cr : strList[2]) {
       const Color c  = std::isupper(cr) ? Co_White : Co_Black;
       const char  kf = static_cast<char>(std::toupper(FileNames[SQFILE(p.king[c])].at(0)));
       if (std::toupper(cr) > kf) { p.castling |= (c == Co_White ? C_wks : C_bks); }
-      else                       { p.castling |= (c == Co_White ? C_wqs : C_bqs); }
-      if (!DynamicConfig::FRC) { DynamicConfig::FRC = true; }  // force FRC
+      else {
+         p.castling |= (c == Co_White ? C_wqs : C_bqs);
+      }
+      if (!DynamicConfig::FRC) {
+         Logging::LogIt(Logging::logInfo) << "FRC position found (castling letters), activating FRC";
+         DynamicConfig::FRC = true; // force FRC !
+      }
       found = true;
    }
 }
@@ -192,13 +197,66 @@ hashes/counters and optional NNUE state. Captures and pawn moves reset `fifty`;
 other moves increment it. An en passant target is retained after a double push
 only when an adjacent opposing pawn exists.
 
+The end of `applyMove()` in
+[moveApply.cpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/moveApply.cpp) shows these rules. The en passant
+square is only hashed and kept when an opposing pawn stands next to the
+destination; otherwise two positions that differ only by an unusable en passant
+right would get different keys and miss repetitions and TT hits:
+
+```cpp
+   const bool pawnMove = abs(moveInfo.fromP) == P_wp;
+   // update EP
+   if (p.ep != INVALIDSQUARE) p.h ^= Zobrist::ZT[p.ep][13];
+   p.ep = INVALIDSQUARE;
+   if (pawnMove && abs(moveInfo.to - moveInfo.from) == 16 && (BBTools::adjacent(SquareToBitboard(moveInfo.to)) & p.pieces_const(~p.c,P_wp)) != emptyBitBoard) {
+      p.ep = static_cast<Square>((moveInfo.from + moveInfo.to) / 2);
+      p.h ^= Zobrist::ZT[p.ep][13];
+   }
+   ...
+   // update Color
+   p.c = ~p.c;
+   p.h ^= Zobrist::ZT[3][13];
+   p.h ^= Zobrist::ZT[4][13];
+
+   // update game state
+   if (moveInfo.isCapNoEP || pawnMove) p.fifty = 0; // E.p covered by pawn move here ...
+   else
+      ++p.fifty;
+   if (p.c == Co_White) ++p.moves;
+   ++p.halfmoves;
+```
+
 Promotions update both material and hash classes: the pawn disappears and a
 non-pawn piece appears. En passant removes its victim from a square different
 from `to`. Castling changes both king and rook representations.
 
 `applyNull()` is not a legal game move. It flips side/hash, clears en passant,
 records `NULLMOVE` and advances game-ply counters without moving pieces. It
-does not run the ordinary capture/pawn/fifty update sequence.
+does not run the ordinary capture/pawn/fifty update sequence:
+
+```cpp
+void applyNull(Searcher&, Position& pN) {
+   START_TIMER
+   pN.c = ~pN.c;
+   pN.h ^= Zobrist::ZT[3][13];
+   pN.h ^= Zobrist::ZT[4][13];
+   if (pN.ep != INVALIDSQUARE) pN.h ^= Zobrist::ZT[pN.ep][13];
+   pN.ep = INVALIDSQUARE;
+   pN.lastMove = NULLMOVE;
+   if (pN.c == Co_White) ++pN.moves;
+   ++pN.halfmoves;
+   STOP_AND_SUM_TIMER(Apply)
+}
+```
+
+`fifty` is left unchanged, so a null move neither resets nor advances the
+reversible-move count used by repetition detection.
+
+Column `NbPiece` (13) of the Zobrist table `ZT[square][piece]` is not a piece:
+`computeHash()` uses `ZT[3][13]` when White is to move and `ZT[4][13]` when
+Black is to move, and `ZT[ep][13]` for an en passant square. XORing both
+side keys therefore switches from one side to the other. Castling rights use a
+separate table, `ZTCastling[castling]`, indexed by the whole rights mask.
 
 ## Hash domains
 

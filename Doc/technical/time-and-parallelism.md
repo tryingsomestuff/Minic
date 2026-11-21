@@ -1,6 +1,6 @@
 # Time management and parallel search
 
-[Index](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/README.md) | [Previous: evaluation](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/evaluation.md) | [Next: development](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/development.md)
+[Index](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/README.md) | [Previous: evaluation](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/evaluation.md) | [Next: disabled techniques](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/disabled-features.md)
 
 Primary sources: [timeMan.cpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/timeMan.cpp),
 [timeMan.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/timeMan.hpp), [searcher.cpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/searcher.cpp),

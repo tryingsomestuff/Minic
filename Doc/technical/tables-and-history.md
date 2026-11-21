@@ -28,6 +28,14 @@ None of these "histories" is interchangeable with another. In particular,
 
 ## TT layout and indexing
 
+A *transposition table* (TT) is a large hash table that remembers what the
+search learned about a position: a score with its bound type, the depth at which
+it was obtained, the best move found and a static evaluation. The same position
+is often reached through different move orders (a *transposition*), and also
+again in the next iteration of iterative deepening. A sufficiently deep stored
+bound can then end the search of that node immediately, and a stored best move
+gives an excellent first move to try even when the bound is not usable.
+
 An entry comprises three 32-bit groups:
 
 ```text
@@ -48,8 +56,32 @@ The array is aligned to 1024 bytes. There is **one entry per index**, not a
 cluster with multiple candidates.
 
 Every store replaces that entry. Depth, generation and exactness do not select
-a victim. A 3-bit generation advances modulo 8 each search and is stored in
+a victim, as `TT::setEntry()` in
+[transposition.cpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/transposition.cpp) shows:
+
+```cpp
+void setEntry(Searcher &context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d, bool distribute) {
+   assert(h != nullHash); // can really happen in fact ... but rarely
+   if (DynamicConfig::disableTT) return;
+   Entry e(h, m, s, eval, b, d);
+   e.h ^= e._data1;
+   e.h ^= e._data2;
+   context.stats.incr(Stats::sid_ttInsert);
+   table[h & (ttSize - 1)] = e; // always replace (favour leaf)
+   // only update buffer for other process on main thread
+   if (distribute) Distributed::setEntry(h, e);
+}
+```
+
+"Always replace" favors recent and shallow information. It is simple and
+cheap, but a deep, expensive entry can be overwritten by a shallow one that hashes
+to the same slot; engines that keep several entries per slot choose a victim
+by depth and age instead. A 3-bit generation advances modulo 8 each search and is stored in
 flags, but is not currently an aging replacement policy.
+
+The generation is therefore stored but unused for replacement; it is listed
+with the other inert mechanisms in
+[disabled techniques](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/disabled-features.md).
 
 `hashFull()` samples nonzero stored fingerprints and reports per mille.
 It does not measure the proportion of useful entries from the current
@@ -65,7 +97,39 @@ storedFingerprint XOR payload1 XOR payload2 == Hash64to32(requestedHash)
 ```
 
 A stored valid move is also checked for pseudo-legality in the current
-position. A mismatch invalidates the returned entry.
+position. A mismatch invalidates the returned entry. In `TT::getEntry()`:
+
+```cpp
+   e = table[h & (ttSize - 1)];
+   ...
+   if (e.h == nullHash) return false; //early exit
+   if (
+#ifndef DEBUG_HASH_ENTRY
+       ((e.h ^ e._data1 ^ e._data2) != Hash64to32(h)) ||
+#endif
+       (isValidMove(e.m) && !isPseudoLegal(p, e.m))) {
+      // move is filled, but wrong in this position, invalidate returned entry.
+      e.h = nullHash;
+      return false;
+   }
+
+   if (e.d >= d /*+ (e.b != B_exact)*/) {
+      // valid entry only if depth is ok
+      context.stats.incr(Stats::sid_tthits);
+      return true;
+   }
+```
+
+The entry is copied first, so the checks apply to a local snapshot even if
+another thread overwrites the slot meanwhile. Folding the payload into the
+stored fingerprint means that a slot torn by two concurrent writers almost
+always fails the comparison instead of returning a mixed entry. This is
+the classic lockless-hashing idea.
+
+The `-disableTT` command-line option (no UCI option) makes both functions
+return immediately. The data-generation path also switches it on temporarily
+when it extracts a quiet leaf position from a search, so that the leaf comes
+from an actual qsearch rather than a TT cutoff.
 
 `getEntry()` returns true only when the validated entry has enough depth.
 A shallower but valid entry can return false while leaving `e.h != nullHash`;
@@ -83,7 +147,11 @@ in-check and generation flags. Test the relevant bits rather than comparing
 the entire byte with an unflagged bound constant.
 
 For mate scores, storage adds search height to winning mates and subtracts it
-from losing mates; retrieval reverses that adjustment. This makes the mate
+from losing mates; retrieval reverses that adjustment (`createHashScore()` and
+`adjustHashScore()`). Search encodes a mate as `MATE - height` from the root,
+but a TT entry belongs to a position, not to a path: a "mate in 3 from here"
+must be stored as such and re-expressed from the root of whichever search finds
+it again. This makes the mate
 distance reusable from a root with a different height.
 
 TT cutoffs additionally depend on node type, depth, bound direction, mate and
@@ -115,6 +183,22 @@ comment cannot fix the data flow.
 thread count, then rounds each worker's capacity down to a power of two.
 Entries retain a compressed pawn-and-king key, cached structure bitboards,
 score and danger. They are direct-mapped and overwritten on a miss.
+
+```cpp
+void Searcher::initPawnTable() {
+   ...
+   ttSizePawn = powerFloor((SIZE_MULTIPLIER * DynamicConfig::ttPawnSizeMb / DynamicConfig::threads) / sizeof(PawnEntry));
+   ...
+}
+```
+
+A `PawnEntry` holds, per color, the pawn attack targets, holes, semi-open files
+and passed pawns, plus the open files, the structure score, the 32-bit key and
+the per-color king danger. With 64-bit bitboards these fields take 84 bytes,
+typically padded to 88. With one thread and 16 MiB, `16777216 / 88 = 190650`
+entries round down to 131072, which is about 11 MiB actually used. With four threads,
+each worker gets `4194304 / 88 = 47662`, rounded to 32768 entries. The log line
+`Size of Pawn TT` reports the actual figure.
 
 The default desktop budget is 16 MiB before per-worker rounding; TT defaults
 to 128 MiB. Actual allocated memory can be lower after power-of-two rounding.
@@ -299,6 +383,26 @@ helper-pointer table also consumes memory; do not estimate startup footprint
 using only the score-entry array.
 
 ## Correction-history gravity example
+
+*Correction history* learns, for a structural key (pawns and kings, or one
+side's non-pawn pieces), how much the static evaluation tends to be wrong
+compared with the search result, and adds that learned bias to later static
+evaluations with the same key. The update in
+[correctionHistory.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/correctionHistory.hpp) is:
+
+```cpp
+   FORCE_FINLINE void update(Color c, Hash key, DepthType depth, int evalDiff, int correctionMax) {
+      ScoreType & item = table[c][key & (size - 1)];
+      const int depthWeight = std::min(static_cast<int>(depth), SearchConfig::correctionHistoryDepthCap);
+      const int change = std::clamp(evalDiff * depthWeight / SearchConfig::correctionHistoryDepthScale,
+                                     -correctionMax, correctionMax);
+      item = static_cast<ScoreType>(item + change - (item * Abs(change)) / correctionMax);
+   }
+```
+
+Deeper results are trusted more, up to the depth cap, and the gravity term keeps
+every bucket inside `[-correctionMax, correctionMax]` (32 for pawn keys, 44 for
+non-pawn keys by default).
 
 Correction update differs from move-history gravity:
 

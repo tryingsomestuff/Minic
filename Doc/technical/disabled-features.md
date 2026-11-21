@@ -160,7 +160,7 @@ at non-cut nodes) is a separate, also disabled, ordering idea in the same loop.
 ### Singular-extension variants
 
 The active singular logic (see
-[singular TT policy](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/search-policy-reference.md#singular-tt-policy-separate-and-active))
+[singular TT policy](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/search-policy-reference.md#singular-tt-policy))
 extends a "singular" TT move by one or two plies. Otherwise it uses multi-cut
 or negative extensions. Three variants are commented out:
 
@@ -444,7 +444,7 @@ in [searcherQSearch.cpp](https://github.com/tryingsomestuff/Minic/blob/master/So
 
 ## Quiescence search
 
-Background: [quiescence](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/search.md#quiescence).
+Background: [quiescence](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/search.md#quiescence-search).
 
 ### Quiescence futility pruning
 
