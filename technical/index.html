@@ -907,8 +907,13 @@ Chess960 (FRC) mode on if it was not already active:</p>
       const Color c  = std::isupper(cr) ? Co_White : Co_Black;
       const char  kf = static_cast&lt;char&gt;(std::toupper(FileNames[SQFILE(p.king[c])].at(0)));
       if (std::toupper(cr) &gt; kf) { p.castling |= (c == Co_White ? C_wks : C_bks); }
-      else                       { p.castling |= (c == Co_White ? C_wqs : C_bqs); }
-      if (!DynamicConfig::FRC) { DynamicConfig::FRC = true; }  // force FRC
+      else {
+         p.castling |= (c == Co_White ? C_wqs : C_bqs);
+      }
+      if (!DynamicConfig::FRC) {
+         Logging::LogIt(Logging::logInfo) &lt;&lt; &quot;FRC position found (castling letters), activating FRC&quot;;
+         DynamicConfig::FRC = true; // force FRC !
+      }
       found = true;
    }
 }
@@ -1004,12 +1009,58 @@ that object.</p>
 hashes/counters and optional NNUE state. Captures and pawn moves reset <code>fifty</code>;
 other moves increment it. An en passant target is retained after a double push
 only when an adjacent opposing pawn exists.</p>
+<p>The end of <code>applyMove()</code> in
+<a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/moveApply.cpp">moveApply.cpp</a> shows these rules. The en passant
+square is only hashed and kept when an opposing pawn stands next to the
+destination; otherwise two positions that differ only by an unusable en passant
+right would get different keys and miss repetitions and TT hits:</p>
+<pre><code class="language-cpp">   const bool pawnMove = abs(moveInfo.fromP) == P_wp;
+   // update EP
+   if (p.ep != INVALIDSQUARE) p.h ^= Zobrist::ZT[p.ep][13];
+   p.ep = INVALIDSQUARE;
+   if (pawnMove &amp;&amp; abs(moveInfo.to - moveInfo.from) == 16 &amp;&amp; (BBTools::adjacent(SquareToBitboard(moveInfo.to)) &amp; p.pieces_const(~p.c,P_wp)) != emptyBitBoard) {
+      p.ep = static_cast&lt;Square&gt;((moveInfo.from + moveInfo.to) / 2);
+      p.h ^= Zobrist::ZT[p.ep][13];
+   }
+   ...
+   // update Color
+   p.c = ~p.c;
+   p.h ^= Zobrist::ZT[3][13];
+   p.h ^= Zobrist::ZT[4][13];
+
+   // update game state
+   if (moveInfo.isCapNoEP || pawnMove) p.fifty = 0; // E.p covered by pawn move here ...
+   else
+      ++p.fifty;
+   if (p.c == Co_White) ++p.moves;
+   ++p.halfmoves;
+</code></pre>
 <p>Promotions update both material and hash classes: the pawn disappears and a
 non-pawn piece appears. En passant removes its victim from a square different
 from <code>to</code>. Castling changes both king and rook representations.</p>
 <p><code>applyNull()</code> is not a legal game move. It flips side/hash, clears en passant,
 records <code>NULLMOVE</code> and advances game-ply counters without moving pieces. It
-does not run the ordinary capture/pawn/fifty update sequence.</p>
+does not run the ordinary capture/pawn/fifty update sequence:</p>
+<pre><code class="language-cpp">void applyNull(Searcher&amp;, Position&amp; pN) {
+   START_TIMER
+   pN.c = ~pN.c;
+   pN.h ^= Zobrist::ZT[3][13];
+   pN.h ^= Zobrist::ZT[4][13];
+   if (pN.ep != INVALIDSQUARE) pN.h ^= Zobrist::ZT[pN.ep][13];
+   pN.ep = INVALIDSQUARE;
+   pN.lastMove = NULLMOVE;
+   if (pN.c == Co_White) ++pN.moves;
+   ++pN.halfmoves;
+   STOP_AND_SUM_TIMER(Apply)
+}
+</code></pre>
+<p><code>fifty</code> is left unchanged, so a null move neither resets nor advances the
+reversible-move count used by repetition detection.</p>
+<p>Column <code>NbPiece</code> (13) of the Zobrist table <code>ZT[square][piece]</code> is not a piece:
+<code>computeHash()</code> uses <code>ZT[3][13]</code> when White is to move and <code>ZT[4][13]</code> when
+Black is to move, and <code>ZT[ep][13]</code> for an en passant square. XORing both
+side keys therefore switches from one side to the other. Castling rights use a
+separate table, <code>ZTCastling[castling]</code>, indexed by the whole rights mask.</p>
 <h2 id="chapter-positions-and-moves-hash-domains">Hash domains</h2>
 <p>Full Zobrist hashing covers colored pieces, side, castling rights and en passant.
 It does <strong>not</strong> encode the fifty-move counter. <code>computeHash()</code> normally returns
@@ -3465,6 +3516,13 @@ contribution to quiet ordering.</p>
 <p>None of these "histories" is interchangeable with another. In particular,
 <code>StackData::eval</code> is not the result of a completed game-root search.</p>
 <h2 id="chapter-tables-and-history-tt-layout-and-indexing">TT layout and indexing</h2>
+<p>A <em>transposition table</em> (TT) is a large hash table that remembers what the
+search learned about a position: a score with its bound type, the depth at which
+it was obtained, the best move found and a static evaluation. The same position
+is often reached through different move orders (a <em>transposition</em>), and also
+again in the next iteration of iterative deepening. A sufficiently deep stored
+bound can then end the search of that node immediately, and a stored best move
+gives an excellent first move to try even when the bound is not usable.</p>
 <p>An entry comprises three 32-bit groups:</p>
 <pre><code class="language-text">fingerprint: 32
 score s: 16 | evaluation e: 16
@@ -3478,8 +3536,28 @@ the requested byte budget:</p>
 <p>The array is aligned to 1024 bytes. There is <strong>one entry per index</strong>, not a
 cluster with multiple candidates.</p>
 <p>Every store replaces that entry. Depth, generation and exactness do not select
-a victim. A 3-bit generation advances modulo 8 each search and is stored in
+a victim, as <code>TT::setEntry()</code> in
+<a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/transposition.cpp">transposition.cpp</a> shows:</p>
+<pre><code class="language-cpp">void setEntry(Searcher &amp;context, Hash h, Move m, ScoreType s, ScoreType eval, Bound b, DepthType d, bool distribute) {
+   assert(h != nullHash); // can really happen in fact ... but rarely
+   if (DynamicConfig::disableTT) return;
+   Entry e(h, m, s, eval, b, d);
+   e.h ^= e._data1;
+   e.h ^= e._data2;
+   context.stats.incr(Stats::sid_ttInsert);
+   table[h &amp; (ttSize - 1)] = e; // always replace (favour leaf)
+   // only update buffer for other process on main thread
+   if (distribute) Distributed::setEntry(h, e);
+}
+</code></pre>
+<p>"Always replace" favors recent and shallow information. It is simple and
+cheap, but a deep, expensive entry can be overwritten by a shallow one that hashes
+to the same slot; engines that keep several entries per slot choose a victim
+by depth and age instead. A 3-bit generation advances modulo 8 each search and is stored in
 flags, but is not currently an aging replacement policy.</p>
+<p>The generation is therefore stored but unused for replacement; it is listed
+with the other inert mechanisms in
+<a href="#chapter-disabled-features">disabled techniques</a>.</p>
 <p><code>hashFull()</code> samples nonzero stored fingerprints and reports per mille.
 It does not measure the proportion of useful entries from the current
 generation.</p>
@@ -3489,7 +3567,35 @@ entry and verifies:</p>
 <pre><code class="language-text">storedFingerprint XOR payload1 XOR payload2 == Hash64to32(requestedHash)
 </code></pre>
 <p>A stored valid move is also checked for pseudo-legality in the current
-position. A mismatch invalidates the returned entry.</p>
+position. A mismatch invalidates the returned entry. In <code>TT::getEntry()</code>:</p>
+<pre><code class="language-cpp">   e = table[h &amp; (ttSize - 1)];
+   ...
+   if (e.h == nullHash) return false; //early exit
+   if (
+#ifndef DEBUG_HASH_ENTRY
+       ((e.h ^ e._data1 ^ e._data2) != Hash64to32(h)) ||
+#endif
+       (isValidMove(e.m) &amp;&amp; !isPseudoLegal(p, e.m))) {
+      // move is filled, but wrong in this position, invalidate returned entry.
+      e.h = nullHash;
+      return false;
+   }
+
+   if (e.d &gt;= d /*+ (e.b != B_exact)*/) {
+      // valid entry only if depth is ok
+      context.stats.incr(Stats::sid_tthits);
+      return true;
+   }
+</code></pre>
+<p>The entry is copied first, so the checks apply to a local snapshot even if
+another thread overwrites the slot meanwhile. Folding the payload into the
+stored fingerprint means that a slot torn by two concurrent writers almost
+always fails the comparison instead of returning a mixed entry. This is
+the classic lockless-hashing idea.</p>
+<p>The <code>-disableTT</code> command-line option (no UCI option) makes both functions
+return immediately. The data-generation path also switches it on temporarily
+when it extracts a quiet leaf position from a search, so that the leaf comes
+from an actual qsearch rather than a TT cutoff.</p>
 <p><code>getEntry()</code> returns true only when the validated entry has enough depth.
 A shallower but valid entry can return false while leaving <code>e.h != nullHash</code>;
 PVS can still use its move/evaluation/context. Distinguish <strong>hit</strong> from
@@ -3502,7 +3608,11 @@ access formally race-free.</p>
 in-check and generation flags. Test the relevant bits rather than comparing
 the entire byte with an unflagged bound constant.</p>
 <p>For mate scores, storage adds search height to winning mates and subtracts it
-from losing mates; retrieval reverses that adjustment. This makes the mate
+from losing mates; retrieval reverses that adjustment (<code>createHashScore()</code> and
+<code>adjustHashScore()</code>). Search encodes a mate as <code>MATE - height</code> from the root,
+but a TT entry belongs to a position, not to a path: a "mate in 3 from here"
+must be stored as such and re-expressed from the root of whichever search finds
+it again. This makes the mate
 distance reusable from a root with a different height.</p>
 <p>TT cutoffs additionally depend on node type, depth, bound direction, mate and
 fifty-move conditions. Some late cuts allow slightly shallower entries with
@@ -3526,6 +3636,19 @@ comment cannot fix the data flow.</p>
 thread count, then rounds each worker's capacity down to a power of two.
 Entries retain a compressed pawn-and-king key, cached structure bitboards,
 score and danger. They are direct-mapped and overwritten on a miss.</p>
+<pre><code class="language-cpp">void Searcher::initPawnTable() {
+   ...
+   ttSizePawn = powerFloor((SIZE_MULTIPLIER * DynamicConfig::ttPawnSizeMb / DynamicConfig::threads) / sizeof(PawnEntry));
+   ...
+}
+</code></pre>
+<p>A <code>PawnEntry</code> holds, per color, the pawn attack targets, holes, semi-open files
+and passed pawns, plus the open files, the structure score, the 32-bit key and
+the per-color king danger. With 64-bit bitboards these fields take 84 bytes,
+typically padded to 88. With one thread and 16 MiB, <code>16777216 / 88 = 190650</code>
+entries round down to 131072, which is about 11 MiB actually used. With four threads,
+each worker gets <code>4194304 / 88 = 47662</code>, rounded to 32768 entries. The log line
+<code>Size of Pawn TT</code> reports the actual figure.</p>
 <p>The default desktop budget is 16 MiB before per-worker rounding; TT defaults
 to 128 MiB. Actual allocated memory can be lower after power-of-two rounding.
 Small-memory builds interpret size units differently through <code>SIZE_MULTIPLIER</code>.</p>
@@ -3694,6 +3817,22 @@ Unrepresentable promoted material takes the fallback path. The parallel
 helper-pointer table also consumes memory; do not estimate startup footprint
 using only the score-entry array.</p>
 <h2 id="chapter-tables-and-history-correction-history-gravity-example">Correction-history gravity example</h2>
+<p><em>Correction history</em> learns, for a structural key (pawns and kings, or one
+side's non-pawn pieces), how much the static evaluation tends to be wrong
+compared with the search result, and adds that learned bias to later static
+evaluations with the same key. The update in
+<a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/correctionHistory.hpp">correctionHistory.hpp</a> is:</p>
+<pre><code class="language-cpp">   FORCE_FINLINE void update(Color c, Hash key, DepthType depth, int evalDiff, int correctionMax) {
+      ScoreType &amp; item = table[c][key &amp; (size - 1)];
+      const int depthWeight = std::min(static_cast&lt;int&gt;(depth), SearchConfig::correctionHistoryDepthCap);
+      const int change = std::clamp(evalDiff * depthWeight / SearchConfig::correctionHistoryDepthScale,
+                                     -correctionMax, correctionMax);
+      item = static_cast&lt;ScoreType&gt;(item + change - (item * Abs(change)) / correctionMax);
+   }
+</code></pre>
+<p>Deeper results are trusted more, up to the depth cap, and the gravity term keeps
+every bucket inside <code>[-correctionMax, correctionMax]</code> (32 for pawn keys, 44 for
+non-pawn keys by default).</p>
 <p>Correction update differs from move-history gravity:</p>
 <pre><code class="language-text">w = min(depth, 16)
 change = clamp((bestScore - baselineEval) * w / 16, -maximum, maximum)
@@ -5636,7 +5775,7 @@ chapter holds the full inventory and caveats:</p>
 </article>
 <article id="chapter-time-and-parallelism">
 <h1 id="chapter-time-and-parallelism-time-management-and-parallel-search">Time management and parallel search</h1>
-<p><a href="#chapter-readme">Index</a> | <a href="#chapter-evaluation">Previous: evaluation</a> | <a href="#chapter-development">Next: development</a></p>
+<p><a href="#chapter-readme">Index</a> | <a href="#chapter-evaluation">Previous: evaluation</a> | <a href="#chapter-disabled-features">Next: disabled techniques</a></p>
 <p>Primary sources: <a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/timeMan.cpp">timeMan.cpp</a>,
 <a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/timeMan.hpp">timeMan.hpp</a>, <a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/searcher.cpp">searcher.cpp</a>,
 <a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/searcherDriver.cpp">searcherDriver.cpp</a>,
@@ -6437,7 +6576,7 @@ The commented line <code>//if(!pvsData.cutNode) MoveSorter::sort(moves);</code> 
 at non-cut nodes) is a separate, also disabled, ordering idea in the same loop.</p>
 <h3 id="chapter-disabled-features-singular-extension-variants">Singular-extension variants</h3>
 <p>The active singular logic (see
-<a href="#chapter-search-policy-reference-singular-tt-policy-separate-and-active">singular TT policy</a>)
+<a href="#chapter-search-policy-reference-singular-tt-policy">singular TT policy</a>)
 extends a "singular" TT move by one or two plies. Otherwise it uses multi-cut
 or negative extensions. Three variants are commented out:</p>
 <ul>
@@ -6837,7 +6976,7 @@ in <a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/searcher
   Nothing sets <code>MD_easy</code>.</li>
 </ul>
 <h2 id="chapter-disabled-features-quiescence-search">Quiescence search</h2>
-<p>Background: <a href="#chapter-search-quiescence">quiescence</a>.</p>
+<p>Background: <a href="#chapter-search-quiescence-search">quiescence</a>.</p>
 <h3 id="chapter-disabled-features-quiescence-futility-pruning">Quiescence futility pruning</h3>
 <p><strong>Idea.</strong> In <em>quiescence search</em>, only captures (and evasions) are searched
 until the position is quiet. <em>Futility pruning</em> there skips a capture when
@@ -7417,7 +7556,7 @@ surrounding code changed after them. A sound procedure, also described in
 </article>
 <article id="chapter-development">
 <h1 id="chapter-development-building-diagnosing-and-modifying-minic">Building, diagnosing and modifying Minic</h1>
-<p><a href="#chapter-readme">Index</a> | <a href="#chapter-time-and-parallelism">Previous: time and parallelism</a> | <a href="#chapter-glossary">Next: glossary</a></p>
+<p><a href="#chapter-readme">Index</a> | <a href="#chapter-disabled-features">Previous: disabled techniques</a> | <a href="#chapter-glossary">Next: glossary</a></p>
 <p>Primary sources: <a href="https://github.com/tryingsomestuff/Minic/blob/master/Makefile">Makefile</a>,
 <a href="https://github.com/tryingsomestuff/Minic/blob/master/Tools/build/common">Tools/build/common</a>,
 <a href="https://github.com/tryingsomestuff/Minic/blob/master/Tools/build/build.sh">Tools/build/build.sh</a>,
@@ -7463,6 +7602,48 @@ script, which is relevant to exact comparisons.</p>
 <p>The <code>config</code> target still manages <code>Tourney/nn.bin</code>; <code>EVALFILE=none</code> is not a
 promise that <code>make</code> requires no network/Fathom setup.
 Runtime network loading is a separate option.</p>
+<h3 id="chapter-development-build-variables">Build variables</h3>
+<p>The <a href="https://github.com/tryingsomestuff/Minic/blob/master/Makefile">Makefile</a> and <a href="https://github.com/tryingsomestuff/Minic/blob/master/Tools/build/build.sh">Tools/build/build.sh</a>
+read these environment variables:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NOPROFILE=1</code></td>
+<td>Single optimized compilation, no PGO training run.</td>
+</tr>
+<tr>
+<td><code>EXE=&lt;path&gt;</code></td>
+<td>Output path relative to the repository root (exported as <code>FORCEDNAME</code>); also adds <code>-ffp-contract=off</code>.</td>
+</tr>
+<tr>
+<td><code>EVALFILE=&lt;path&gt;</code></td>
+<td>Embed this network instead of <code>Tourney/nn.bin</code>, and skip the network checksum check. <code>EVALFILE=none</code> builds without an embedded network.</td>
+</tr>
+<tr>
+<td><code>DEBUGMINIC=1</code></td>
+<td><code>-O3 -g -ggdb -fno-omit-frame-pointer</code>, still with <code>-DNDEBUG</code>, so assertions remain off.</td>
+</tr>
+<tr>
+<td><code>VTUNEMINIC=1</code></td>
+<td>Release flags plus <code>-g</code> (symbols for profilers) instead of stripping.</td>
+</tr>
+<tr>
+<td><code>CXX</code>, <code>CC</code></td>
+<td>Compilers; default <code>g++</code>/<code>gcc</code>. The build switches to Intel MPI compilers by itself when <code>WITH_MPI</code> is uncommented.</td>
+</tr>
+</tbody>
+</table>
+<p>Without <code>EVALFILE</code>, <code>make config</code> downloads the default network into
+<code>Tourney/nn.bin</code> when it is missing or when its MD5 checksum is not the
+expected one. The PGO training run is <code>bench 20</code> (<code>bench 10</code> in a <code>DEBUGMINIC</code>
+build). <code>build.sh</code> also compiles the Fathom tablebase prober when
+<code>Fathom/src/tbprobe.h</code> exists and links it into the engine.</p>
 <p>The CMake file in <a href="https://github.com/tryingsomestuff/Minic/blob/master/Tools/build/CMakeLists.txt">Tools/build</a> is an
 Include-What-You-Use harness, not the normal engine build system. Platform,
 coverage and sanitizer scripts are specialized workflows: read their
@@ -7482,7 +7663,10 @@ Do not assume it installs an <code>EXE</code> experiment under the pytest name.<
 pytest -q -s Test/test.py -k 'gameinfo_test or uci_test'
 pytest -q -s Test/test.py -k pawnhistory_test
 </code></pre>
-<p>Each case starts a separate engine process and asserts its exit code. The
+<p>The cases are <code>perft_test</code>, <code>see_test</code>, <code>gameinfo_test</code>, <code>pawnhistory_test</code>,
+<code>uci_test</code>, <code>spsa_test</code>, <code>time_test</code>, <code>qsearch_test</code>, <code>eval_test</code>, <code>gen_test</code>,
+<code>see_cli_test</code> and <code>kpk_test</code>.
+Each case starts a separate engine process and asserts its exit code. The
 <a href="https://github.com/tryingsomestuff/Minic/blob/master/Test/README.md">test README</a> describes every case. The developer
 commands behind the two most specific ones are:</p>
 <table>
@@ -7507,80 +7691,174 @@ commands behind the two most specific ones are:</p>
 assertions: it does not establish correctness of every transient UCI message
 or every possible search line.</p>
 <h2 id="chapter-development-focused-engine-diagnostics">Focused engine diagnostics</h2>
-<p>With <code>DEBUG_TOOL</code>, useful direct commands include:</p>
-<pre><code class="language-sh">Dist/Minic3/minic_dev_linux_x64 -perft_test
-Dist/Minic3/minic_dev_linux_x64 -see_test
-Dist/Minic3/minic_dev_linux_x64 -gameinfo_test
-Dist/Minic3/minic_dev_linux_x64 -pawnhistory_test
-Dist/Minic3/minic_dev_linux_x64 -eval start
-Dist/Minic3/minic_dev_linux_x64 -qsearch start
+<p>The default configuration defines <code>DEBUG_TOOL</code>, which makes developer commands
+available as the first command-line argument. Commands that need a position
+take a full FEN in one quoted argument, or one of the shortcuts <code>start</code>,
+<code>fine70</code>, <code>shirov</code>, <code>shirov2</code> and <code>mate4</code>. The dispatch is in <code>cliManagement()</code>
+in <a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/cli.cpp">cli.cpp</a>:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Arguments (defaults)</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-perft_test</code>, <code>-perft_test_long</code>, <code>-perft_test_long_fischer</code></td>
+<td>none</td>
+<td>Built-in perft regression positions, standard and Chess960.</td>
+</tr>
+<tr>
+<td><code>-perft</code></td>
+<td><code>&lt;fen&gt; [depth=5]</code></td>
+<td>Count leaf nodes of the legal move tree; also reports speed.</td>
+</tr>
+<tr>
+<td><code>-see_test</code></td>
+<td>none</td>
+<td>SEE regression suite.</td>
+</tr>
+<tr>
+<td><code>-see</code></td>
+<td><code>&lt;fen&gt; &lt;move&gt; &lt;threshold&gt;</code></td>
+<td>Whether <code>SEE_GE(move, threshold)</code> holds. The threshold argument is required.</td>
+</tr>
+<tr>
+<td><code>-gameinfo_test</code>, <code>-pawnhistory_test</code></td>
+<td>none</td>
+<td>Game-history and pawn-history unit checks.</td>
+</tr>
+<tr>
+<td><code>bench</code>, <code>-bench</code>, <code>benchBig</code></td>
+<td><code>[depth=16]</code></td>
+<td>Fixed-depth search over a position set; total nodes identify search behavior.</td>
+</tr>
+<tr>
+<td><code>-analyze</code></td>
+<td><code>&lt;fen&gt; [depth=15]</code></td>
+<td>Fixed-depth search with normal output.</td>
+</tr>
+<tr>
+<td><code>-mateFinder</code></td>
+<td><code>&lt;fen&gt; [depth=10]</code></td>
+<td>Same with the mate-finder mode, which disables selective pruning.</td>
+</tr>
+<tr>
+<td><code>-qsearch</code></td>
+<td><code>&lt;fen&gt;</code></td>
+<td><code>qsearchNoPruning()</code> score, not the production quiescence search.</td>
+</tr>
+<tr>
+<td><code>-eval</code>, <code>-evalHCE</code></td>
+<td><code>&lt;fen&gt;</code></td>
+<td>Active evaluator (NNUE when loaded) or handcrafted evaluation, with game phase.</td>
+</tr>
+<tr>
+<td><code>-evalSpeed</code></td>
+<td><code>[epd file]</code></td>
+<td>Evaluation throughput, TT disabled.</td>
+</tr>
+<tr>
+<td><code>-gen</code></td>
+<td><code>&lt;fen&gt;</code></td>
+<td>Generate, score and list the moves.</td>
+</tr>
+<tr>
+<td><code>-testmove</code></td>
+<td><code>&lt;fen&gt;</code></td>
+<td>Apply the hard-coded move from square 8 to 16 (a2a3) and print the result.</td>
+</tr>
+<tr>
+<td><code>-attacked</code>, <code>-cov</code></td>
+<td><code>&lt;fen&gt; &lt;square index&gt;</code></td>
+<td>Attack bitboard on a square, or coverage of the piece standing on it.</td>
+</tr>
+<tr>
+<td><code>-kpk</code>, <code>-probe</code></td>
+<td><code>&lt;fen&gt;</code></td>
+<td>KPK bitbase or Syzygy probe.</td>
+</tr>
+<tr>
+<td><code>-timeTest</code></td>
+<td><code>[initial ms=50000] [increment=0] [moves in TC=-1] [GUI lag=0]</code></td>
+<td>Simulate time allocation over a game.</td>
+</tr>
+<tr>
+<td><code>-selfplay</code></td>
+<td><code>[depth=15] [games=1]</code></td>
+<td>Self-play games; with <code>-genFen 1</code> they also write training positions.</td>
+</tr>
+<tr>
+<td><code>-spsa</code></td>
+<td>none</td>
+<td>Print numeric options in SPSA input format.</td>
+</tr>
+<tr>
+<td><code>-uci</code>, <code>-xboard</code></td>
+<td>none</td>
+<td>Protocol loops; no argument at all also means UCI.</td>
+</tr>
+</tbody>
+</table>
+<p>For example:</p>
+<pre><code class="language-sh">Dist/Minic3/minic_dev_linux_x64 -perft start 6
+Dist/Minic3/minic_dev_linux_x64 -analyze &quot;r1bqkb1r/pp3ppp/1np1pn2/6N1/2BP4/8/PPP1QPPP/R1B1K1NR w KQkq - 1 1&quot; 20
+Dist/Minic3/minic_dev_linux_x64 -see start e2e4 0
+Dist/Minic3/minic_dev_linux_x64 -timeTest 60000 500 -1 0
 </code></pre>
-<p>Other CLI operations support perft/divide, fixed-depth analysis, SEE
-threshold checks, KPK and time simulation. Read dispatch and the relevant
-<code>cli*.cpp</code> file for their exact argument order; protocol and developer-helper
-searches do not all have the same semantics.</p>
+<p>A FEN argument is checked against a regular expression before <code>readFEN()</code>;
+a malformed one is reported and the command does nothing. Protocol and
+developer-helper searches do not all have the same semantics: <code>-qsearch</code> in
+particular is not the search path used in games.</p>
 <p>For asynchronous UCI integration, drive the process interactively and wait
 for <code>bestmove</code> before sending <code>quit</code>. A rapidly piped
 <code>go ... / wait / quit</code> sequence is not a general synchronization contract.
 Exercise multiple threads, MultiPV, stop/ponder, root histories and legal
 bestmove/PV application as appropriate.</p>
-<h2 id="chapter-development-diagnostics-and-configuration">Diagnostics and configuration</h2>
-<p><code>WITH_STATS</code> is normally enabled and records main/qnodes, TT/cache hits,
-cutoffs and heuristic activity. Statistics help distinguish a missing gate
-from a merely unhelpful heuristic.</p>
-<p>Relevant opt-in gates include:</p>
-<table>
-<thead>
-<tr>
-<th>Gate</th>
-<th>Diagnostic use</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>WITH_TIMER</code></td>
-<td>Timing categories for engine work.</td>
-</tr>
-<tr>
-<td><code>WITH_BETACUTSTATS</code></td>
-<td>More detailed cutoff-source statistics.</td>
-</tr>
-<tr>
-<td><code>VERBOSE_EVAL</code></td>
-<td>HCE feature displays.</td>
-</tr>
-<tr>
-<td><code>DEBUG_HASH</code>, <code>DEBUG_PHASH</code>, <code>DEBUG_NONPAWNHASH</code></td>
-<td>Incremental key consistency.</td>
-</tr>
-<tr>
-<td><code>DEBUG_MATERIAL</code>, <code>DEBUG_BITBOARD</code></td>
-<td>Representation consistency.</td>
-</tr>
-<tr>
-<td><code>DEBUG_NNUE_UPDATE</code></td>
-<td>Incremental evaluator checks.</td>
-</tr>
-<tr>
-<td><code>DEBUG_APPLY</code>, <code>DEBUG_GENERATION</code>, <code>DEBUG_PSEUDO_LEGAL</code></td>
-<td>Move-path assertions/diagnostics.</td>
-</tr>
-<tr>
-<td><code>DEBUG_FIFTY_COLLISION</code></td>
-<td>Repetition hash comparison diagnostics.</td>
-</tr>
-<tr>
-<td><code>REPRODUCTIBLE_RESULTS</code></td>
-<td>Extra state clearing between searches.</td>
-</tr>
-</tbody>
-</table>
-<p>Some debug gates are mutually incompatible or require assertions. The current
-<code>DEBUGMINIC</code> script path still includes <code>-DNDEBUG</code>; debug symbols alone do not
-enable <code>assert</code>. Check actual compiler flags when expecting invariant failures.</p>
-<p>There is no separate repository lint command. Format changed C++ with the
-repository's clang-format configuration and preserve surrounding style.
-Documentation-only edits do not require rebuilding the engine.</p>
+<h2 id="chapter-development-runtime-options-and-their-registration">Runtime options and their registration</h2>
+<p>A runtime option is a <code>DynamicConfig</code> global, declared in
+<a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/dynamicConfig.hpp">dynamicConfig.hpp</a>, given its default in
+<a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/dynamicConfig.cpp">dynamicConfig.cpp</a>, and registered in
+<code>registerCOMOptions()</code> in <a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/option.cpp">option.cpp</a> with a protocol
+name, a type, a widget, a range and an optional callback:</p>
+<pre><code class="language-cpp">   _keys.emplace_back(k_int,   w_spin,  &quot;Hash&quot;                        , &amp;DynamicConfig::ttSizeMb                       , (unsigned int)1  , (unsigned int)256000                , &amp;TT::initTable);
+   _keys.emplace_back(k_int,   w_spin,  &quot;PawnHash&quot;                    , &amp;DynamicConfig::ttPawnSizeMb                   , (unsigned int)1  , (unsigned int)4096                  , &amp;ThreadPool::initPawnTables);
+   _keys.emplace_back(k_int,   w_spin,  &quot;Threads&quot;                     , &amp;DynamicConfig::threads                        , (unsigned int)1  , (unsigned int)(MAX_THREADS-1)       , std::bind(&amp;ThreadPool::setup, &amp;ThreadPool::instance()));
+</code></pre>
+<p>The registry produces both the UCI <code>option name ...</code> list and the XBoard
+<code>feature option=...</code> list, so one registration serves both protocols. The
+callback runs after a successful change; it is what makes <code>Hash</code> reallocate the
+TT and <code>Threads</code> recreate the workers.</p>
+<p><code>Options::SetValue()</code> validates what it receives. A boolean must parse
+completely (<code>true</code>/<code>false</code>, with <code>0</code>/<code>1</code> mapped), an integer must parse
+completely and lie inside the range registered for the option, and an
+unsigned value cannot be negative. A rejected value is logged as a warning and
+the option keeps its previous value, so a typo in a GUI configuration or a
+tuning script does not silently install an out-of-range parameter:</p>
+<pre><code class="language-cpp">      if (parsedValue &lt; keyRef.vmin || parsedValue &gt; keyRef.vmax) {
+         Logging::LogIt(Logging::logWarn) &lt;&lt; &quot;Rejected out-of-range option &quot; &lt;&lt; key &lt;&lt; &quot;=&quot; &lt;&lt; parsedValue
+                                          &lt;&lt; &quot; (expected &quot; &lt;&lt; keyRef.vmin &lt;&lt; &quot;..&quot; &lt;&lt; keyRef.vmax &lt;&lt; &quot;)&quot;;
+         return false;
+      }
+</code></pre>
+<p>Any change is also refused while the main worker is searching.</p>
+<p>The same globals can be set on the command line with <code>-&lt;identifier&gt; &lt;value&gt;</code>,
+using the <code>DynamicConfig</code> identifier rather than the protocol name, for
+instance <code>-ttSizeMb 256 -threads 4</code>. <code>initOptions()</code> reads them with <code>GETOPT</code>
+before any table is allocated:</p>
+<pre><code class="language-cpp">#define GETOPT(name, type)              Options::getOption&lt;type&gt;(DynamicConfig::name, #name);
+</code></pre>
+<p><code>getOption()</code> extracts the value with <code>operator&gt;&gt;</code> and does <strong>not</strong> apply the
+registered range: command-line values bypass the protocol validation, and a
+boolean must be written <code>1</code> or <code>0</code> there. A few globals are only reachable
+this way, for example <code>-disableTT</code>, <code>-debugMode</code> and <code>-minOutputLevel</code>.</p>
+<p>To add a runtime option: declare and define the global, register it with the
+type matching the C++ variable (<code>k_bool</code>, <code>k_depth</code>, <code>k_int</code>, <code>k_score</code>,
+<code>k_ull</code>, <code>k_string</code>), add a callback if a structure must be rebuilt, add a
+<code>GETOPT</code> line if it is useful on the command line, and read the global where
+it is used.</p>
 <h3 id="chapter-development-selected-runtime-defaults">Selected runtime defaults</h3>
 <p>These identifiers refer to <a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/dynamicConfig.cpp">dynamicConfig.cpp</a>;
 network initialization and option callbacks can change the active values.</p>
@@ -7625,7 +7903,7 @@ network initialization and option callbacks can change the active values.</p>
 <td>344 / 315.</td>
 </tr>
 <tr>
-<td><code>forceNNUE</code>, <code>limitStrength</code>, <code>withWDL</code></td>
+<td><code>forceNNUE</code>, <code>limitStrength</code>, <code>withWDL</code>, <code>mateFinder</code>, <code>disableTT</code></td>
 <td>False.</td>
 </tr>
 </tbody>
@@ -7633,31 +7911,132 @@ network initialization and option callbacks can change the active values.</p>
 <p><code>useNNUE</code> begins false and becomes true after successful loading. It is not
 equivalent to the build gate or the availability of an embedded filename.
 For the advertised protocol option names, ranges and callbacks, consult
-the option registry rather than assuming they match these identifiers exactly.</p>
-<p><code>Options::SetValue()</code> validates what it receives. A boolean must parse
-completely (<code>true</code>/<code>false</code>, with <code>0</code>/<code>1</code> mapped), an integer must parse
-completely and lie inside the range registered for the option, and an
-unsigned value cannot be negative. A rejected value is logged as a warning and
-the option keeps its previous value, so a typo in a GUI configuration or a
-tuning script does not silently install an out-of-range parameter.</p>
-<pre><code class="language-cpp">if (parsedValue &lt; keyRef.vmin || parsedValue &gt; keyRef.vmax) {
-   Logging::LogIt(Logging::logWarn) &lt;&lt; &quot;Rejected out-of-range option &quot; &lt;&lt; key &lt;&lt; &quot;=&quot; &lt;&lt; parsedValue
-                                    &lt;&lt; &quot; (expected &quot; &lt;&lt; keyRef.vmin &lt;&lt; &quot;..&quot; &lt;&lt; keyRef.vmax &lt;&lt; &quot;)&quot;;
-   return false;
-}
-</code></pre>
-<p>Parameters that only exist in a search-tuning build (<code>WITH_SEARCH_TUNING</code>),
-such as the move-ordering bonuses, the history divisors or the continuation
-weights, are registered through the same mechanism and therefore obey the same
-ranges.</p>
-<h3 id="chapter-development-coverage-and-assertions">Coverage and assertions</h3>
-<p>CI's coverage path uses <a href="https://github.com/tryingsomestuff/Minic/blob/master/Tools/build/docov">Tools/build/docov</a>. It builds
-its own executable with GCC coverage instrumentation and exercises analysis,
-perft, SEE, evaluation, move/state diagnostics, UCI and XBoard scripts; it does
-not simply reuse the pytest tournament copy. <code>COV_PROFILE=full</code> adds the longer
-benchmark and perft runs, and <code>COV_FAIL_ON_ERROR=1</code> turns a failing step into a
-failing script. The resulting HTML report is published with the project's
-GitHub Pages site, next to this documentation.</p>
+the option registry rather than assuming they match these identifiers exactly.
+<code>MateFinder</code> is registered as a UCI option, but every <code>go</code> resets it and
+<code>go mate &lt;n&gt;</code> sets it again; in practice it is controlled by the <code>go</code> command,
+or by <code>-mateFinder</code> on the command line.</p>
+<h2 id="chapter-development-tuning-builds">Tuning builds</h2>
+<p>Three gates, all <strong>disabled by default</strong>, turn compiled constants into
+adjustable parameters. See also
+<a href="#chapter-disabled-features">disabled techniques</a>.</p>
+<p><code>WITH_SEARCH_TUNING</code> makes the <code>CONST_SEARCH_TUNING</code> parameters of
+<a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/searchConfig.cpp">searchConfig.cpp</a> mutable and registers them as
+UCI spin options (aspiration, null move, pruning coefficients, ordering
+bonuses, history divisors, <code>CMHWeight0</code> to <code>CMHWeight3</code>, correction-history
+limits...). Their registered ranges are checked like any other option.
+<code>-spsa</code> then prints one line per numeric option, in the
+<code>name, int, value, min, max, step, learning rate</code> format used by SPSA tuners:
+the bounds are about plus or minus 50 % of the current value, clipped to the
+registered range. <a href="https://github.com/tryingsomestuff/Minic/blob/master/Tools/fit/sprt_tune.py">Tools/fit/sprt_tune.py</a>
+discovers these options over UCI and tunes them one at a time with
+cutechess-cli SPRT matches; <a href="https://github.com/tryingsomestuff/Minic/blob/master/Tools/fit/ax_tune.py">Tools/fit/ax_tune.py</a> is
+a Bayesian-optimization alternative.</p>
+<p><code>WITH_EVAL_TUNING</code> makes evaluation terms mutable and adds the
+<code>-tuning &lt;epd file&gt;</code> command, a Texel-style optimizer that fits handcrafted
+evaluation parameters to game results stored in an EPD file.
+<code>WITH_PIECE_TUNING</code> additionally exposes piece values. These builds are slower
+and are not meant for play.</p>
+<h2 id="chapter-development-debug-gates">Debug gates</h2>
+<p><code>WITH_STATS</code> is normally enabled and records main/qnodes, TT/cache hits,
+cutoffs and heuristic activity. Statistics help distinguish a missing gate
+from a merely unhelpful heuristic.</p>
+<p>The following opt-in gates are commented out in
+<a href="https://github.com/tryingsomestuff/Minic/blob/master/Source/config.hpp">config.hpp</a>; enable one by uncommenting it and
+rebuilding:</p>
+<table>
+<thead>
+<tr>
+<th>Gate</th>
+<th>Diagnostic use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>WITH_TIMER</code></td>
+<td>Timing categories for engine work.</td>
+</tr>
+<tr>
+<td><code>WITH_BETACUTSTATS</code></td>
+<td>Cutoff-source statistics, printed after <code>bench</code>.</td>
+</tr>
+<tr>
+<td><code>VERBOSE_EVAL</code></td>
+<td>HCE feature displays.</td>
+</tr>
+<tr>
+<td><code>DEBUG_HASH</code>, <code>DEBUG_PHASH</code>, <code>DEBUG_NONPAWNHASH</code></td>
+<td>Recompute keys and compare them with the incremental ones.</td>
+</tr>
+<tr>
+<td><code>DEBUG_MATERIAL</code>, <code>DEBUG_BITBOARD</code></td>
+<td>Representation consistency.</td>
+</tr>
+<tr>
+<td><code>DEBUG_NNUE_UPDATE</code></td>
+<td>Compare incremental and freshly rebuilt accumulators.</td>
+</tr>
+<tr>
+<td><code>DEBUG_APPLY</code>, <code>DEBUG_GENERATION</code>, <code>DEBUG_GENERATION_LEGAL</code>, <code>DEBUG_PSEUDO_LEGAL</code></td>
+<td>Move-path checks. The last two are mutually incompatible.</td>
+</tr>
+<tr>
+<td><code>DEBUG_STATICEVAL</code>, <code>DEBUG_EVALSYM</code></td>
+<td>Check evaluation shortcuts and color symmetry.</td>
+</tr>
+<tr>
+<td><code>DEBUG_HASH_ENTRY</code>, <code>DEBUG_TT_CHECK</code>, <code>DEBUG_KING_CAP</code>, <code>DEBUG_PERFT</code>, <code>DEBUG_BACKTRACE</code></td>
+<td>TT payload corruption tests, king-capture detection, perft and backtrace aids.</td>
+</tr>
+<tr>
+<td><code>DEBUG_FIFTY_COLLISION</code></td>
+<td>Report repetition hash matches between different positions.</td>
+</tr>
+<tr>
+<td><code>REPRODUCTIBLE_RESULTS</code></td>
+<td>Extra state clearing between searches.</td>
+</tr>
+</tbody>
+</table>
+<p>Some checks use <code>assert</code>. Every build script, including the <code>DEBUGMINIC</code> and
+sanitizer paths, compiles with <code>-DNDEBUG</code>, so debug symbols alone do not
+enable assertions: remove <code>-DNDEBUG</code> from the flags when an invariant failure
+is expected.</p>
+<p>There is no separate repository lint command. Format changed C++ with the
+repository's clang-format configuration (Google-based, 3-space indentation,
+150 columns) and preserve surrounding style.</p>
+<h2 id="chapter-development-continuous-integration-and-coverage">Continuous integration and coverage</h2>
+<p>The GitHub Actions workflow runs on pushes and pull requests to <code>master</code>. It
+builds the engine with <code>make</code>, then runs
+<a href="https://github.com/tryingsomestuff/Minic/blob/master/Tools/build/docov">Tools/build/docov</a>. That script builds
+its own executable with GCC coverage instrumentation (<code>--coverage</code>, <code>-O3</code>,
+<code>DEBUG_TOOL</code>), runs a fixed list of workloads (analysis, perft, <code>bench</code>,
+self-play, the SEE and perft regression commands, time simulation, evaluation,
+move generation, KPK, a scripted UCI session and a scripted XBoard session),
+then produces an HTML report with <code>lcov</code>/<code>genhtml</code>. It does not reuse the
+pytest tournament copy. Useful variables:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>COV_PROFILE=full</code></td>
+<td>Also runs <code>benchBig</code> and the long perft suites.</td>
+</tr>
+<tr>
+<td><code>COV_FAIL_ON_ERROR=1</code></td>
+<td>Exit with an error if any step failed (otherwise failures are only counted).</td>
+</tr>
+<tr>
+<td><code>SYZYGY_PATH=&lt;dir&gt;</code></td>
+<td>Adds tablebase analysis and probing when the directory exists.</td>
+</tr>
+</tbody>
+</table>
+<p>On <code>master</code>, the report is published on the project's GitHub Pages site.</p>
 <p>Coverage checks that a path was exercised, not that its heuristic is beneficial.
 For invariants, also use the corresponding debug checks with assertions enabled
 and focused special-move/stack tests.</p>
