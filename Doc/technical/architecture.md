@@ -2,6 +2,19 @@
 
 [Index](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/README.md) | [Next: positions and moves](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/positions-and-moves.md)
 
+## Repository layout
+
+| Directory | Content |
+|---|---|
+| [Source/](https://github.com/tryingsomestuff/Minic/blob/master/Source) | The engine: board, move generation, search, evaluation, protocols and developer tools. |
+| [Source/nnue/](https://github.com/tryingsomestuff/Minic/blob/master/Source/nnue) | NNUE inference code, weight loading and the learner/data-conversion code. |
+| [Fathom/](https://github.com/tryingsomestuff/Minic/blob/master/Fathom) | Syzygy tablebase probing library (git submodule), linked when present. |
+| [Train/](https://github.com/tryingsomestuff/Minic/blob/master/Train) | Python/PyTorch NNUE training pipeline; not part of the engine build. |
+| [Tools/](https://github.com/tryingsomestuff/Minic/blob/master/Tools) | Build scripts, tuning and analysis scripts, tournament helpers. |
+| [Test/](https://github.com/tryingsomestuff/Minic/blob/master/Test) | The pytest smoke tests that launch the built executable. |
+| [Book_and_Test/](https://github.com/tryingsomestuff/Minic/blob/master/Book_and_Test) | Opening books, test suites and tuning data. |
+| [Doc/](https://github.com/tryingsomestuff/Minic/blob/master/Doc) | This documentation. |
+
 ## Main source map
 
 | Source | Responsibility |
@@ -17,40 +30,138 @@
 
 ## Startup
 
-`minic()` initializes the engine before dispatching a developer command or a
-protocol loop. The significant order in `init()` is:
+`main()` in [minic.cpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/minic.cpp)
+only calls `minic()`, defined in
+[minic.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/minic.hpp).
+`minic()` **always** runs `init()` first, even for `-h`, so every invocation
+allocates the TT, the material table and the worker pool before looking at
+its command line. `init()` reads:
 
-1. Distributed runtime, options and logging.
-2. Zobrist keys and TT allocation.
-3. Board/attack masks, optional magic attacks, KPK and material knowledge.
-4. Evaluation configuration and the thread pool.
-5. Late distributed initialization, Syzygy and NNUE loading.
-6. `COM::init()`, root-position setup and optional energy monitoring.
+```cpp
+inline void init(int argc, char** argv) {
+   Distributed::init();
+   Logging::hellooo();
+   Options::initOptions(argc, argv);
+   Logging::init(); // after reading options
+   Zobrist::initHash();
+   TT::initTable();
+   BBTools::initMask();
+#ifdef WITH_MAGIC
+   BBTools::MagicBB::initMagic();
+#endif
+   KPK::init();
+   MaterialHash::MaterialHashInitializer::init();
+   EvalConfig::initEval();
+   ThreadPool::instance().setup();
+   Distributed::lateInit();
+#ifdef WITH_SYZYGY
+   SyzygyTb::initTB();
+#endif
+#ifdef WITH_NNUE
+   NNUEWrapper::init();
+#endif
+   COM::init(COM::p_uci); // let's do this ... (usefull to reset position in case of NNUE)
+   sizeOf();
+   // Start energy monitoring
+   initEnergyMonitor(500);
+}
+```
 
-Options and network availability affect later initialization. Merely compiling
-`WITH_NNUE` does not establish `DynamicConfig::useNNUE`; successful loading does.
-Similarly, compiled Syzygy support does not imply that table files are available.
+The order matters:
 
-At shutdown, the engine stops workers, waits for them, clears the pool's workers,
-finishes distributed operations and finalizes monitoring/logging. Do not destroy
-shared root information or weights while workers still reference them.
+- Command-line options (`-<identifier> <value>` pairs named after the
+  `DynamicConfig` globals, such as `-ttSizeMb 256`, see
+  [development](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/development.md#runtime-options-and-their-registration))
+  are read before logging is configured and before any table is sized, so the
+  TT size, pawn-cache size and thread count are known when the TT and the
+  worker pool are created.
+- Zobrist keys come before anything that hashes a position; attack masks
+  (and magic tables) come before KPK, whose bitbase generation uses them.
+- `NNUEWrapper::init()` sets `DynamicConfig::useNNUE` to true only if a network
+  was actually loaded. Merely compiling `WITH_NNUE` does not enable NNUE.
+  Similarly `SyzygyTb::initTB()` does nothing without a `syzygyPath`.
+- `COM::init()` comes last because it reads the start position into the
+  protocol root (which needs masks, hashes and, with NNUE, a loaded network)
+  and resets every worker's game state.
+- `sizeOf()` logs `sizeof(Position)` and `sizeof(Searcher::PVSData)`; it is
+  the quickest way to see the real size of the copy/make unit on a given build.
+
+After `init()`, `minic()` dispatches in this order: help (`-h`, `--help`...),
+the test-suite names when `WITH_TEST_SUITE` is compiled, `-tuning` with
+`WITH_EVAL_TUNING`, `-pgn` with `WITH_PGN_PARSER`, the data conversion commands
+(`-plain2bin`, `-pgn2bin`, `-bin2plain`, `-rescore`) with `WITH_DATA2BIN`, and
+finally `cliManagement()` when `DEBUG_TOOL` is defined. An empty command line
+becomes `-uci`. Without `DEBUG_TOOL` (not the default) the engine ignores its
+arguments for mode selection and enters UCI if `WITH_UCI` is compiled,
+XBoard otherwise. An Emscripten build skips all of this and exports
+`processCommand()`, which forwards one line to the UCI parser.
+
+`finalize()` stops workers, waits for them, destroys the pool's workers,
+synchronizes distributed processes, reports energy use and closes logging.
+Do not destroy shared root information or weights while workers still
+reference them.
+
+## Identifying a build
+
+The version reported by `uci` (`id name Minic ...`) and by the XBoard `myname`
+feature is built from `MinicBaseVersion` in
+[config.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/config.hpp), the six-character Git commit of the
+checkout and an optional `-dirty` suffix, for example `3.47-af45d8-dirty`.
+The build script generates the commit information; a build made outside a Git
+checkout reports `unknown`. `-dirty` marks tracked changes and new files under
+`Source`. With more than one MPI process, `MinicVersionWithProcessCount()`
+appends `_<n>proc`. Always record this string when comparing two binaries: it
+tells whether the executable matches a given commit.
 
 ## Three configuration layers
 
-**Build-time gates** in `config.hpp` remove or include code. Examples are NNUE,
-Syzygy, MPI, timers and tuning support.
+**Build-time gates** in `config.hpp` remove or include code with `#define`.
+They cannot be changed by any option: a compiled-out feature does not exist in
+the executable. The desktop configuration (anything not `WITH_SMALL_MEMORY`,
+which `ARDUINO`/`ESP32` select) enables `WITH_UCI`, `WITH_XBOARD`,
+`WITH_MAGIC`, `WITH_NNUE`, `WITH_STATS`, `WITH_MATERIAL_TABLE`,
+`WITH_ASYNC_ANALYZE`, `WITH_SYZYGY` (except with MSVC), `USE_SIMD_INTRIN`
+(except on Android), `USE_PARTIAL_SORT`, `DEBUG_TOOL` (forced), `WITH_TEST_SUITE`,
+`WITH_GENFILE`, `WITH_DATA2BIN` and the pawn and non-pawn correction histories.
 
 **Algorithm switches and parameters** in `searchConfig.*` control search
-heuristics. Many parameters are constants normally and become mutable in a
-search-tuning build through `CONST_SEARCH_TUNING`. Local `constexpr bool`
-switches in `depthPolicy()` are a further layer: a descriptive branch can exist
-but be compiled away.
+heuristics. They are `const` in a normal build and become mutable, and
+registered as options, in a search-tuning build through `CONST_SEARCH_TUNING`.
+Local `constexpr bool` switches in `depthPolicy()` are a further layer: a
+descriptive branch can exist but be compiled away.
 
 **Runtime options** live in `DynamicConfig`, registered through `Options`.
-They include hash sizes, threads, MultiPV, NNUE file/scaling, contempt, skill and
-variant settings. Some callbacks are delayed until `isready`; some operations
-cannot safely run during a search. Read the registration and callback together,
-not just the global's initial value.
+They include hash sizes, threads, MultiPV, NNUE file/scaling, contempt, skill,
+style and variant settings. Read the registration and its callback together,
+not just the global's initial value: `Hash` immediately reallocates and clears
+the TT, `PawnHash` reallocates every pawn cache, and `Threads` destroys and
+recreates every worker (with fresh pawn caches and cleared game state).
+`Options::SetValue()` refuses every change while the main worker is searching.
+The only UCI work deferred to `isready` is `Opponent::init()`, which applies
+`UCI_Opponent`/`UCI_RatingAdv` information.
+
+### Build gates that are off by default
+
+The following gates are commented out in
+[config.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/config.hpp)
+and are therefore **disabled by default**. Enabling one means uncommenting its
+`#define` (or passing `-D<GATE>` in the build definitions) and rebuilding. The
+complete inventory, including search and evaluation switches, is in
+[disabled features](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/disabled-features.md).
+
+| Gate | What it would do | Caveat visible in the code |
+|---|---|---|
+| `WITH_MPI` | Multi-process ("distributed") search sharing TT entries and statistics. | `build.sh` detects the uncommented line and switches to `mpiicpx`/`mpiicx`. |
+| `WITH_FMTLIB` | Colored "pretty" console output in CLI mode (`Pretty::init()`) and formatted search display. | Needs the `fmt` library; `build.sh` adds `-lfmt` only when the line is uncommented in `config.hpp`. |
+| `WITH_PGN_PARSER` | `-pgn <file>` command that converts a PGN file into an EPD-like `<file>.edp` position file. | Developer data tool, unrelated to play. |
+| `WITHOUT_FILESYSTEM` | For compilers lacking `std::filesystem`. | Also disables `WITH_GENFILE` and `WITH_DATA2BIN` and the network file-size check before loading. |
+| `LIMIT_THREADS_TO_PHYSICAL_CORES` | Caps `Threads` in `ThreadPool::setup()`. | The cap is `std::thread::hardware_concurrency()`, which counts logical, not physical, cores. |
+| `REPRODUCTIBLE_RESULTS` | Clears TT, pawn caches and all histories before every search, not only at new games. | Makes consecutive searches independent, at a strength cost; see [reset policy](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/tables-and-history.md#reset-policy). |
+| `WITH_TIMER` | `START_TIMER`/`STOP_AND_SUM_TIMER` accumulate `rdtsc` ticks per engine function and `Timers::Display()` prints them. | Without it the macros and `Display()` are empty. |
+| `WITH_BETACUTSTATS` | Classifies each PVS beta cutoff by move category (TT, good capture, killers, counter...) and prints the breakdown after `bench`/`benchBig`. | Both the collection (`updateStatBetaCut()` in PVS) and the display are gated. |
+| `WITH_SEARCH_TUNING`, `WITH_EVAL_TUNING`, `WITH_PIECE_TUNING` | Make search parameters, evaluation terms or piece values mutable and tunable. | See [tuning builds](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/development.md#tuning-builds). |
+| `WITH_NNUE_UNCERTAINTY`, `WITH_NNUE_PREFETCH`, `WITH_EVALSCORE_AS_INT`, `WITH_HORIZON_CORRHIST` | Network uncertainty head, NNUE row prefetch, packed `EvalScore`, depth-context correction history. | Described in the evaluation, NNUE and [tables](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/tables-and-history.md#move-and-correction-tables) chapters. |
+| `VERBOSE_EVAL`, `DEBUG_*` | Diagnostics and self-checks. | See [development](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/development.md#debug-gates). |
 
 ## Ownership boundaries
 
@@ -79,35 +190,46 @@ position startpos moves e2e4 e7e5
 go wtime 60000 btime 60000 winc 500 binc 500
 ```
 
-`ucinewgame` calls `COM::init()`, which resets the protocol root, worker game
-state and `GameInfo`. The optional previous-game PGN write precedes the reset.
+`ucinewgame` calls `COM::init()` (it is ignored with an `info string` while a
+search is running). `COM::init()` optionally appends the previous game to a PGN
+file (`PgnOut`), reads the start position into `COM::position`, clears
+`GameInfo`, resets opponent information and calls `ThreadPool::clearGame()`,
+which clears the TT and every worker's game state.
 
-`position` reads the initial FEN and applies the supplied moves to
-`COM::position`. In the documented working tree, it builds a temporary
-`GameInfo`; `replace()` preserves optional scores along the old history's
-unchanged prefix. A different initial position or divergent move invalidates
-scores beyond the common prefix.
+`position` first invalidates `COM::position` (its hash is set to `nullHash`),
+reads the initial position, then applies each move with `COM::makeMove()`,
+which rejects invalid or non-pseudo-legal moves before `applyMove()`. A `fen`
+is read as exactly six whitespace-separated fields. Every applied move is
+appended to a temporary `GameInfo`; `replace()` then installs it while
+preserving optional scores along the old history's unchanged prefix. A
+different initial position or a divergent move invalidates scores beyond the
+common prefix.
 
-`go` populates `TimeMan` limits and calls `COM::thinkAsync()`. That constructs
-`ThreadData`, allocates the initial time budget and passes the data to
-`ThreadPool::startSearch()`. Workers receive position copies, not ownership of
-the GUI position.
+`go` resets the limits and `DynamicConfig::mateFinder` (only `go mate <n>` sets
+it back to true), populates `TimeMan` and calls `COM::thinkAsync()`. That
+computes the move budget, constructs `ThreadData` from a copy of
+`COM::position` and passes it to `ThreadPool::startSearch()`. Workers receive
+position copies, not ownership of the GUI position.
 
 The main searcher runs iterative deepening, eventually selects a result and
 publishes the searched root's score. `COM::receiveMoves()` then reports the
 move. An implementation detail is that it also applies the move to
-`COM::position`, even for UCI; the next `position` command reconstructs the
-authoritative game state. Do not interpret this as fully stateless UCI internals.
+`COM::position` (but does not append it to `GameInfo`), even for UCI; the next
+`position` command reconstructs the authoritative game state. Do not interpret
+this as fully stateless UCI internals.
 
 ## XBoard differences
 
 XBoard keeps a more explicitly stateful game: force/analyze/play modes,
 side-to-move bookkeeping, opponent moves and engine moves. `receiveOppMove()`
-and `moveApplied()` append played positions to `GameInfo`.
+(for `usermove`) and `moveApplied()` (after the engine's own move) append the
+played positions to `GameInfo`.
 
-Undo/remove uses `replay()`: reconstruct the remaining move sequence and retain
-scores only in the retained prefix. Setting a board or starting a new game
-resets history rather than inventing moves preceding the supplied position.
+Undo/remove uses `replay()`: reconstruct the remaining move sequence from the
+initial position and retain scores only in the retained prefix. `setboard`
+and `new` reset history rather than inventing moves preceding the supplied
+position. `new` also switches Chess960 off; `variant fischerandom` switches
+it on.
 
 Move legality and variant behavior are shared with the engine core; the
 protocols do not each maintain independent board implementations.
@@ -129,9 +251,11 @@ or shared-state synchronization.
 ## Developer and auxiliary paths
 
 `DEBUG_TOOL` enables CLI operations such as perft, SEE, evaluation, qsearch and
-analysis. The desktop configuration forces this gate on. `WITH_TEST_SUITE`
-adds tactical/position-suite machinery; data generation/conversion and tuning
-have additional gates.
+analysis (listed in
+[development](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/development.md#focused-engine-diagnostics)).
+The desktop configuration forces this gate on. `WITH_TEST_SUITE` adds
+tactical/position-suite machinery; data generation/conversion and tuning have
+additional gates.
 
 Not every `searchDriver()` invocation represents the live GUI game.
 `subSearch` marks auxiliary work; `postMove` controls move reporting. The current

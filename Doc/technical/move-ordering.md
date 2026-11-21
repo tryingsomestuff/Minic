@@ -1,6 +1,6 @@
 # Move ordering and picking
 
-[Index](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/README.md) | [Next: evaluation](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/evaluation.md)
+[Index](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/README.md) | [Previous: search](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/search.md) | [Next: tables and history](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/tables-and-history.md)
 
 Primary sources: [moveSort.cpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/moveSort.cpp),
 [moveSort.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/moveSort.hpp), [tables.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/tables.hpp),
@@ -30,7 +30,7 @@ tail, but does not avoid generating that tail.
 A nonzero existing score is left unchanged, allowing reuse of ProbCut-scored
 captures. `score()` skips lists with fewer than two entries.
 
-| Category | Base/bonus in the documented source |
+| Category | Default base/bonus |
 |---|---|
 | Ordinary quiet | Base 0. |
 | Castling | Base 256. |
@@ -62,8 +62,14 @@ With SEE enabled outside check, add the exchange score and a 512 recapture
 bonus when applicable. If SEE is below `DynamicConfig::badCapLimit`, subtract
 twice the capture base, moving the capture towards the end of the list.
 
-Without SEE, or while in check, add MVV-LVA, recapture and capture-history
-bonuses instead. Thus capture history is not directly added by this scorer's
+Without SEE, or while in check, add the 512 recapture bonus,
+`capMMLVAMultiplicator * MvvLvaScores[victim][attacker]` (factor 2, table
+entries `20 * value(victim) - value(attacker)` on the scale P=1, N=2, B=3,
+R=5, Q=9, K=20, so a pawn taking a queen gives 2 * 179) and capture history divided by
+`capHistoryDivisor` (4) instead. *MVV-LVA* (most valuable victim, least
+valuable attacker) is the classical cheap capture order: take the biggest
+piece first, preferably with the smallest attacker. Quiescence always scores
+this way (`useSEE` false), while PVS and ProbCut use SEE. Thus capture history is not directly added by this scorer's
 normal SEE branch, although it is still used for capture pruning/reduction.
 Promotion ordering uses its own bases rather than this ordinary-capture path.
 
@@ -98,11 +104,26 @@ Without a killer/counter match:
 ```text
 score += from/to history / fromToHistoryDivisor
        + piece/to history / pieceToHistoryDivisor
-       + pawn-hash/piece/destination history / PawnHistoryDivisor
+       + pawn-hash/piece/destination history / pawnHistoryDivisor
        + weighted CMH / cmhHistoryDivisor
 ```
 
-The three existing divisors and `PawnHistoryDivisor` currently equal 3.
+In `MoveSorter::computeScore()` these terms read:
+
+```cpp
+s += context.historyT.getFromToHistory(p.c, from, correctedTo) / SearchConfig::fromToHistoryDivisor;
+s += context.historyT.getPieceToHistory(pp, correctedTo)       / SearchConfig::pieceToHistoryDivisor;
+s += context.historyT.getPawnHistory(p, pp, correctedTo)       / SearchConfig::pawnHistoryDivisor;
+s += context.getCMHScore(p, from, correctedTo, cmhPtr)         / SearchConfig::cmhHistoryDivisor;
+```
+
+Each history is bounded by `HISTORY_MAX = 1024`, so with divisors of 3 every
+learned term contributes at most 341 points and the four of them at most about
+1365. They therefore only reorder moves inside the quiet class (base 0), far
+below the capture base, the TT move and the root-best bonus.
+
+The four divisors currently equal 3; the UCI option for `pawnHistoryDivisor` is
+registered as `PawnHistoryDivisor`.
 Pawn history uses a 512-entry direct-mapped bucket table keyed by the low bits
 of Minic's cached `p.ph`, then colored moved piece and destination square.
 `p.ph` includes both kings as well as pawns, unlike pawn-only keys used by some
@@ -131,7 +152,8 @@ The implementation uses `min_element` with a descending comparator; this is
 why it still selects the largest score.
 
 PVS uses `pickNextLazy()`, which permanently sets `skipSort` for that sorter when
-the previous picked score drops below its threshold, or when the caller says
+the previous picked score drops below its threshold (`lazySortThreshold`,
+-491), or when the caller says
 the list is already sorted. Once set, later entries are consumed in their
 current order. Production qsearch instead calls `pickNext()` repeatedly without
 the lazy cutoff; `lazySortThresholdQS` exists but its use is commented out.
@@ -154,6 +176,7 @@ The worker-local tables are:
 | `history` | Side to move, from square, to square. |
 | `historyP` | Colored moved piece, destination. |
 | `historyCap` | Colored moved piece, destination, captured piece kind. |
+| `pawnHistory` | Pawn-and-king hash bucket (512), colored moved piece, destination. |
 | `counter_history` | Context moved piece/destination, current moved piece/destination. |
 
 From/to, piece/to and capture history initialize to zero; continuation entries
@@ -165,6 +188,12 @@ normally persist through searches in the same game.
 Piece indices include color; capture-history victim indices use only the
 captured piece kind. Destinations are supplied by callers: these accessors
 do not perform castling correction. CMH continues to use cached row pointers.
+
+The history tables are *butterfly* statistics: they record how often moves
+with the same key were good. A move that produces a beta cutoff is rewarded,
+the quiet moves that were tried before it without cutting off are penalized, and
+the *gravity* term pulls a value back towards zero as it approaches the bounds,
+so that old information fades and values stay inside a known range.
 
 The depth bonus and gravity update are:
 
@@ -180,10 +209,25 @@ The damping scale is `HISTORY_MAX = 1024`. Capping the depth at 16 keeps
 `HSCORE` within that range while preserving the original factor of 4.
 `HISTORY_UPDATE` also caps effective bonuses after contextual weighting:
 CMH ratios can otherwise exceed 1024.
-The original gravity formula then preserves `[-1024,1024]` without clamping
-stored entries, and a zero bonus leaves the entry unchanged. Updates through
-depth 16 with unscaled bonuses retain the old behavior; larger bonuses now
-saturate at 1024. This change needs a separate playing-strength comparison.
+The gravity formula then preserves `[-1024,1024]` without clamping
+stored entries, and a zero bonus leaves the entry unchanged. Depths above 16
+no longer increase the bonus, and larger weighted bonuses saturate at 1024.
+
+```cpp
+constexpr ScoreType HISTORY_UPDATE(const ScoreType item, const int bonus) {
+   ...
+   const int boundedBonus = std::clamp(bonus, -static_cast<int>(HISTORY_MAX), static_cast<int>(HISTORY_MAX));
+   const int updated = item + boundedBonus - HISTORY_DIV(item * Abs(boundedBonus));
+   ...
+   return static_cast<ScoreType>(updated);
+}
+```
+
+For example, with `item = 512` and `bonus = 256`, the update gives
+`512 + 256 - (512 * 256 >> 10) = 640`: the gain shrinks as the entry grows, and
+a negative bonus applied to an already large positive entry removes
+proportionally more. `HistoryT::update<S>()` applies this function to the
+from/to, piece/to and pawn tables, and, with weights, to each available CMH row.
 
 Quiet history updates require `T_std`: castling and quiet promotions do not
 use that update function. Capture history accepts `isCaptureNoEP`, which includes
@@ -198,16 +242,29 @@ Earlier entries are not an explicit record of exclusively searched moves:
 some can have been skipped/pruned. Changing list layout can therefore change
 learning as well as search order.
 
-## Four-distance continuation history
+## Continuation history
 
-Current constants:
+*Continuation history* (counter-move history, CMH) scores a candidate quiet
+move in the context of an earlier move: "after the piece that just landed on
+square X, how good was moving piece Y to square Z?". It captures patterns such
+as responses to a specific threat that plain from/to history cannot express.
 
-| Prior-move distance | Context stack offset | Weight |
+The infrastructure supports four context distances. The default weights enable
+only the first:
+
+| Prior-move distance | Context stack offset | Default weight (`CMHWeight`) |
 |---|---|---|
 | 1 | Current position's `lastMove` | 8 |
-| 2 | One position slot back | 6 |
-| 4 | Three position slots back | 4 |
-| 6 | Five position slots back | 2 |
+| 2 | One position slot back | 0 |
+| 4 | Three position slots back | 0 |
+| 6 | Five position slots back | 0 |
+
+The weights are `SearchConfig::CMHWeight` and the distances are `CMH_DISTANCE`
+in [tables.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/tables.hpp). With search tuning enabled, the weights
+are the options `CMHWeight0` to `CMHWeight3`; the first one must stay positive
+because it normalizes learning (see below). Raising a later weight re-enables
+that distance for both scoring and learning. A zero weight leaves the row
+pointer computed but contributes neither score nor update.
 
 The table row is selected from the colored piece on the prior move's corrected
 destination in its resulting position. The column is the candidate moved
@@ -218,6 +275,24 @@ moves by the same side as the candidate. Four pointers reference the same
 `counter_history` storage; there is no independent distance dimension.
 Repeated contexts may therefore refer to the same row.
 
+```cpp
+void Searcher::getCMHPtr(const unsigned int ply, CMHPtrArray& cmhPtr) {
+   cmhPtr.fill(nullptr);
+   for (unsigned int k = 0; k < SearchConfig::MAX_CMH_PLY; ++k) {
+      if (ply < CMH_DISTANCE[k]) continue;
+      const unsigned int contextPly = ply - (CMH_DISTANCE[k] - 1);
+      assert(contextPly < MAX_PLY);
+      if (contextPly < rootHalfmoves) continue;
+      if (isValidMove(stack[contextPly].p.lastMove)) {
+         const Position & pRef = stack[contextPly].p;
+         const Square to = correctedMove2ToKingDest(pRef.lastMove);
+         const int ptIdx = PieceIdx(pRef.board_const(to));
+         cmhPtr[k] = &historyT.counter_history[ptIdx][to];
+      }
+   }
+}
+```
+
 `getCMHPtr()` checks valid last moves and refuses contexts before
 `rootHalfmoves`. A root can still supply distance 1 if its own `lastMove` is
 valid; older game contexts are not reconstructed from `GameInfo`.
@@ -227,14 +302,16 @@ The ordering score normalizes only by available weights:
 $$
 H(m)=\operatorname{trunc}\!\left(
 \frac{\sum_{i\in I}w_i\,h_i(m)}{\sum_{i\in I}w_i}\right),
-\qquad (w_1,w_2,w_4,w_6)=(8,6,4,2).
+\qquad (w_1,w_2,w_4,w_6)=(8,0,0,0)\ \text{by default}.
 $$
 
 $I$ contains only available context distances, and $h_i(m)$ is the row's
 history score for candidate $m$.
 
 With no context it returns zero. Learning applies a bonus scaled by
-`weight[i] / weight[0]` to each available row.
+`weight[i] / weight[0]` to each available row. With the default weights, the
+average is therefore simply the distance-1 entry and later rows are never
+changed.
 
 `isCMHGood()` and `isCMHBad()` inspect **only pointer 0**. An absent pointer
 satisfies neither predicate. Multidistance ordering/learning does not make
@@ -242,8 +319,12 @@ the pruning test multidistance too.
 
 ## Worked continuation/history example
 
-Suppose distances 1/2/4 have available entries `320, 100, -80`, while distance
-6 is unavailable:
+With the default weights, a candidate whose distance-1 entry is 320 gets
+`weightedCMH = 8*320 / 8 = 320`.
+
+To illustrate the normalization, suppose instead that the weights were
+8/6/4/2 and distances 1/2/4 have available entries `320, 100, -80`, while
+distance 6 is unavailable:
 
 ```text
 weightedCMH = (8*320 + 6*100 + 4*(-80)) / (8+6+4)
@@ -252,7 +333,7 @@ weightedCMH = (8*320 + 6*100 + 4*(-80)) / (8+6+4)
 
 The absent context contributes neither zero times its weight nor its weight
 to the denominator. With from/to history 192, piece/to history 96 and PST
-improvement 30, a generic quiet receives:
+improvement 30 (and ignoring pawn history), a generic quiet receives:
 
 ```text
 192/3 + 96/3 + 157/3 + 30/2 = 64 + 32 + 52 + 15 = 163
@@ -262,10 +343,11 @@ This assumes no killer/counter/escape/root bonus. The divisions truncate
 individually. Summing all numerators before dividing produces a different
 score in general.
 
-At learning depth 4, `HSCORE(4) = 64`. Continuation bonuses before damping
-are 64/48/32/16 for distances 1/2/4/6, respectively. If contexts alias the
-same row, the actual updates are successive gravity operations on that row,
-not one update on four independent tables.
+At learning depth 4, `HSCORE(4) = 64`. In that same hypothetical
+configuration, continuation bonuses before damping are 64/48/32/16 for
+distances 1/2/4/6, respectively. If contexts alias the same row, the actual
+updates are successive gravity operations on that row, not one update on four
+independent tables.
 
 ## SEE algorithm and scope
 
@@ -282,9 +364,34 @@ set has no opposing piece. Pinned attackers are not filtered by recursively
 applying each exchange as a fully legal position.
 
 Thus SEE is a local exchange estimate, not a replacement for legality or an
-oracle for forks/checking sequences. Its initial EP handling has its own
-special occupancy expression; audit it separately rather than assuming ordinary
-capture geometry covers EP.
+oracle for forks/checking sequences. For en passant, the initial victim value
+is a pawn, but the occupancy mask removes the en-passant target square
+(`p.ep`, already empty) rather than the square of the captured pawn, so that
+pawn still blocks slider x-rays in the exchange. A commented early exit in the
+swap loop (its comment says it does not change the result) is disabled.
+
+## Disabled ordering ideas
+
+Several ordering ideas are present in the code but disabled by default. The
+engine-wide inventory, with enabling instructions, is
+[implemented but disabled techniques](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/disabled-features.md#move-ordering).
+
+| Idea | Gate | What it would do |
+|---|---|---|
+| Second killer from two plies earlier | Commented branch in `computeScore()` | Give `previousPlyKiller1Bonus` (1400) to `killers[height - 2][1]`. The parameter exists and is a tuning option, but has no effect. |
+| Former killers protected from pruning | Commented `isFormerKiller` term in `KillerT::isKiller()` ([tables.cpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/tables.cpp)) | Exempt the first killer of `height - 2` from per-move pruning, like current killers. |
+| King-evasion bonus | `//if (isInCheck && from == p.king[C]) s += 10000;` | Try king moves first when in check. |
+| Bad-capture variant | `/*see + pstScore < 0 &&*/` in the bad-capture test | Also require the PST hint not to compensate a negative SEE before demoting a capture. |
+| Full sort at non-cut nodes | `//if(!pvsData.cutNode) ms.sort(moves);` in `pvs()` (and the same idea in ProbCut) | Sort the whole list up front where no early cutoff is expected, instead of selecting move by move. |
+| Lazy selection in qsearch | `pickNext/*Lazy*/` with `lazySortThresholdQS` (-512) commented out | Stop selecting once scores fall below the threshold, as PVS does. |
+| Deeper continuation contexts | `CMHWeight = {8, 0, 0, 0}` | Distances 2, 4 and 6 are computed but weightless (see above). |
+| Tactical "noisy" quiets | Commented fork detection in `isNoisy()` ([searcherPVS.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/searcherPVS.hpp)) | Treat a pawn or knight move attacking two enemy pieces as noisy, so that it escapes quiet pruning and quiet cutoff learning (LMR would still treat it as an ordinary quiet, since `depthPolicy()` tests the move type). |
+
+`USE_PARTIAL_SORT` is defined in
+[config.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/config.hpp).
+The alternative full-sort branch of the `pvs()` move loop calls
+`MoveSorter::scoreAndSort(moves)`, a non-static member, without a sorter
+object, so undefining the macro requires fixing that branch first.
 
 ## Ordering score as a selectivity input
 
@@ -303,6 +410,12 @@ thresholds.
 Keep CMH weights, score normalization and learning scale consistent. Separately
 test ordering changes and pruning/reduction changes when possible.
 
-Pawn history would be another contextual move-ordering signal, not the existing
-pawn evaluation cache or pawn correction history. Likewise, continuation
-correction would learn evaluation residuals, not beta-cutoff move quality.
+Pawn history is a contextual move-ordering signal, distinct from the pawn
+evaluation cache and from pawn correction history, which learns evaluation
+residuals rather than beta-cutoff move quality. Likewise, a continuation
+correction (not implemented) would also learn evaluation residuals.
+
+The `-pawnhistory_test` developer command (see
+[development](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/development.md)) checks the bounded history
+update, the accessor mapping, pawn-history learning and reset, and its
+contribution to quiet ordering.

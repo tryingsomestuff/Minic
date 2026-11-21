@@ -11,10 +11,21 @@ and [featureTransformer.hpp](https://github.com/tryingsomestuff/Minic/blob/maste
 define accumulators;
 [evaluator.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/nnue/evaluator.hpp)
 defines topology;
+[weight.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/nnue/weight.hpp),
 [weightReader.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/nnue/weightReader.hpp)
-defines loading;
+and [quantization.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/nnue/quantization.hpp)
+define the file format, loading and quantization;
 [model.py](https://github.com/tryingsomestuff/Minic/blob/master/Train/model.py)
 defines training/export.
+
+NNUE stands for "efficiently updatable neural network": a network whose first
+layer is a huge but very sparse affine map, so that its output (the
+*accumulator*) can be derived from the parent position by adding and removing a
+few rows when a move is played (the child's evaluator starts as a copy of the
+parent's), and only a small dense network is evaluated from scratch at each
+node. This chapter gives the exact definitions; the
+[evaluation overview](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/evaluation.md)
+explains how the network output is turned into an engine score.
 
 ## What an input feature means
 
@@ -26,6 +37,10 @@ piece square
 piece kind
 whether the piece belongs to the perspective or its opponent
 ```
+
+This family of inputs is usually called **HalfKA**: "half" because each network
+input set only describes the board relative to one king, and "KA" for *king* times
+*all pieces*.
 
 There are `64 * (12 * 64) = 49152` indices. `FeatureIdx::major = 768` is the
 stride per king square; `minor = 64` is the stride per colored piece kind.
@@ -39,6 +54,16 @@ indexUs(k, s, p)   = 768 * HFlip(k) + HFlip(s) + usOffset(p)
 indexThem(k, s, p) = 768 * HFlip(k) + HFlip(s) + themOffset(p)
 HFlip(square)     = square XOR 7
 getBlock(square)  = square
+```
+
+```cpp
+[[nodiscard]] static constexpr size_t NNUEIndiceUs(const Square ksq, const Square s, const Piece p) {
+   return nnue::FeatureIdx::major * getBlock(HFlip(ksq)) + HFlip(s) + nnue::FeatureIdx::usOffset(p);
+}
+
+[[nodiscard]] static constexpr size_t NNUEIndiceThem(const Square ksq, const Square s, const Piece p) {
+   return nnue::FeatureIdx::major * getBlock(HFlip(ksq)) + HFlip(s) + nnue::FeatureIdx::themOffset(p);
+}
 ```
 
 **The horizontal flip is unconditional.** It is not king-file-dependent
@@ -87,12 +112,38 @@ at every position. Reset copies 384 biases and inserts one 384-row per occupied
 square. There are two parameter sets, `weights.w` and `weights.b`, not one
 shared transformer reused with only a color flip.
 
+```cpp
+FORCE_FINLINE void clear() {
+   assert(weights_);
+   active_.from(weights_->b);
+}
+...
+FORCE_FINLINE void insert(const size_t idx) {
+   assert(weights_);
+   weights_->insertIdx(idx, active_);
+}
+```
+
+```cpp
+FORCE_FINLINE void insertIdx(const size_t idx, StackVector<BIT, nbB, Q>& x) const {
+   const WIT* wPtr = W + idx * dim1;
+   x.add_(wPtr);
+}
+```
+
+These are `FeatureTransformer::clear()`, `FeatureTransformer::insert()` and
+`InputLayer::insertIdx()`; `erase` subtracts the same row. The matrix is stored
+with one contiguous 384-value row per feature index.
+
 The model learns a king-conditioned linear summary; nonlinearity occurs when
 the resulting accumulators are activated. Incremental updates are possible
 because removing/adding a feature is subtracting/adding its row.
 
 ## Exact dense topology
 
+A **clipped ReLU** is the activation $\operatorname{clip}(x)=\min(\max(x,0),1)$:
+like a ReLU it zeroes negative values, but it also saturates at 1, which keeps
+every activation in a small fixed range (convenient for quantized arithmetic).
 Let `clip(x) = min(max(x, 0), 1)`. In the normal SIMD path:
 
 ```text
@@ -111,7 +162,28 @@ optional logVariance = Wvariance*y2 + bvariance
 
 The final scalar is not clipped with ReLU. The skip connections are
 **concatenations**, not residual sums. Earlier activated values remain directly
-available to later layers and the output.
+available to later layers and the output. In the SIMD implementation each layer
+writes its result right after the copy of the previous values, which realizes
+the concatenation without an extra pass:
+
+```cpp
+auto x1 = layer.fc0.forward(x0).activation_();
+
+StackVector<BT, 16, Q> x2;
+simdCopy_f32<8>(x2.data, x1.data);
+layer.fc1.forwardTo(x1, x2.data + 8);
+simdActivation<8, Q>(x2.data + 8);
+
+StackVector<BT, 24, Q> x3;
+simdCopy_f32<16>(x3.data, x2.data);
+layer.fc2.forwardTo(x2, x3.data + 16);
+simdActivation<8, Q>(x3.data + 16);
+
+const float eval = layer.fc3.forward(x3).data[0];
+```
+
+The function finally returns `eval * Quantization<Q>::outFactor` (600) together
+with the variance (or its placeholder).
 
 With $\phi(v)=\operatorname{clip}(v,0,1)$ applied componentwise, the dense
 relationships are:
@@ -163,9 +235,12 @@ This is phase based, not a literal piece-count bucket. Pawn and different
 non-pawn material contribute different phase weights. Crossing the threshold
 can select a different dense function without changing the feature layout.
 
-The C++ sparse trainer computes phase from its own copied material constants;
-ordinary engine evaluation can obtain quantized phase from the material table.
-Near 0.45, verify both paths rather than assuming identically rounded selection.
+The C++ sparse trainer computes phase from its own copied material constants
+(as a float); ordinary engine evaluation can obtain the phase from the material
+table, which stores it as `(uint8_t)(255 * phase)` and reads it back as
+`value / 255`. Because of that truncation a position whose exact phase is just
+above 0.45 can be seen below it by the engine. Near 0.45, verify both paths
+rather than assuming identically rounded selection.
 Commented king-bucket and occupancy-count alternatives are inactive.
 
 ## Parameter and byte accounting
@@ -196,9 +271,33 @@ accumulators are not.
 
 ## Quantization and numerical limits
 
+*Quantization* represents real numbers as small integers: a value $v$ is stored
+as $\operatorname{round}(q v)$ for a scale $q$ and divided by $q$ when used.
+Here only the first layer is quantized, because it holds nearly all of the
+parameters and is updated by additions, which are exact in integer arithmetic.
 Disk parameters are floats. Input rows/biases become
 `round(floatValue * 512)` in signed 16-bit storage. The loader logs and clamps
 out-of-range individual weights/biases.
+
+```cpp
+// if quantization is active and we overflow, just clamp and warn
+if (Q && Abs(tmp * Wscale) > (NT)std::numeric_limits<T>::max()) {
+   NT tmp2 = tmp;
+   tmp = std::clamp(tmp2 * Wscale, (NT)std::numeric_limits<T>::lowest(), (NT)std::numeric_limits<T>::max());
+   Logging::LogIt(Logging::logWarn) << "Overflow weight " << tmp2 << " -> " << tmp;
+}
+else {
+   tmp = tmp * Wscale;
+}
+dst[i] = static_cast<T>(Quantization<Q>::round(tmp));
+```
+
+The scale and its stated assumption are documented next to the constant
+in `quantization.hpp`, which refers to this chapter:
+`scale {512}; // 32*512 = 16384 and |weight| & |bias| < 0.6`. A legal position
+has at most 32 pieces and hence at most 32 active features, so a sum of 32
+rows stays far below the int16 limit of 32767 as long as the trained weights and
+biases keep their magnitude small.
 
 With input scale $q=512$, the normal SIMD path can be summarized as:
 
@@ -229,8 +328,9 @@ It is not a centipawn-error guarantee: the dense weights, subsequent activations
 and output scale determine how the error propagates.
 
 That per-parameter check does not prove every sum of active rows fits int16.
-`StackVector` incremental operations do not add an explicit accumulator
-saturation policy. Training/export must preserve reasonable ranges, and reset
+`StackVector` incremental operations use plain 16-bit adds and subtracts
+(`_mm256_add_epi16` and similar, not saturating ones), so an out-of-range sum would wrap
+around silently. Training/export must preserve reasonable ranges, and reset
 versus incremental comparisons should include crowded/material-unusual boards.
 
 Dense weights and biases remain float; this is not a fully integer NNUE.
@@ -245,8 +345,8 @@ compiler/ISA/FMA settings.
 
 ### Historical fully integer formulation
 
-The former standalone quantization note described a different design:
-integer dense weights/activations and wider integer biases/dot products.
+An earlier design proposal, kept here as a reference, described a different
+network: integer dense weights/activations and wider integer biases/dot products.
 Its reasoning is preserved here as a historical design reference, **not**
 as a description of the currently enabled mixed int16/float network.
 
@@ -344,15 +444,35 @@ destination = (serializedIndex % outputWidth) * inputWidth
               + serializedIndex / outputWidth
 ```
 
+```cpp
+#ifdef USE_SIMD_INTRIN
+   // transpose data ///@todo as this is default now, do this in trainer ...
+   const size_t j = (i % dim1) * dim0 + i / dim1;
+#else
+   const size_t j = i;
+#endif
+   dst[j] = static_cast<T>(tmp);
+```
+
 SIMD inference computes one dot product per output. The scalar path keeps
-input-major layout and accumulates scaled output rows. Export order must
-match the loader, not whichever in-memory path was inspected.
+input-major layout and accumulates scaled output rows:
+
+```cpp
+#ifdef USE_SIMD_INTRIN
+#pragma omp simd
+      for (size_t i = 0; i < dim1; ++i) { result.data[i] += x.dot_(W + i * dim0); }
+#else
+#pragma omp simd
+      for (size_t i = 0; i < dim0; ++i) { result.fma_(x.data[i], W + i * dim1); }
+#endif // USE_SIMD_INTRIN
+```
+
+Export order must match the loader, not whichever in-memory path was inspected.
 
 There is also an actual input-activation distinction: the non-SIMD path
 dequantizes first, then calls `activationInput`, whose upper bound is
 `Quantization<true>::scale`, currently 512 rather than 1. The normal fused SIMD
 conversion clips to 1. Thus same topology is not a proof of identical outputs.
-This is a documented path difference, not a change made by this guide.
 
 ## Incremental update cases
 
@@ -360,6 +480,28 @@ For a non-king quiet, each perspective erases the old source row and inserts
 the destination row. A capture additionally erases the victim from the proper
 us/them category. Promotions insert the promoted kind instead of another pawn.
 EP removes the victim at `oldEP +/- 8`, not at the moved pawn's destination.
+
+```cpp
+nnueEvaluator.template us<c>().erase(NNUEIndiceUs(moveInfo.king[c], moveInfo.from, fromType));
+nnueEvaluator.template them<c>().erase(NNUEIndiceThem(moveInfo.king[~c], moveInfo.from, fromType));
+...
+      nnueEvaluator.template us<c>().insert(NNUEIndiceUs(moveInfo.king[c], moveInfo.to, fromType));
+      nnueEvaluator.template them<c>().insert(NNUEIndiceThem(moveInfo.king[~c], moveInfo.to, fromType));
+...
+if (moveInfo.type == T_ep) {
+   const Square epSq = moveInfo.ep + (c == Co_White ? -8 : +8);
+   nnueEvaluator.template us<c>().erase(NNUEIndiceThem(moveInfo.king[c], epSq, P_wp));
+   nnueEvaluator.template them<c>().erase(NNUEIndiceUs(moveInfo.king[~c], epSq, P_wp));
+}
+else if (toType != P_none) {
+   nnueEvaluator.template us<c>().erase(NNUEIndiceThem(moveInfo.king[c], moveInfo.to, toType));
+   nnueEvaluator.template them<c>().erase(NNUEIndiceUs(moveInfo.king[~c], moveInfo.to, toType));
+}
+```
+
+This is `updateNNUEEvaluator<c>()`, with `c` the mover: `us<c>()` is the
+mover's accumulator, indexed from the mover's king, and `them<c>()` the other
+one, indexed from the opponent's king.
 
 | Move | Accumulator work before propagation |
 |---|---|
@@ -377,7 +519,9 @@ feature ownership while leaving the board itself apparently legal.
 With `getBlock(k) == k`, an ordinary moving king always changes block.
 The dispatcher nevertheless checks same-block equality; a stationary-king
 Chess960 castle can take that other branch. Do not assert that every castling
-encoding universally enters the two-perspective reset path.
+encoding universally enters the two-perspective reset path. (Chess960 mode is
+switched on by `readFEN()` whenever the castling field is written with file
+letters instead of `KQkq`.)
 
 ### Work estimate
 
@@ -398,6 +542,23 @@ copies the parent's evaluator values into the child's slot, associates them
 and then applies row changes. Reset/update finishes with `dirty = false`;
 propagation asserts it is not dirty.
 
+```cpp
+FORCE_FINLINE void initChildEvaluatorOnStack(const Position& parentPosition, Position& childPosition) {
+#ifdef WITH_NNUE
+   auto& childData = stack[childPosition.halfmoves];
+   childData.evaluator = parentPosition.evaluator();
+   childPosition.associateEvaluator(childData.evaluator);
+#else
+   (void)parentPosition;
+   (void)childPosition;
+#endif
+}
+```
+
+A null-move child is a plain copy
+of the parent position and keeps pointing to the parent's evaluator; only the
+side to move, hence the accumulator order at propagation, differs.
+
 Dirty state is a validity marker, not a general automatic memoizer that
 silently repairs every invalid position on propagation.
 
@@ -406,13 +567,30 @@ and pruning. A pruned board child must never be propagated before proper
 association/update. With `DEBUG_NNUE_UPDATE`, a fresh evaluator rebuild is
 compared to the incremental state after update.
 
-Optional prefetch exists for upcoming feature rows but is disabled. It changes
-memory scheduling, not mathematical evaluation.
+Optional prefetch of upcoming feature rows (`WITH_NNUE_PREFETCH`) is disabled
+by default. It changes memory scheduling, not mathematical evaluation.
 
 ## Training-only factorization
 
+The trainer mirrors the inference graph: the accumulators are clamped to [0, 1]
+before the first dense layer, every dense layer is computed for both buckets and
+the sample's bucket output is selected afterwards.
+
+```python
+base = torch.clamp(us * torch.cat([w_, b_], dim=1) + (1.0 - us) * torch.cat([b_, w_], dim=1),0,1)
+...
+y0 = torch.clamp(self.fc0(base),0,1)
+y0 = y0.view(-1, L1)[indices]
+```
+
 The trainer uses `withFactorizer = True`. Its `piece_position(i)` drops the
-king dimension by mapping the feature index modulo 768.
+king dimension by mapping the feature index modulo 768 (the number of
+piece-and-square states, `halfka.state_numel()`).
+
+```python
+def piece_position(i):
+  return i % halfka.state_numel()
+```
 
 Each full king-conditioned transformer receives a shared piece-position
 factor contribution during training:
@@ -421,12 +599,19 @@ factor contribution during training:
 virtualExportWeight = affineWeight + expandedFactorWeights
 ```
 
+```python
+def virtual_weight(self):
+  return self.affine.weight.data + sum([block.virtual() for block in self.factored_blocks])
+```
+
 This shares a simpler positional prior across king squares while retaining
-king-specific residual freedom. Serialization folds it into the ordinary
+king-specific residual freedom, which helps rarely seen king squares learn
+faster. Serialization folds it into the ordinary
 49152-by-384 matrix. There is no additional factorizer layer during inference.
 The exported bias remains the affine bias.
 
-The C++ sparse loader sorts active feature indices into coalesced batches and
+The C++ sparse loader (`training_data_loader.cpp`) duplicates the engine's index
+expression, sorts active feature indices into coalesced batches and
 provides side-to-move, outcome, score and bucket. The Python dense fallback uses
 `halfka.py`; matching its tensor orientation to the primary sparse feature
 path is an explicit requirement, not something the architecture name proves.
@@ -442,8 +627,17 @@ target = lambda*p + (1-lambda)*t
 error  = abs(target - q)^2.4
 ```
 
-Current sample weighting uses outcome-surprise weight normalized to batch mean.
-Calculated score-zone weights are not multiplied into the active expression.
+Current sample weighting down-weights samples whose game outcome contradicts
+the search score:
+
+```text
+surprise = abs(t - sigmoid(s / 410))
+surprise = 0.1 * surprise   if (s > 0) == (t > 0.5)
+weight   = 1 / (1 + 9 * surprise), then divided by the batch mean
+```
+
+Calculated score-zone weights (2 for $|s| < 150$ down to 0.6 from 700 on) are
+not multiplied into the active expression.
 Commented dropout calls do not make the active model a dropout network.
 
 The optional head returns `exp(clamp(logVariance, -10, 10))`. With a positive
@@ -455,7 +649,7 @@ NLL-like term = 0.5*log(2*pi*v) + error/(2*v)
 penalty = 0.01*mean(predictedVariance)
 ```
 
-`WITH_NNUE_UNCERTAINTY` is disabled in the normal build. Without that head,
+`WITH_NNUE_UNCERTAINTY` is disabled by default. Without that head,
 C++ propagation returns uncertainty 1; this is a placeholder, not a measured
 confidence estimate. Python defines and exports the head even when its
 uncertainty loss weight is zero.
@@ -474,11 +668,29 @@ variance alone proves tactical safety.
 The stream contains version, white transformer, black transformer, then both
 bucket instances of fc0, both fc1, both fc2, both evaluation heads, followed by
 optional uncertainty heads. It is grouped by layer, not "all layers of bucket
-0, then all layers of bucket 1".
+0, then all layers of bucket 1". Each transformer or bucket instance is written
+as its weights (input-major, one row per input) followed by its biases, matching
+the order of the loader:
+
+```cpp
+w.load_(ws);
+b.load_(ws);
+for (auto & l : innerLayer) l.fc0.load_(ws);
+for (auto & l : innerLayer) l.fc1.load_(ws);
+for (auto & l : innerLayer) l.fc2.load_(ws);
+for (auto & l : innerLayer) l.fc3.load_(ws);
+#ifdef WITH_NNUE_UNCERTAINTY
+for (auto & l : innerLayer) l.fc3_uncertainty.load_(ws);
+#endif
+```
 
 The version is `0xc0ffee03`; byte-size and version checks determine compatibility.
+The Python exporter obtains these four bytes by reinterpreting the hexadecimal
+constant as a big-endian float and storing it as the first float32 of the file
+(so that a little-endian reader sees `0xc0ffee03`).
 A head-disabled engine accepts the optional tail and ignores it. Enabling the
 head expects that tail and does not supply learned weights for an older file.
+The Python exporter always writes the head, so its files have the larger size.
 
 The byte stream uses native numeric representations; it is not a checksummed,
 explicitly endian-neutral container. With `WITHOUT_FILESYSTEM`, the external
@@ -489,3 +701,33 @@ Always change feature indices, dimensions, export grouping, bucket logic,
 binary validation and both inference layouts together. Check known positions
 through trainer output, exported scalar/SIMD inference, and incremental versus
 reset inference before treating a topology modification as a search experiment.
+
+## Disabled and inactive NNUE code
+
+The following NNUE-related code is present but inactive in the default build;
+the [implemented but disabled techniques](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/disabled-features.md#nnue)
+chapter holds the full inventory and caveats:
+
+- **Uncertainty head** (`//#define WITH_NNUE_UNCERTAINTY` in
+  [config.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/config.hpp)),
+  disabled by default. Defining it adds `fc3_uncertainty` to each bucket and
+  makes the loader require the 151049300-byte format, so head-less nets are
+  rejected. Search does not read the resulting `EvalData::uncertainty`.
+- **Row prefetching** (`//#define WITH_NNUE_PREFETCH`), disabled by default.
+  It prefetches the rows that the next incremental update touches.
+- **Alternative buckets**: the king-square table (up to 7 buckets) and the
+  occupancy-count formula are commented out both in `NNUEEVal()` and in
+  `training_data_loader.cpp`. They require a matching `nbuckets`, trainer and
+  net.
+- **16-block king layout**: the commented expression in `getBlock()` would
+  merge king squares into 16 blocks, so only $16 \cdot 768 = 12288$ of the
+  49152 indices would be used. It needs the same change in the trainer's
+  loader and a net trained for it.
+- **`forbidNNUE()`** always returns false, so no position is kept away from
+  NNUE by that hook.
+- **Training-side remnants**: commented dropout calls, alternative loss
+  expressions and the unused score-zone weights in
+  [model.py](https://github.com/tryingsomestuff/Minic/blob/master/Train/model.py).
+
+The evaluation-wide summary is in the
+[evaluation overview](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/evaluation.md#disabled-and-inert-parts).

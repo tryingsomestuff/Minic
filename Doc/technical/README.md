@@ -5,15 +5,9 @@ representation, search, evaluation, move selection, time allocation and tooling.
 Start here, then follow the chapters rather than reading every source file in
 alphabetical order.
 
-## Documented source
+## Scope
 
-Reviewed on **2026-10-06**, against Minic **3.47**, commit **`1210cdbb`** and the
-working-tree changes present during this review. In particular, this guide
-includes the not-yet-committed `GameInfo` search-score persistence and
-booming/moobing changes. Four-distance continuation history is in the base
-commit. These details matter when comparing this guide with older binaries.
-
-The guide describes the usual desktop configuration in
+This guide documents Minic **3.47** in its usual desktop configuration, as defined by
 [config.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/config.hpp). Small-memory targets, compiler/platform
 conditions and runtime options can change it. The source links and named
 functions are the authority for exact conditions and current constants.
@@ -23,92 +17,49 @@ not a claim that it produced a measured Elo gain. Where the original author's
 reason is not recorded, a tradeoff is an interpretation of the implementation,
 not an account of historical intent.
 
+Each chapter names its primary source files. Code excerpts are shortened copies
+of the real functions (omissions are marked `...`); function names are given so
+that they can be found by searching rather than by line number.
+
 ## Chapters
+
+The chapters are listed in reading order. Detailed references, indented under
+their parent chapter, hold the exact arithmetic that the overview chapters only
+summarize.
 
 | Chapter | Main questions |
 |---|---|
 | [Architecture and lifecycle](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/architecture.md) | Who owns a position? How does a command become a search and a reported move? |
 | [Positions, moves and legality](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/positions-and-moves.md) | How are boards, hashes, castling and NNUE state kept consistent? |
 | [Search and selectivity](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/search.md) | What happens in PVS and qsearch? Which pruning, reduction and extension mechanisms actually run? |
+| &nbsp;&nbsp;↳ [Search policy reference](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/search-policy-reference.md) | Every active/disabled depth-policy switch, exact LMR arithmetic, singular branches, pruning gates and retry windows. |
 | [Move ordering and picking](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/move-ordering.md) | How are moves scored, picked and learned from? Why is this not a staged MovePicker? |
-| [Evaluation and NNUE](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/evaluation.md) | How are HCE, NNUE, endgame knowledge and correction history combined? |
-| [Time management and parallel search](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/time-and-parallelism.md) | How are time limits, emergencies, pondering and Lazy SMP coordinated? |
 | [Tables, hashes and game history](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/tables-and-history.md) | What is cached or learned, who owns it, and when is it reset? |
+| [Evaluation and NNUE](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/evaluation.md) | How are HCE, NNUE, endgame knowledge and correction history combined? |
+| &nbsp;&nbsp;↳ [Classical evaluation reference](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/classical-evaluation-reference.md) | Attack masks, pawn classifications, passer races, king-danger sigmoid, mobility, tuned feature examples and final scaling. |
+| &nbsp;&nbsp;↳ [NNUE topology and inference reference](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/nnue-reference.md) | Exact feature indices, tensor shapes, parameter/byte counts, quantization, incremental cases, exporter and training loss. |
+| [Time management and parallel search](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/time-and-parallelism.md) | How are time limits, emergencies, pondering and Lazy SMP coordinated? |
+| [Implemented but disabled techniques](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/disabled-features.md) | Which mechanisms exist in the code but are switched off by default, how are they gated and how can they be re-enabled? |
 | [Building, diagnosing and modifying Minic](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/development.md) | How do you build, exercise, measure and safely change these mechanisms? |
 | [Technical glossary](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/glossary.md) | Definitions of engine terminology, Minic-specific names, mathematical symbols and easily confused concepts. |
 
-### Detailed implementation references
+The order goes from the engine's skeleton to its decisions: how the program is
+organized, how a position is represented, how the tree is searched, how moves are
+ordered, what the search remembers, how positions are evaluated, and how time
+and threads are managed. The inventory of disabled techniques comes after all
+the active mechanisms, since each entry refers back to the chapter that
+explains its context. Tables precede evaluation because correction history
+and the pawn cache, which evaluation relies on, are introduced there. The
+development guide and glossary are meant to be consulted at any point.
 
-| Reference | Technical scope |
-|---|---|
-| [Search policy reference](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/search-policy-reference.md) | Every active/disabled depth-policy switch, exact LMR arithmetic, singular branches, pruning gates and retry windows. |
-| [Classical evaluation reference](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/classical-evaluation-reference.md) | Attack masks, pawn classifications, passer races, king-danger sigmoid, mobility, tuned feature examples and final scaling. |
-| [NNUE topology and inference reference](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/nnue-reference.md) | Exact feature indices, tensor shapes, parameter/byte counts, quantization, incremental cases, exporter and training loss. |
-
-For a first reading, follow architecture -> positions -> search -> evaluation.
-For a heuristic experiment, also read move ordering, tables and time management:
-these mechanisms interact even when their code lives in different files.
-
+For a first reading, follow architecture -> positions -> search -> move ordering
+-> tables -> evaluation. For a heuristic experiment, also read time management
+and the disabled-techniques inventory: these mechanisms interact even when their
+code lives in different files, and a switched-off branch is often the natural
+starting point of an experiment.
 The reference chapters distinguish mathematical intent from literal code.
 Disabled predicates, commented alternatives and known path differences are
 documented explicitly; their existence is not evidence of strength or correctness.
-
-## Build an HTML version
-
-The [GitHub Pages site](https://tryingsomestuff.github.io/Minic/) provides a
-landing page linking to the [coverage report](https://tryingsomestuff.github.io/Minic/coverage/)
-and [this complete guide](https://tryingsomestuff.github.io/Minic/technical/).
-The GitHub Actions workflow builds both on pushes and pull requests targeting
-`master`, and publishes the site on pushes to `master`. The published layout is:
-
-```text
-index.html             Landing page (Doc/index.html)
-coverage/              Complete coverage report and its assets
-technical/index.html   All technical documentation chapters
-```
-
-With Python 3 and [Python-Markdown](https://python-markdown.github.io/) installed,
-run from the repository root:
-
-```sh
-python -m pip install Markdown
-python Doc/technical/build_html.py
-```
-
-Open `Doc/technical/index.html` in a browser. The script combines all `.md` files
-in this directory into one page, following this index's chapter order and then
-including any additional chapters. It renders tables and fenced code blocks,
-adds chapter navigation and rewrites chapter/heading links to page anchors.
-Styling is embedded and no server or external CSS is needed.
-
-LaTeX equations and Mermaid diagrams render in GitHub's Markdown viewer.
-The generated HTML uses **MathJax 3.2.2** and **Mermaid 11.12.0**, fetched from
-jsDelivr in the browser only when the relevant content exists. Python generation
-does not download them or require additional Python packages. Rendering needs
-JavaScript and internet access to those libraries; offline/JavaScript-disabled
-reading retains LaTeX text and diagram source. Loading failures display an
-explicit notice. Rendered diagrams retain a collapsible source block.
-
-Use `$...$` for inline mathematics, and `$$` on its own lines around display
-mathematics. The generator preserves TeX before Markdown can interpret its
-underscores, backslashes or HTML-like operators. Fenced and inline code remain
-code. Write diagrams in fenced `mermaid` blocks. Prefer these notations for
-equations and structural relationships; retain pseudocode where casts, shifts
-and execution order are the important detail.
-
-Generator regression checks use
-`python -m unittest discover -s Doc/technical -p 'test_*.py'`.
-They exercise TeX preservation, code isolation, malformed display blocks and
-standalone HTML generation without downloading browser libraries.
-
-Use `--output /path/to/minic.html` for a different destination; its parent
-directory must already exist. Markdown file links point to the repository's
-`master` branch on GitHub. In HTML, included chapters become in-page anchors;
-source-code and other repository files still open GitHub, even if the HTML is
-moved outside the repository. Relative repository links added in future chapters
-are converted too. Newly added files must be committed and pushed before their
-GitHub links are available. Markdown is treated as trusted documentation, not
-sanitized user input. The default generated HTML is ignored by Git.
 
 ## A search at a glance
 
@@ -173,21 +124,23 @@ quantity again.
 
 ## Status map
 
-| Mechanism | Status in the documented desktop source |
+| Mechanism | Default desktop configuration |
 |---|---|
 | PVS, aspiration, LMR/LMP, null move, reverse futility, razoring, ProbCut | Enabled, with node-specific gates. |
 | IIR | Enabled; traditional IID is disabled. |
 | Singular extensions | Single/double, multi-cut and negative-extension branches exist; some refinements remain commented out. |
 | Generic extensions in `depthPolicy()` | All its extension toggles are currently false. |
-| Quiet/capture/continuation histories | Enabled; continuation distances 1, 2, 4, 6 with weights 8, 6, 4, 2. |
+| Quiet/capture/pawn/continuation histories | Enabled. Continuation distances 1, 2, 4, 6 are supported, but the default weights 8, 0, 0, 0 use only distance 1. |
 | Pawn/non-pawn correction | Enabled; optional horizon correction is disabled. |
 | Partial move sorting | Enabled; not a capture/quiet staged generator. |
 | NNUE | Compiled normally; actually used only after successful network loading. |
 | NNUE uncertainty | Optional head disabled; the field exists but does not drive search. |
 | Syzygy | Compiled on the usual non-MSVC desktop path; requires loaded tables. |
 | MPI | Optional, disabled by default; distinct from local SMP. |
-| Upcoming repetition, clustered TT, pawn move history | Roadmap candidates, not current implementations. |
+| Upcoming repetition, clustered TT, continuation correction | Roadmap candidates, not current implementations. |
 
+The [disabled techniques](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/disabled-features.md) chapter lists every
+mechanism that is present in the code but inactive by default, with its gate.
 See [TODO.md](https://github.com/tryingsomestuff/Minic/blob/master/TODO.md) for experiments. A roadmap entry is not evidence
 that a feature is enabled or strength-tested.
 

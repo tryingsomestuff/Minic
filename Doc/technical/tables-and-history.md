@@ -1,6 +1,6 @@
 # Tables, hashes and game history
 
-[Index](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/README.md) | [Next: development](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/development.md)
+[Index](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/README.md) | [Previous: move ordering](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/move-ordering.md) | [Next: evaluation](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/evaluation.md)
 
 Primary sources: [transposition.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/transposition.hpp),
 [transposition.cpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/transposition.cpp),
@@ -15,7 +15,7 @@ Primary sources: [transposition.hpp](https://github.com/tryingsomestuff/Minic/bl
 |---|---|---|
 | TT | Shared among local workers | Search bounds, move hints and evaluation information. |
 | Pawn-and-king cache | Per worker | Reuse structural HCE work. |
-| Move histories | Per worker | Learn promising moves/contexts. |
+| Move histories (from/to, piece/to, capture, pawn, continuation) | Per worker | Learn promising moves/contexts. |
 | Killers and counter moves | Per worker | Short-lived cutoff/refutation hints. |
 | Correction tables | Per worker | Learn evaluation residuals. |
 | Search stack | Per worker | Position copies, raw eval/hash/threat and NNUE accumulators. |
@@ -124,6 +124,21 @@ The cache stores HCE features, not search bounds or move history. It does not
 need the side-to-move search key because its stored score is white-positive
 structural information.
 
+Only terms that depend on the pawns and the two kings can be cached under a
+pawn-and-king key. The passed-pawn bonus also depends on the opponent's
+remaining pieces, on the side to move (the "unstoppable passer" race) and on
+king distances, so it is **not** cached: the evaluator reads the cached set of
+passed pawns and then computes this bonus for every evaluation:
+
+```cpp
+// add computed or hash score for pawn structure
+features.scores[F_pawnStruct] += pe.score;
+
+// passer eval depends on some position stuff, can't be cached
+evalPawnPasser<Co_White>(p, pe.passed[Co_White], features.scores[F_pawnStruct]);
+evalPawnPasser<Co_Black>(p, pe.passed[Co_Black], features.scores[F_pawnStruct]);
+```
+
 ## Move and correction tables
 
 See [move ordering](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/move-ordering.md) for indices, weights and update equations.
@@ -131,13 +146,23 @@ The largest move-history structure is `counter_history`: a colored
 piece/destination context by colored piece/destination candidate. Multiple CMH
 distances use the same storage, so adding pointers is different from multiplying
 the table by a distance dimension.
-Their scoring weights are configured by `SearchConfig::CMHWeight` and exposed
+Their scoring weights are configured by `SearchConfig::CMHWeight`, whose default
+`{8, 0, 0, 0}` leaves only the distance-1 context active, and exposed
 as `CMHWeight0` through `CMHWeight3` when search tuning is enabled; the first
 weight must remain positive because it normalizes CMH update bonuses.
 Pawn move history is a separate 512-bucket table per worker, indexed by the
-low bits of Minic's pawn-and-king hash, colored moved piece and destination.
-Its 832 KiB per-worker cost is separate from the pawn evaluation cache and
-pawn correction history.
+low bits of Minic's pawn-and-king hash, colored moved piece and destination:
+
+```cpp
+const size_t bucket = static_cast<size_t>(computePHash(p) & (SearchConfig::PAWN_HISTORY_BUCKETS - 1));
+return pawnHistory[bucket][PieceIdx(piece)][to];
+```
+
+The bucket count must be a power of two (a `static_assert` in `HistoryT`
+enforces it) so that the mask replaces a modulo. Different pawn structures can
+share a bucket: like the correction tables, the table has no full-key tag and
+accepts such collisions. Its 832 KiB per-worker cost is separate from the pawn
+evaluation cache and pawn correction history.
 
 Correction tables have direct-mapped `[side][key & mask]` buckets without
 full-key tags. Collisions intentionally blend observations. The active
@@ -214,7 +239,10 @@ it remain unknown.
 
 Starting a new game clears optional scores together with moves. The tests in
 [cli_gameInfoTest.cpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/cli_gameInfoTest.cpp) cover zero/missing
-scores, replay, divergence, FEN origins, rewind, fifty mismatch and reset.
+scores, replay, divergence, FEN origins, rewind, fifty mismatch and reset, as
+well as repetition detection that reads the game history: a history with no
+move before its initial position, and an initial position that must count
+as an occurrence for twofold and threefold repetition.
 
 ### Synchronization scope
 
@@ -293,10 +321,12 @@ depth ramp, but is disabled in the normal configuration.
 ## Cache validity versus feature dependency
 
 A correct compressed key says an entry matches the chosen key domain. It
-does not prove every stored value depends only on that domain. The passer-race
-dependency discussed in the
-[classical evaluation reference](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/classical-evaluation-reference.md)
-is an example. Similarly, TT `e` provenance depends on the writer, while
+does not prove every stored value depends only on that domain. The
+passed-pawn race is the example in the evaluator: its inputs go beyond the
+pawn-and-king key, so it is computed outside the cache, as described
+[above](#pawn-cache) and in the
+[classical evaluation reference](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/classical-evaluation-reference.md).
+Similarly, TT `e` provenance depends on the writer, while
 GameInfo scores require actual root membership beyond a hash match.
 
 ## Memory considerations
@@ -304,7 +334,8 @@ GameInfo scores require actual root membership beyond a hash match.
 In addition to shared TT/network/material memory, every worker has a stack,
 accumulators and histories. The raw two 384-element `int16_t` accumulators over
 2048 slots alone occupy roughly 3 MiB before padding and other stack fields.
-The continuation table adds over 1 MiB per worker.
+The continuation table adds over 1 MiB per worker, and the pawn-history table
+another 832 KiB.
 
 The two quantized input matrices occupy about 72 MiB before biases/dense heads;
 the serialized float matrices are about twice that. Increasing threads does

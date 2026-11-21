@@ -1,10 +1,10 @@
 # Technical glossary
 
-[Index](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/README.md)
+[Index](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/README.md) | [Previous: development](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/development.md)
 
 This glossary combines chess-engine terminology with the meanings used in
 Minic. A term describing a general technique does **not** imply that Minic
-implements or enables it. Snapshot-specific exceptions and inactive mechanisms
+implements or enables it. Version-specific exceptions and inactive mechanisms
 are identified explicitly.
 
 Use the section links below or browser search to find a term. The chapter
@@ -23,10 +23,10 @@ details rather than duplicating the complete implementation here.
 | [Classical evaluation](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/glossary.md#classical-evaluation) | MG/EG, phase, mobility, danger and pawn features. |
 | [Neural evaluation and training](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/glossary.md#neural-evaluation-and-training) | NNUE, features, accumulators, tensors and uncertainty. |
 | [Hashes, tables and history](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/glossary.md#hashes-tables-and-history) | Zobrist domains, TT entries, correction and game replay. |
-| [Time management](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/glossary.md#time-management) | Allocation, variability, emergencies and forecast. |
+| [Time management](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/glossary.md#time-management) | Allocation, soft/hard limits, variability, emergencies, booming/moobing. |
 | [Parallelism and synchronization](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/glossary.md#parallelism-and-synchronization) | SMP, MPI, local/shared state and publication. |
-| [Protocols and variants](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/glossary.md#protocols-and-variants) | UCI, XBoard, FRC and Armageddon. |
-| [Builds and diagnostics](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/glossary.md#builds-and-diagnostics) | PGO, perft, assertions, coverage and reproducibility. |
+| [Protocols and variants](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/glossary.md#protocols-and-variants) | UCI, XBoard, FRC/DFRC, Shredder-FEN and Armageddon. |
+| [Builds and diagnostics](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/glossary.md#builds-and-diagnostics) | PGO, perft, assertions, coverage, version strings, disabled features and reproducibility. |
 | [Experiments and statistical language](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/glossary.md#experiments-and-statistical-language) | Elo, SPRT, confidence and controlled comparisons. |
 | [Equation notation](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/glossary.md#equation-notation) | Symbols, indicators, casts, clipping and score units. |
 
@@ -130,7 +130,7 @@ Details: [search](https://github.com/tryingsomestuff/Minic/blob/master/Doc/techn
 | PVS | Principal Variation Search: search an early move normally, challenge later moves with a narrow window, then retry promising results. |
 | Re-search / retry | Another search attempt with a different depth, window or cut-node hint; distinguish which quantity changed. |
 | Iterative deepening | Search successive root depths, retaining completed results and ordering/timing information between iterations. |
-| Aspiration window | Initially narrow root window around an earlier score; fail-low/high causes widened retries. |
+| Aspiration window | Narrow root window around the previous iteration's score (beyond depth 4, half-width `5 + max(0, 40 - 3*depth)` by default); a fail-low/high widens it and searches again. Narrow windows cut more but need retries when wrong. |
 | MultiPV | Multiple root variations requested for output. Additional root work is not identical to one ordinary best-line search. |
 | Quiescence / qsearch | Search beyond the main depth horizon to reduce tactical instability. Minic searches evasions when checked and captures otherwise. |
 | Stand pat | Static score used as a qsearch baseline when not in check. It is not literally a legal pass move. |
@@ -162,7 +162,7 @@ Details: [search policy reference](https://github.com/tryingsomestuff/Minic/blob
 | Extension | Increase a move's depth budget. Generic extensions are disabled; the singular TT path has active extension behavior. |
 | Negative extension | Remove plies through the singular-policy extension variable; distinct from ordinary LMR arithmetic. |
 | LMR | Late Move Reductions, using depth/move rank and context to select a smaller initial child budget. |
-| LMP | Late Move Pruning, skipping eligible later quiets after a depth-dependent legal-candidate count. |
+| LMP | Late Move Pruning: at depth up to `lmpMaxDepth` (10), skip remaining eligible quiets once the move count exceeds `lmpLimit[improving][depth]`. |
 | Early move | In the generated loop, `validMoveCount < 2`; a successful TT move affects that count before ordinary candidates. |
 | Improving | Local raw static-evaluation trend against a guarded two-ply-earlier stack value; not proof of a favorable game trajectory. |
 | Advanced pawn push | Current rank/piece-kind predicate protecting some moves from selectivity; not synonymous with a passed pawn. |
@@ -176,7 +176,7 @@ Details: [search policy reference](https://github.com/tryingsomestuff/Minic/blob
 | Mate threat | Signal from the artificial null-move search returning a mated score; selective evidence, not necessarily a proved forced mate. |
 | Threat pruning | Node policy using own/opponent threat summaries and margins; not blanket proof that every threatened position is tactical. |
 | ProbCut | Search selected promising captures against a raised threshold to support an earlier cutoff. |
-| IIR | Internal Iterative Reduction: reduce nominal depth without a sufficiently useful TT context; enabled. |
+| IIR | Internal Iterative Reduction: without a TT hit at depth >= 3, reduce depth by 1, on the assumption that a node lacking TT information is less important or poorly ordered; enabled. |
 | IID | Internal Iterative Deepening: internal preliminary search to discover a move; traditional IID is disabled. |
 | Singular move | A TT candidate whose excluded alternatives fail below a verification threshold. |
 | Exclusion / skip move | Search the same position while disallowing selected moves. Its context/key cannot be treated as ordinary unrestricted search. |
@@ -201,18 +201,20 @@ Details: [move ordering](https://github.com/tryingsomestuff/Minic/blob/master/Do
 | Killer | Recent quiet cutoff move at a search-relative height; a history hint, not a tactical guarantee. |
 | Counter move | One remembered response indexed by the preceding move's from/corrected-to identity. |
 | Continuation history / CMH | Learned response scores conditioned on earlier moved-piece/destination contexts. Not the counter-move identity table. |
-| Continuation distance | Number of moves back for a context. Active distances 1/2/4/6 have weights 8/6/4/2. |
+| Continuation distance | Number of moves back for a context. Distances 1/2/4/6 exist; the default weights 8/0/0/0 make only distance 1 contribute. |
+| CMHWeight | `SearchConfig::CMHWeight`, per-distance weights of the normalized continuation-history average; defaults 8/0/0/0, so distances 2/4/6 are inert. |
 | Available context | Valid, root-guarded CMH row pointer. Unavailable weights are omitted from normalization. |
 | Context alias | Two contextual references address the same row/bucket; their learning effects need not be independent. |
 | From/to history | Score keyed by side, source and destination. |
 | Piece/to history | Score keyed by colored moving piece and destination. |
 | Capture history | Score keyed by colored moving piece, destination and captured kind; EP is excluded by its update helper. |
-| Pawn history | Proposed additional contextual ordering signal; not the active pawn cache or pawn correction history. |
+| Pawn history | Move-ordering score keyed by one of 512 pawn-and-king hash buckets, colored moving piece and destination; distinct from the pawn cache and pawn correction history. |
 | Gravity update | Bonus plus damping toward a bounded scale; the exact integer expression matters and is not always an explicit clamp. |
-| HSCORE | Depth-dependent move-history bonus, `4*min(depth,32)^2`. |
+| HSCORE | Depth-dependent move-history bonus, `4*min(depth,16)^2`, which never exceeds `HISTORY_MAX`. |
+| HISTORY_UPDATE | Gravity update `item + b - HISTORY_DIV(item * Abs(b))` with bonus `b` clamped to `[-HISTORY_MAX, HISTORY_MAX]` (`HISTORY_MAX = 1024`); keeps every entry inside that range. |
 | HISTORY_DIV | Arithmetic right shift by 10. Negative rounding differs from ordinary integer division toward zero. |
 | MVV-LVA | Most Valuable Victim / Least Valuable Attacker capture-ordering heuristic; not a full exchange evaluation. |
-| SEE | Static Exchange Evaluation: estimate local alternating exchanges using attackers and x-rays. |
+| SEE | Static Exchange Evaluation: estimate the material balance of the alternating capture sequence on one square, cheapest attacker first, including x-rays; no search. |
 | SEE_GE | Threshold wrapper that currently computes the full SEE, then compares; not an optimized threshold-only evaluator. |
 | Recapture | Capture aimed at a recently used destination. Particular dormant Minic predicates are looser than that verbal definition. |
 | Bad capture | Ordering classification based on capture score and configured limits, later consumed by pruning/reduction. |
@@ -301,7 +303,7 @@ Details: [NNUE reference](https://github.com/tryingsomestuff/Minic/blob/master/D
 | Clipped ReLU | Activation bounded between 0 and 1 in the normal dense/SIMD input path; scalar input clipping has a documented difference. |
 | Linear head | Final affine scalar without clipped activation, producing evaluation or log variance. |
 | Skip connection | Earlier values bypass an intermediate transformation. Minic uses concatenation, not residual addition. |
-| Bucket | One of two phase-selected dense parameter sets; not a king bucket or piece-count bin in the active inference path. |
+| Bucket | One of two dense parameter sets (`nbuckets = 2`), chosen by game phase: bucket 0 when `gp < 0.45`, otherwise 1. Not a king bucket or piece-count bin in the active inference path. |
 | Tensor shape | Number/order of dimensions. Actual dense inputs are 768, 8, 16 and 24, not merely repeated 8-wide layers. |
 | Quantization | Convert input floats to rounded int16 weights/biases with scale 512; dense parameters remain floats. |
 | Dequantization | Convert int16 sums to float using reciprocal scale before neural activation. |
@@ -387,13 +389,15 @@ Details: [time and parallelism](https://github.com/tryingsomestuff/Minic/blob/ma
 | Risky situation | Small/missing increment triggers the conservative timing branch. |
 | Forced move | Difficulty category reducing allowance, not proof that the game is forced to its conclusion. |
 | Easy move | Historic time category still represented; current source notes it is no longer used. |
-| Iteration emergency | Completed-depth score deterioration within the current search; separate from between-root game evolution. |
-| Booming | Genuine historical rise by at least 80 between same-side recorded roots; current time multiplier is 1, with a clock cap. |
-| Moobing | Historical fall by at least 80 between same-side recorded roots; current multiplier is 2. |
+| Iteration emergency | Within one dynamic-clock search, a completed depth above 14 scores more than 64 below depth - 2; the allowance is tripled, capped at one fifth of the remaining clock. Separate from between-root game evolution. |
+| Booming | Final root score recorded two plies earlier exceeds the one four plies earlier by at least 80 (mate scores and roots before ply 4 excluded); time multiplier 1, so only the one-fifth-of-clock cap can change the allowance. |
+| Moobing | The symmetric fall by at least 80 between the same two recorded roots; time multiplier 2, capped at one fifth of the remaining clock. Its search-side depth correction is disabled by default. |
 | Attack / defense difficulty | Time-management category labels using score thresholds; not necessarily the actual position's tactical plan. |
-| Variability | Heuristic root-score instability state controlling a logistic time factor; not neural variance. |
+| Variability | Heuristic root-score instability state $v$ (reset to 1 per search, multiplied by `1 + depth/100` or 0.98 per depth above 12) giving the time factor $2/(1+e^{1-v})$; not neural variance. |
 | Effective branching factor / EBF | Node-count-derived search growth estimate used to forecast another iteration. |
-| Forecast | Predictive soft-stop calculation from elapsed time/EBF, not a measured future duration. |
+| Forecast / soft limit | Stop iterating when `elapsed * 1.2 * EBF` exceeds the adjusted allowance (dynamic clocks only); a prediction, not a measured future duration. |
+| Hard limit | `timeCheck()` raises the stop flag once elapsed time exceeds the adjusted allowance, aborting the unfinished iteration. |
+| Pondering correction | Factor 1.5 applied to moves-to-go and sudden-death allocations when the main worker's `isPondering` flag is still set from the previous search, otherwise 1. |
 | Pondering | Search while the opponent is thinking, with distinct protocol/time-state behavior. |
 | Ponderhit | Notification that predicted opponent play occurred; changes how ongoing work is timed/reported. |
 | Stop sampling | Periodic PVS checks rather than a wall-clock check on every node; qsearch mainly observes the stop flag. |
@@ -422,7 +426,7 @@ and [parallel search](https://github.com/tryingsomestuff/Minic/blob/master/Doc/t
 | Publication | Making a result available to readers with suitable lifetime and consistency, not simply assigning a field. |
 | Snapshot | Mutually consistent observed state at a defined boundary; ordinary multi-field reads need not form one. |
 | Stop / wait / join | Request termination versus wait for completion. Requesting stop alone does not establish that the worker has finished. |
-| Worker voting | Depth-weighted root-result selection followed by choosing a supporting worker result. |
+| Worker voting / Lazy SMP vote | Each worker with a PV adds its completed depth to its first move's tally; the highest tally wins (ties to the smallest `MiniMove`), and the deepest supporting worker supplies score, PV and depth. Bypassed by depth-based skill levels. |
 | Data race | Unsynchronized conflicting non-atomic access; XOR TT validation does not provide a formal C++ race-freedom proof. |
 | MPI | Optional multi-process distributed communication, separate from local shared-memory threads. |
 
@@ -442,7 +446,9 @@ Details: [lifecycle](https://github.com/tryingsomestuff/Minic/blob/master/Doc/te
 | New-game signal | Protocol instruction resetting game-related state according to the implementation's reset policy. |
 | FEN | Forsyth-Edwards Notation for board, side, castling, EP and counters; not a complete list of prior game positions. |
 | SAN / coordinate move text | Algebraic notation versus source/destination notation; neither is the internal scored-move representation. |
-| FRC / Chess960 | Fischer Random Chess, particularly relevant to castling starts, overlap and output conventions. |
+| FRC / Chess960 | Fischer Random Chess: 960 start positions with shuffled back ranks, so castling rooks and king can start on any file. Enabled by `UCI_Chess960` (`DynamicConfig::FRC`); castling is then printed as king-takes-rook instead of e1g1-style moves. |
+| DFRC | Double Fischer Random: White and Black use independently shuffled back ranks. The command-line `DFRC` option implies `FRC` and makes self-play start from a random DFRC X-FEN. |
+| Shredder-FEN / X-FEN | FEN castling fields that name the castling rook's file (`HAha`) instead of `KQkq`, which is ambiguous when several rooks share a side. Minic reads `A`-`H`/`a`-`h` letters only when no `KQkq` letter is present, switching FRC on; in FRC mode it writes rook-file letters. |
 | Armageddon | Variant with asymmetric draw outcomes and altered evaluation/search draw scoring. |
 | Antichess | Losing-chess variant with different capture/king assumptions; ordinary chess legality/evaluation assertions need variant guards. |
 | `subSearch` | Marks auxiliary search work; not every `searchDriver()` call belongs to the live game root. |
@@ -472,6 +478,8 @@ Details: [development](https://github.com/tryingsomestuff/Minic/blob/master/Doc/
 | NPS | Nodes per second; affected by tree shape, evaluation, hardware and counters, not equivalent to Elo. |
 | Fixed-depth comparison | Equal nominal root depth, not necessarily equal nodes, selective depth or time. |
 | Fixed-node comparison | Equal requested node cap; isolates some timing policy but is not a complete real-time strength comparison. |
+| Dirty build version | Engine version string `<base>-<commit>-dirty`, where the `-dirty` marker means the build script found uncommitted tracked changes or untracked files under `Source`; missing git information gives commit `unknown`. |
+| Disabled by default | Implemented code that does not affect normal play: commented-out compile-time gate, `false` search flag or local switch, commented branch, inert default or off runtime option. Inventory and enabling instructions: [disabled features](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/disabled-features.md). |
 | Determinism / reproducibility | Repeat behavior under controlled environment/state; multiworker scheduling and shared TT can vary traces. |
 | Include-What-You-Use / IWYU | Header dependency diagnostic harness; the repository CMake harness is not its normal engine build system. |
 
@@ -539,7 +547,7 @@ procedure and does not supply a confidence interval on its own.
 | Depth / height / absolute ply | Remaining budget versus relative recursion coordinate versus game position index. |
 | Move score / static score / search score | Ordering priority versus nonrecursive evaluation versus returned/stored search evidence. |
 | Counter move / continuation history | One remembered response identity versus contextual response scores. |
-| Pawn cache / pawn history / pawn correction | Cached HCE features versus proposed ordering statistics versus static-bias learning. |
+| Pawn cache / pawn history / pawn correction | Cached HCE features versus ordering statistics versus static-bias learning. |
 | Raw danger / king penalty / uncertainty | Attack summary versus nonlinear MG contribution versus optional neural dispersion-related output. |
 | Iteration emergency / moobing | Deterioration within one search versus deterioration across earlier same-side game roots. |
 | Valid entry / sufficient-depth TT hit | Usable hint versus bound eligible under depth checks. |

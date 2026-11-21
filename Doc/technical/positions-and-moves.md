@@ -1,6 +1,6 @@
 # Positions, moves and legality
 
-[Index](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/README.md) | [Next: search](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/search.md)
+[Index](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/README.md) | [Previous: architecture and lifecycle](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/architecture.md) | [Next: search](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/search.md)
 
 Primary sources: [definition.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/definition.hpp),
 [position.hpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/position.hpp), [position.cpp](https://github.com/tryingsomestuff/Minic/blob/master/Source/position.cpp),
@@ -72,6 +72,33 @@ Standalone `qsearchNoPruning()` tools do not use this root-relative contract.
 `initRootPositionOnStack()` records `rootHalfmoves`, clears pre-root stack slots
 and initializes the root's evaluator. Real game history is in `GameInfo`, not in
 those discarded slots.
+
+## FEN castling field and Chess960 detection
+
+The standard letters `KQkq` set the usual rights. When none of them is present,
+the castling field is read as *Shredder-FEN* style rook files (`A` to `H` for
+White, `a` to `h` for Black). Each letter is compared with the king's file to
+decide between king-side and queen-side rights, and every such letter forces
+Chess960 (FRC) mode on if it was not already active:
+
+```cpp
+for (const char& cr : strList[2]) {
+   if ((cr >= 'A' && cr <= 'H') || (cr >= 'a' && cr <= 'h')) {
+      const Color c  = std::isupper(cr) ? Co_White : Co_Black;
+      const char  kf = static_cast<char>(std::toupper(FileNames[SQFILE(p.king[c])].at(0)));
+      if (std::toupper(cr) > kf) { p.castling |= (c == Co_White ? C_wks : C_bks); }
+      else                       { p.castling |= (c == Co_White ? C_wqs : C_bqs); }
+      if (!DynamicConfig::FRC) { DynamicConfig::FRC = true; }  // force FRC
+      found = true;
+   }
+}
+```
+
+The test does not depend on how many letters were already recognized, so a
+field with a single file letter (`A`, for example) switches the mode just like
+a full `HAha`. The king and rook start squares are then
+recorded in the shared `RootInformation`, which is what the castling-move
+generation and encoding described below rely on.
 
 ## Copy/make and the stack
 

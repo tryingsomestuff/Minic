@@ -1,6 +1,6 @@
 # Building, diagnosing and modifying Minic
 
-[Index](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/README.md)
+[Index](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/README.md) | [Previous: time and parallelism](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/time-and-parallelism.md) | [Next: glossary](https://github.com/tryingsomestuff/Minic/blob/master/Doc/technical/glossary.md)
 
 Primary sources: [Makefile](https://github.com/tryingsomestuff/Minic/blob/master/Makefile),
 [Tools/build/common](https://github.com/tryingsomestuff/Minic/blob/master/Tools/build/common),
@@ -31,6 +31,13 @@ For iteration without PGO:
 ```sh
 NOPROFILE=1 make
 ```
+
+Every build identifies itself: the engine reports its base version, the
+six-character Git commit and a `-dirty` suffix when the checkout has local
+changes (`3.47-af45d8-dirty`, for instance). The build script writes this
+information into a generated `minic_build_info.h` that it force-includes, so
+the string reflects the checkout at build time, not at run time. Check it in the
+`uci` output before trusting a comparison between two executables.
 
 Keep the same compiler/ISA/network/PGO conditions when comparing performance.
 The native target is machine-specific; a binary built on one CPU is not
@@ -91,7 +98,17 @@ Use a selector for a focused change:
 ```sh
 pytest -q -s Test/test.py -k 'perft_test or see_test'
 pytest -q -s Test/test.py -k 'gameinfo_test or uci_test'
+pytest -q -s Test/test.py -k pawnhistory_test
 ```
+
+Each case starts a separate engine process and asserts its exit code. The
+[test README](https://github.com/tryingsomestuff/Minic/blob/master/Test/README.md) describes every case. The developer
+commands behind the two most specific ones are:
+
+| Test | What it checks |
+|---|---|
+| `gameinfo_test` | Searched-root scores, UCI replay and branch invalidation, XBoard rewind, new-game reset, booming/moobing thresholds and repetition detection that reads the game history. |
+| `pawnhistory_test` | Bounded history update, accessor mapping, pawn-history learning and reset, and its contribution to quiet-move ordering. |
 
 The suite is a smoke/regression harness, not an Elo test. Inspect its
 assertions: it does not establish correctness of every transient UCI message
@@ -105,6 +122,7 @@ With `DEBUG_TOOL`, useful direct commands include:
 Dist/Minic3/minic_dev_linux_x64 -perft_test
 Dist/Minic3/minic_dev_linux_x64 -see_test
 Dist/Minic3/minic_dev_linux_x64 -gameinfo_test
+Dist/Minic3/minic_dev_linux_x64 -pawnhistory_test
 Dist/Minic3/minic_dev_linux_x64 -eval start
 Dist/Minic3/minic_dev_linux_x64 -qsearch start
 ```
@@ -170,11 +188,35 @@ equivalent to the build gate or the availability of an embedded filename.
 For the advertised protocol option names, ranges and callbacks, consult
 the option registry rather than assuming they match these identifiers exactly.
 
+`Options::SetValue()` validates what it receives. A boolean must parse
+completely (`true`/`false`, with `0`/`1` mapped), an integer must parse
+completely and lie inside the range registered for the option, and an
+unsigned value cannot be negative. A rejected value is logged as a warning and
+the option keeps its previous value, so a typo in a GUI configuration or a
+tuning script does not silently install an out-of-range parameter.
+
+```cpp
+if (parsedValue < keyRef.vmin || parsedValue > keyRef.vmax) {
+   Logging::LogIt(Logging::logWarn) << "Rejected out-of-range option " << key << "=" << parsedValue
+                                    << " (expected " << keyRef.vmin << ".." << keyRef.vmax << ")";
+   return false;
+}
+```
+
+Parameters that only exist in a search-tuning build (`WITH_SEARCH_TUNING`),
+such as the move-ordering bonuses, the history divisors or the continuation
+weights, are registered through the same mechanism and therefore obey the same
+ranges.
+
 ### Coverage and assertions
 
 CI's coverage path uses [Tools/build/docov](https://github.com/tryingsomestuff/Minic/blob/master/Tools/build/docov). It builds
-its own executable and exercises analysis, move/state diagnostics and protocol
-workloads; it does not simply reuse the pytest tournament copy.
+its own executable with GCC coverage instrumentation and exercises analysis,
+perft, SEE, evaluation, move/state diagnostics, UCI and XBoard scripts; it does
+not simply reuse the pytest tournament copy. `COV_PROFILE=full` adds the longer
+benchmark and perft runs, and `COV_FAIL_ON_ERROR=1` turns a failing step into a
+failing script. The resulting HTML report is published with the project's
+GitHub Pages site, next to this documentation.
 
 Coverage checks that a path was exercised, not that its heuristic is beneficial.
 For invariants, also use the corresponding debug checks with assertions enabled
